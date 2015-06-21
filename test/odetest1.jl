@@ -15,7 +15,6 @@ InitialiseFromPrior = false # Sample starting parameters from prior
 #######################
 
 # Define the ODEModel object
-ModelType    = "ODE"
 ModelName    = "FHN"
 NumOfParas   = 3
 ParaNames    = ["a", "b", "c"]
@@ -67,8 +66,7 @@ InferInitialConditions   = false
 
 AuxiliaryVars = 20; # Number of tangent samples (We'll store this in the model for now)
 
-MyODEModel = ODEModel( ModelType,
-                       ModelName,
+MyODEModel = ODEModel( ModelName,
                        NumOfParas,
                        ParaNames,
                        DefaultParas,

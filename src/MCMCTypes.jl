@@ -1,7 +1,6 @@
 # Define the statistical model object
 type ODEModel
 
-    ModelType
     ModelName
     NumOfParas::Int64
     ParaNames::Array
@@ -25,13 +24,11 @@ type ODEModel
     InferInitialConditions::Bool
 
     AuxiliaryVars::Any
-
 end
 
 # Define the statistical model object
 type TargetOnlyModel
 
-    ModelType
     ModelName
     NumOfParas::Int64
     ParaNames::Array

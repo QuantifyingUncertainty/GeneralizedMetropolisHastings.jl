@@ -15,7 +15,6 @@ InitialiseFromPrior = false # Sample starting parameters from prior
 ############################
 
 # Define the Model object
-ModelType    = "Standard"
 ModelName    = "Gaussian"
 NumOfParas   = 1
 ParaNames    = ["a"]
@@ -32,8 +31,7 @@ function LL_Gaussian(x)
     logpdf(MvNormal(Mean,Cov),x)
 end
 
-GaussModel = TargetOnlyModel( ModelType,
-                              ModelName,
+GaussModel = TargetOnlyModel( ModelName,
                               NumOfParas,
                               ParaNames,
                               DefaultParas,
