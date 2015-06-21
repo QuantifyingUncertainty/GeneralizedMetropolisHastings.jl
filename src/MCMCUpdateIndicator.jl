@@ -1,5 +1,5 @@
-function SampleIndicator(Model, Chain::MarkovChain)
-# Input: Model, Chain
+function SampleIndicator(Chain::MarkovChain)
+# Input: Chain
 # Output: Vector of samples of indicator variable
 
 

@@ -152,7 +152,7 @@ for IterationNum = 1:MySimulation.NumOfIterations
     UpdateParameters(MySimulation.Model, Chain)
 
     # Sample the indicator variable to select samples - Gibbs step 2
-    IndicatorSamples = SampleIndicator(MySimulation.Model, Chain)
+    IndicatorSamples = SampleIndicator(Chain)
 
     #println(IndicatorSamples)
     #println(Chain.SampleIndicator)
