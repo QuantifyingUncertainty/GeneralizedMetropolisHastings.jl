@@ -26,7 +26,7 @@ if Chain.Initialised
 
                 # Then update the geometry for all proposed points
                 #println("Updating geometry for proposed point...")
-                Chain.Geometry[j].LL = Model.LLEval( Chain.Geometry[j].Parameters, Model )
+                Chain.Geometry[j].LL = Model.LLEval( Chain.Geometry[j].Parameters)
             end
         end
 
@@ -61,7 +61,7 @@ else
 
         println("Initialising...")
         println("The chosen sampler is Metropolis-Hastings.")
-        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters, Model )
+        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters)
 
     elseif Chain.Sampler == "MALA"
 
@@ -680,158 +680,3 @@ end # end calculate GradientLL
 
 end
 
-
-
-
-function UpdateParameters(Model::GaussianBivariate, Chain::MarkovChain)
-
-if Chain.Initialised
-
-    if Chain.Sampler == "Gibbs"
-        ### Standard Gibbs sampler for bivariate Gaussian example ###
-
-        # Gibbs sampler so just update the first variable
-        ProposalMean                    = Model.TargetMean1 + Model.Rho*( Model.TargetStd1/Model.TargetStd2 )*( Chain.Geometry[1].Parameters[2]-Model.TargetMean2 )
-        ProposalCov                     = sqrt( (1-Model.Rho^2)*Model.TargetStd1^2 )
-        Chain.Geometry[1].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-        ProposalMean                    = Model.TargetMean2 + Model.Rho*( Model.TargetStd2/Model.TargetStd1 )*( Chain.Geometry[1].Parameters[1]-Model.TargetMean1 )
-        ProposalCov                     = sqrt( (1-Model.Rho^2)*Model.TargetStd2^2 )
-        Chain.Geometry[1].Parameters[2] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-    elseif Chain.Sampler == "BivariateStructuredMarginal"
-        ### Marginal/conditional sampler for Gibbs ###
-
-        if Chain.SampleIndicator == 1
-            # Update the 2nd point
-            UpdateIdx  = 2
-            CurrentIdx = 1
-        else
-            # Update the 1st point
-            UpdateIdx  = 1
-            CurrentIdx = 2
-        end
-
-        # Update 1st parameter according to marginal distribution
-        ProposalMean                            = Model.TargetMean1
-        ProposalCov                             = Model.TargetStd1
-        Chain.Geometry[UpdateIdx].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-        # Update 2nd parameter according to conditional distribution
-        ProposalMean                            = Model.TargetMean2 + Model.Rho*( Model.TargetStd2/Model.TargetStd1 )*( Chain.Geometry[UpdateIdx].Parameters[1]-Model.TargetMean1 )
-        ProposalCov                             = sqrt( (1-Model.Rho^2)*Model.TargetStd2^2 )
-        Chain.Geometry[UpdateIdx].Parameters[2] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-        # Evaluate the loglikelihood
-        Chain.Geometry[UpdateIdx].LL = Model.LLEval( Chain.Geometry[UpdateIdx].Parameters, Model )
-
-
-        # Now calculate the transition probabilities
-        for j = 1:Chain.NumOfProposals+1
-            # Mean centred on current j'th set of parameters
-            ProposalMean = Chain.Geometry[j].Parameters
-
-            for i = 1:Chain.NumOfProposals+1
-                if i!=j
-                    # 1 dimensional case
-                    # Calculate the probability of proposing i from j
-                    ProposalMean                             = Model.TargetMean1
-                    ProposalCov                              = Model.TargetStd1
-                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCov[1]), Chain.Geometry[i].Parameters[1])
-
-                    ProposalMean                             = Model.TargetMean2 + Model.Rho*( Model.TargetStd2/Model.TargetStd1 )*( Chain.Geometry[i].Parameters[1]-Model.TargetMean1 )
-                    ProposalCov                              = sqrt( (1-Model.Rho^2)*Model.TargetStd2^2 )
-                    Chain.Geometry[j].ProposalProbability[i] = Chain.Geometry[j].ProposalProbability[i] + logpdf(Normal(ProposalMean[1], ProposalCov[1]), Chain.Geometry[i].Parameters[2])
-                end
-            end
-
-        end
-
-    elseif Chain.Sampler == "BivariateStructuredMetropolis"
-        ### Metropolis/conditional sampler for Gibbs ###
-
-        if Chain.SampleIndicator == 1
-            # Update the 2nd point
-            UpdateIdx  = 2
-            CurrentIdx = 1
-        else
-            # Update the 1st point
-            UpdateIdx  = 1
-            CurrentIdx = 2
-        end
-
-        # Update 1st parameter according to marginal distribution
-        ProposalMean                            = Chain.Geometry[CurrentIdx].Parameters[1]
-        ProposalCov                             = Chain.Geometry[CurrentIdx].StepSize
-        Chain.Geometry[UpdateIdx].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-        # Update 2nd parameter according to conditional distribution
-        ProposalMean                            = Model.TargetMean2 + Model.Rho*( Model.TargetStd2/Model.TargetStd1 )*( Chain.Geometry[UpdateIdx].Parameters[1]-Model.TargetMean1 )
-        ProposalCov                             = sqrt( (1-Model.Rho^2)*Model.TargetStd2^2 )
-        Chain.Geometry[UpdateIdx].Parameters[2] = rand(Normal(ProposalMean[1], ProposalCov[1])) # Takes mean and std
-
-        # Evaluate the loglikelihood
-        Chain.Geometry[UpdateIdx].LL = Model.LLEval( Chain.Geometry[UpdateIdx].Parameters, Model )
-
-
-        # Now calculate the transition probabilities
-        for j = 1:Chain.NumOfProposals+1
-            # Mean centred on current j'th set of parameters
-            ProposalMean = Chain.Geometry[j].Parameters
-
-            for i = 1:Chain.NumOfProposals+1
-                if i!=j
-                    # 1 dimensional case
-                    # Calculate the probability of proposing i from j
-                    ProposalMean                             = Chain.Geometry[j].Parameters[1]
-                    ProposalCov                              = Chain.Geometry[CurrentIdx].StepSize
-                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCov[1]), Chain.Geometry[i].Parameters[1])
-
-                    ProposalMean                             = Model.TargetMean2 + Model.Rho*( Model.TargetStd2/Model.TargetStd1 )*( Chain.Geometry[i].Parameters[1]-Model.TargetMean1 )
-                    ProposalCov                              = sqrt( (1-Model.Rho^2)*Model.TargetStd2^2 )
-                    Chain.Geometry[j].ProposalProbability[i] = Chain.Geometry[j].ProposalProbability[i] + logpdf(Normal(ProposalMean[1], ProposalCov[1]), Chain.Geometry[i].Parameters[2])
-                end
-            end
-
-        end
-
-    else
-        # Code for other samplers
-
-    end
-
-else
-    # Initialise the chain by updating geometry for main point
-    if Chain.Sampler == "MH"
-
-        println("Initialising...")
-        println("The chosen sampler is Metropolis-Hastings.")
-        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters, Model )
-
-    elseif Chain.Sampler == "Gibbs"
-
-        println("The chosen sampler is Gibbs.")
-
-    elseif Chain.Sampler == "BivariateStructuredMarginal"
-
-        println("The chosen sampler is Marginal-Conditional.")
-        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters, Model )
-
-    elseif Chain.Sampler == "BivariateStructuredMetropolis"
-
-        println("The chosen sampler is Metropolis-Conditional.")
-        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters, Model )
-
-    elseif Chain.Sampler == "TrSmMALA"
-
-    else
-        error("Sampler specified is not a valid option.")
-    end
-
-    # Initialisation completed
-    Chain.Initialised = true
-
-end
-
-
-end

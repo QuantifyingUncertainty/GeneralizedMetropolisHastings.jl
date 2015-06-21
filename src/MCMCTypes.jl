@@ -28,48 +28,6 @@ type ODEModel
 
 end
 
-
-# Define the statistical model object
-type GaussianBivariate
-
-    ModelType
-    ModelName
-    NumOfParas::Int64
-    ParaNames::Array
-    DefaultParas::Array{Float64}
-    Priors::Array{Any}
-    LLEval::Function
-
-    TargetMean1::Float64
-    TargetMean2::Float64
-    TargetStd1::Float64
-    TargetStd2::Float64
-    Rho::Float64
-    TargetCov::Array{Float64}
-
-    # Now set up the functions
-    function GaussianBivariate(ModelType, ModelName, NumOfParas, ParaNames, DefaultParas, Priors, LLEval, TargetMean1, TargetMean2, TargetStd1, TargetStd2, Rho)
-        this              = new()
-        this.ModelType    = ModelType
-        this.ModelName    = ModelName
-        this.NumOfParas   = NumOfParas
-        this.ParaNames    = ParaNames
-        this.DefaultParas = DefaultParas
-        this.Priors       = Priors
-        this.LLEval       = LLEval
-
-        this.TargetMean1  = TargetMean1
-        this.TargetMean2  = TargetMean2
-        this.TargetStd1   = TargetStd1
-        this.TargetStd2   = TargetStd2
-        this.Rho          = Rho
-        this.TargetCov    = [TargetStd1^2 TargetStd1*TargetStd2*Rho; TargetStd1*TargetStd2*Rho TargetStd2^2]
-
-        return this
-    end
-end
-
-
 # Define the statistical model object
 type TargetOnlyModel
 
