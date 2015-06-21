@@ -7,7 +7,7 @@ if Chain.Initialised
 
         #println("Entering UpdateParameters function...")
         ProposalMean       = Chain.Geometry[Chain.SampleIndicator].Parameters
-        ProposalCovariance = Chain.Proposal.StepSize*Chain.Proposal.ProposalCovariance
+        ProposalCovariance = Chain.ProposalDistribution.StepSize*Chain.ProposalDistribution.ProposalCov
 
         # Propose the new parameters values
         for j = 1:Chain.NumOfProposals+1

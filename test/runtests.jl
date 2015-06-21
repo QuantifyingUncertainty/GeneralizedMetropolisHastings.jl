@@ -2,7 +2,8 @@ using GeneralizedMetropolisHastings
 using Base.Test
 
 tests =
-  ["odetest1"]
+  ["odetest1",
+   "gaussiantest1"]
 
 println("Running tests:")
 
