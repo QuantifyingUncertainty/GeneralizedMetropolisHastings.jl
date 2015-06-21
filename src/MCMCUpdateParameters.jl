@@ -13,13 +13,7 @@ if Chain.Sampler == "MH"
         if j!= Chain.SampleIndicator
             # Propose new point
             #println("Proposing new point...")
-            if Model.NumOfParas == 1
-                # 1 dimensional case
-                Chain.Geometry[j].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCovariance[1]))
-            else
-                # Multi-dimensional case
-                Chain.Geometry[j].Parameters    = rand(MvNormal(ProposalMean, ProposalCovariance))
-            end
+            Chain.Geometry[j].Parameters    = rand(MvNormal(ProposalMean, ProposalCovariance))
             # Then update the geometry for all proposed points
             #println("Updating geometry for proposed point...")
             Chain.Geometry[j].LL = Model.LLEval( Chain.Geometry[j].Parameters)
@@ -32,14 +26,8 @@ if Chain.Sampler == "MH"
         ProposalMean = Chain.Geometry[j].Parameters
         for i = 1:Chain.NumOfProposals+1
             if i!=j
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    # Calculate the probability of proposing i from j
-                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
-                else
-                    # Calculate the probability of proposal
-                    Chain.Geometry[j].ProposalProbability[i] = logpdf(MvNormal(ProposalMean, ProposalCovariance), Chain.Geometry[i].Parameters)
-                end
+                # Calculate the probability of proposal
+                Chain.Geometry[j].ProposalProbability[i] = logpdf(MvNormal(ProposalMean, ProposalCovariance), Chain.Geometry[i].Parameters)
             end
         end
 
@@ -78,13 +66,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
                 # Propose new point
                 #println("Proposing new point...")
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    Chain.Geometry[j].Parameters[1] = Chain.Geometry[Chain.SampleIndicator].Parameters + rand(Chain.ProposalDistribution.Density)
-                else
-                    # Multi-dimensional case
-                    Chain.Geometry[j].Parameters    = Chain.Geometry[Chain.SampleIndicator].Parameters + rand(Chain.ProposalDistribution.Density)
-                end
+                Chain.Geometry[j].Parameters    = Chain.Geometry[Chain.SampleIndicator].Parameters + rand(Chain.ProposalDistribution.Density)
 
                 # Calculate the log-likelihood for the ODE model
                 UpdateODEGeometry!(Model, Chain, j, false, false) # Update the geometry for current proposal
@@ -108,13 +90,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
                 # Propose new point
                 #println("Proposing new point...")
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    Chain.Geometry[PropNum].Parameters[1] = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density) # NEEDS UPDATED!!!
-                else
-                    # Multi-dimensional case
-                    Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
-                end
+                Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
 
                 # Calculate the log-likelihood, gradient and FI for the ODE model
                 UpdateODEGeometry!(Model, Chain, PropNum, true, true)
@@ -134,15 +110,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
             for i = 1:Chain.NumOfProposals+1
                 if i!=j
-                    if Model.NumOfParas == 1
-                        # 1 dimensional case
-                        # Calculate the probability of proposing i from j
-                        # NEEDS UPDATED!!!
-                        #Chain.ProposalDistribution[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
-                    else
-                        # Calculate the probability of proposal from j to i
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
-                    end
+                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
                 end
             end
 
@@ -161,13 +129,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
                 # Propose new point
                 #println("Proposing new point...")
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    Chain.Geometry[PropNum].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCovariance[1])) # NEEDS UPDATED!!!
-                else
-                    # Multi-dimensional case
-                    Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
-                end
+                Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
 
                 # Calculate the log-likelihood, gradient and FI for the ODE model
                 UpdateODEGeometry!(Model, Chain, PropNum, true, true)
@@ -188,15 +150,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
             for i = 1:Chain.NumOfProposals+1
                 if i!=j
-                    if Model.NumOfParas == 1
-                        # 1 dimensional case
-                        # Calculate the probability of proposing i from j
-                        # NEEDS UPDATED!!!
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
-                    else
-                        # Calculate the probability of proposal from j to i
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
-                    end
+                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
                 end
             end
 
@@ -217,13 +171,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
                 # Propose new point
                 #println("Proposing new point...")
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    Chain.Geometry[PropNum].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCovariance[1])) # NEEDS UPDATED!!!
-                else
-                    # Multi-dimensional case
-                    Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
-                end
+                Chain.Geometry[PropNum].Parameters    = rand(Chain.ProposalDistribution[Chain.SampleIndicator].Density)
 
                 # Calculate the log-likelihood, gradient and FI for the ODE model
                 UpdateODEGeometryRandom!(Model, Chain, PropNum, true)
@@ -244,15 +192,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
             for i = 1:Chain.NumOfProposals+1
                 if i!=j
-                    if Model.NumOfParas == 1
-                        # 1 dimensional case
-                        # Calculate the probability of proposing i from j
-                        # NEEDS UPDATED!!!
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
-                    else
-                        # Calculate the probability of proposal from j to i
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
-                    end
+                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Chain.ProposalDistribution[j].Density, Chain.Geometry[i].Parameters)
                 end
             end
 
@@ -288,13 +228,7 @@ function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
 
                 # Propose new point
                 #println("Proposing new point...")
-                if Model.NumOfParas == 1
-                    # 1 dimensional case
-                    Chain.Geometry[PropNum].Parameters[1] = Chain.Geometry[Chain.SampleIndicator].Parameters[1] + rand(Chain.ProposalDistribution.Density)
-                else
-                    # Multi-dimensional case
-                    Chain.Geometry[PropNum].Parameters    = Chain.Geometry[Chain.SampleIndicator].Parameters + rand(Chain.ProposalDistribution.Density) # using same proposal
-                end
+                Chain.Geometry[PropNum].Parameters    = Chain.Geometry[Chain.SampleIndicator].Parameters + rand(Chain.ProposalDistribution.Density) # using same proposal
 
                 # Calculate the log-likelihood, gradient and FI for the ODE model
                 UpdateODEGeometry!(Model, Chain, PropNum, false, false)
@@ -394,9 +328,6 @@ function Initialise(Model::ODEModel, Chain::MarkovChain)
         error("Sampler specified is not a valid option.")
     end
 end
-
-
-
 
 
 function UpdateODEGeometryRandom!(Model::ODEModel, Chain::MarkovChain, PropNum::Int64, CalculateGradLL::Bool)
@@ -534,12 +465,6 @@ end # end calculate GradientLL
 
 end
 
-
-
-
-
-
-
 function UpdateODEGeometry!(Model::ODEModel, Chain::MarkovChain, PropNum::Int64, CalculateGradLL::Bool, CalculateHessianLL::Bool)
 
 
@@ -643,8 +568,6 @@ if CalculateGradLL
 
 
     end
-
-
 
 end # end calculate GradientLL
 

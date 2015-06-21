@@ -51,13 +51,7 @@ StepSize = MySimulation.InitialStepSize
 if Sampler == "MH"
 
     # Set the proposal distribution for each of these samplers
-    if MySimulation.Model.NumOfParas == 1
-        # Univariate
-        Density = Normal(0, MySimulation.ProposalCovariance[1])
-    else
-        # Set the multivariate proposal distribution for each of these samplers
-        Density = MvNormal(zeros(MySimulation.Model.NumOfParas), StepSize*MySimulation.ProposalCovariance)
-    end
+    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
 
     # Create proposal distribution object for MH
     ProposalDistribution = ProposalDistributionMH(Density, StepSize, MySimulation.ProposalCovariance)
@@ -65,13 +59,7 @@ if Sampler == "MH"
 elseif Sampler == "SmMALA"  || Sampler == "TrSmMALA"
 
     # Set the proposal distribution for each of these samplers
-    if MySimulation.Model.NumOfParas == 1
-        # Univariate
-        Density = Normal(0, MySimulation.ProposalCovariance[1])
-    else
-        # Set the multivariate proposal distribution for each of these samplers
-        Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-    end
+    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
 
     # Create proposal distribution object for SmMALA and TrSmMALA
     ProposalDistribution = Array(ProposalDistributionSmMALA, MySimulation.NumOfProposals + 1)
@@ -82,13 +70,7 @@ elseif Sampler == "SmMALA"  || Sampler == "TrSmMALA"
 elseif Sampler == "TrSmMALA_Random"
 
     # Set the proposal distribution for each of these samplers
-    if MySimulation.Model.NumOfParas == 1
-        # Univariate
-        Density = Normal(0, MySimulation.ProposalCovariance[1])
-    else
-        # Set the multivariate proposal distribution for each of these samplers
-        Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-    end
+    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
 
     NumberOfVectors   = MySimulation.Model.AuxiliaryVars
     TangentVectors = zeros(MySimulation.Model.NumOfParas, NumberOfVectors)
@@ -100,14 +82,9 @@ elseif Sampler == "TrSmMALA_Random"
     end
 
 elseif Sampler == "AdaptiveMH"
+
     # Set the proposal distribution for each of these samplers
-    if MySimulation.Model.NumOfParas == 1
-        # Univariate
-        Density = Normal(0, MySimulation.ProposalCovariance[1])
-    else
-        # Set the multivariate proposal distribution for each of these samplers
-        Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-    end
+    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
 
     RunningMean = zeros(MySimulation.Model.NumOfParas)
     RunningCov  = zeros(MySimulation.Model.NumOfParas)
