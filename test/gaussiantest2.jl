@@ -7,7 +7,7 @@ Sampler             = "MH"
 NumOfProposals      = 1
 NumOfIterations     = 1000
 InitialStepSize     = 0.01
-ProposalCovariance  = [1.0]
+ProposalCovariance  = eye(2)
 InitialiseFromPrior = false # Sample starting parameters from prior
 
 ############################
@@ -17,17 +17,18 @@ InitialiseFromPrior = false # Sample starting parameters from prior
 # Define the Model object
 ModelType    = "Standard"
 ModelName    = "Gaussian"
-NumOfParas   = 1
-ParaNames    = ["a"]
-DefaultParas = [0.0]
+NumOfParas   = 2
+ParaNames    = ["a" "b"]
+DefaultParas = [0.0; 0.0]
 
 Prior        = Array(Distribution, NumOfParas)
 Prior[1]     = Uniform(0, 10)
+Prior[2]     = Uniform(0, 10)
 
 # Specify LL function
 function LL_Gaussian(x)
-    Mean = [0.0]
-    Cov  = eye(1)
+    Mean = [0.0; 0.0]
+    Cov  = eye(2)
 
     logpdf(MvNormal(Mean,Cov),x)
 end

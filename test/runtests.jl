@@ -3,7 +3,8 @@ using Base.Test
 
 tests =
   ["odetest1",
-   "gaussiantest1"]
+   "gaussiantest1",
+   "gaussiantest2"]
 
 println("Running tests:")
 
