@@ -1,92 +1,69 @@
 function UpdateParameters(Model::TargetOnlyModel, Chain::MarkovChain)
 
-if Chain.Initialised
+if Chain.Sampler == "MH"
+    ### Standard Metropolis-Hastings sampler ###
 
-    if Chain.Sampler == "MH"
-        ### Standard Metropolis-Hastings sampler ###
+    #println("Entering UpdateParameters function...")
+    ProposalMean       = Chain.Geometry[Chain.SampleIndicator].Parameters
+    ProposalCovariance = Chain.ProposalDistribution.StepSize*Chain.ProposalDistribution.ProposalCov
 
-        #println("Entering UpdateParameters function...")
-        ProposalMean       = Chain.Geometry[Chain.SampleIndicator].Parameters
-        ProposalCovariance = Chain.ProposalDistribution.StepSize*Chain.ProposalDistribution.ProposalCov
+    # Propose the new parameters values
+    for j = 1:Chain.NumOfProposals+1
+        # Update for all except the indicated sample
+        if j!= Chain.SampleIndicator
+            # Propose new point
+            #println("Proposing new point...")
+            if Model.NumOfParas == 1
+                # 1 dimensional case
+                Chain.Geometry[j].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCovariance[1]))
+            else
+                # Multi-dimensional case
+                Chain.Geometry[j].Parameters    = rand(MvNormal(ProposalMean, ProposalCovariance))
+            end
+            # Then update the geometry for all proposed points
+            #println("Updating geometry for proposed point...")
+            Chain.Geometry[j].LL = Model.LLEval( Chain.Geometry[j].Parameters)
+        end
+    end
 
-        # Propose the new parameters values
-        for j = 1:Chain.NumOfProposals+1
-            # Update for all except the indicated sample
-            if j!= Chain.SampleIndicator
-
-                # Propose new point
-                #println("Proposing new point...")
+    # Now calculate the transition probabilities
+    for j = 1:Chain.NumOfProposals+1
+        # Mean centred on current j'th set of parameters
+        ProposalMean = Chain.Geometry[j].Parameters
+        for i = 1:Chain.NumOfProposals+1
+            if i!=j
                 if Model.NumOfParas == 1
                     # 1 dimensional case
-                    Chain.Geometry[j].Parameters[1] = rand(Normal(ProposalMean[1], ProposalCovariance[1]))
+                    # Calculate the probability of proposing i from j
+                    Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
                 else
-                    # Multi-dimensional case
-                    Chain.Geometry[j].Parameters    = rand(MvNormal(ProposalMean, ProposalCovariance))
-                end
-
-                # Then update the geometry for all proposed points
-                #println("Updating geometry for proposed point...")
-                Chain.Geometry[j].LL = Model.LLEval( Chain.Geometry[j].Parameters)
-            end
-        end
-
-        # Now calculate the transition probabilities
-        for j = 1:Chain.NumOfProposals+1
-            # Mean centred on current j'th set of parameters
-            ProposalMean = Chain.Geometry[j].Parameters
-
-            for i = 1:Chain.NumOfProposals+1
-                if i!=j
-                    if Model.NumOfParas == 1
-                        # 1 dimensional case
-                        # Calculate the probability of proposing i from j
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(Normal(ProposalMean[1], ProposalCovariance[1]), Chain.Geometry[i].Parameters[1])
-                    else
-                        # Calculate the probability of proposal
-                        Chain.Geometry[j].ProposalProbability[i] = logpdf(MvNormal(ProposalMean, ProposalCovariance), Chain.Geometry[i].Parameters)
-                    end
+                    # Calculate the probability of proposal
+                    Chain.Geometry[j].ProposalProbability[i] = logpdf(MvNormal(ProposalMean, ProposalCovariance), Chain.Geometry[i].Parameters)
                 end
             end
-
         end
-
-    else
-        # Code for other samplers
 
     end
-
 else
-    # Initialise the chain by updating geometry for main point
-    if Chain.Sampler == "MH"
-
-        println("Initialising...")
-        println("The chosen sampler is Metropolis-Hastings.")
-        Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters)
-
-    elseif Chain.Sampler == "MALA"
-
-    elseif Chain.Sampler == "SmMALA"
-
-    elseif Chain.Sampler == "TrSmMALA"
-
-    else
-        error("Sampler specified is not a valid option.")
-    end
-
-    # Initialisation completed
-    Chain.Initialised = true
+    # Code for other samplers
+end
 
 end
 
+function Initialise(Model::TargetOnlyModel, Chain::MarkovChain)
 
+# Initialise the chain by updating geometry for main point
+if Chain.Sampler == "MH"
+    println("Initialising...")
+    println("The chosen sampler is Metropolis-Hastings.")
+    Chain.Geometry[Chain.SampleIndicator].LL = Model.LLEval( Chain.Geometry[Chain.SampleIndicator].Parameters)
+else
+    error("Sampler specified is not a valid option.")
 end
 
-
-
+end
 
 function UpdateParameters(Model::ODEModel, Chain::MarkovChain)
-
-if Chain.Initialised
 
     if Chain.Sampler == "MH"
 
@@ -333,10 +310,10 @@ if Chain.Initialised
 
     else
       # Code for other samplers
-
     end
+end
 
-else
+function Initialise(Model::ODEModel, Chain::MarkovChain)
     # Initialise the chain by updating geometry for main point
     if Chain.Sampler == "MH"
 
@@ -416,13 +393,6 @@ else
     else
         error("Sampler specified is not a valid option.")
     end
-
-    # Initialisation completed
-    Chain.Initialised = true
-
-end
-
-
 end
 
 

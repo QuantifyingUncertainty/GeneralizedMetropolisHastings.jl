@@ -122,16 +122,11 @@ end
 
 CurrentIteration = 1;
 
-# Initialised flag is false, since geometry not yet initialised
-Initialised = false
-
-
 # Create the chain object
 println("Creating chain object...")
 Chain = MarkovChain( Sampler,
                      NumOfProposals,
                      SampleIndex,
-                     Initialised,
                      CurrentIteration,
                      AttemptedProposal,
                      AcceptedProposal,
@@ -142,7 +137,7 @@ Chain = MarkovChain( Sampler,
 
 
 # Initialise the LL and any other quantities needed for the chosen sampler
-UpdateParameters(MySimulation.Model, Chain)
+Initialise(MySimulation.Model, Chain)
 
 # Initialise variable for storing results
 #SavedSamples = Array(Float64, MySimulation.Model.NumOfParas, (MySimulation.NumOfIterations*Chain.NumOfProposals))

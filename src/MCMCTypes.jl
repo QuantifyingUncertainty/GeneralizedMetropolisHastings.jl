@@ -102,7 +102,6 @@ type MarkovChain
     Sampler
     NumOfProposals::Int64
     SampleIndicator::Int64
-    Initialised::Bool
     CurrentIteration::Int64
 
     AttemptedProposal::Int64
