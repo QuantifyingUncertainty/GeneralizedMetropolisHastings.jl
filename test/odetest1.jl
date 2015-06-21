@@ -4,7 +4,7 @@ using Distributions
 # Define settings for simulation
 OutputID            = "TestOutputFile"
 Sampler             = "MH"
-NumOfProposals      = 1
+NumOfProposals      = 2
 NumOfIterations     = 1000
 InitialStepSize     = 0.01
 ProposalCovariance  = eye(3);
