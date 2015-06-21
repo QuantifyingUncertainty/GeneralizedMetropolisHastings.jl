@@ -431,18 +431,17 @@ end
 
 function UpdateODEGeometryRandom!(Model::ODEModel, Chain::MarkovChain, PropNum::Int64, CalculateGradLL::Bool)
 
-if Model.UsePrior
-    for k = 1:Model.NumOfParas
-        Chain.Geometry[PropNum].LogPrior = logpdf(Model.Priors[k], Chain.Geometry[PropNum].Parameters[k])
+for k = 1:Model.NumOfParas
+    Chain.Geometry[PropNum].LogPrior = logpdf(Model.Priors[k], Chain.Geometry[PropNum].Parameters[k])
 
-        # If the proposed parameter has zero prior probability mass then exit
-        if isinf(Chain.Geometry[PropNum].LogPrior)
-            println("Proposed parameter outside prior")
-            Chain.Geometry[PropNum].LL = -1e200
-            return false
-        end
+    # If the proposed parameter has zero prior probability mass then exit
+    if isinf(Chain.Geometry[PropNum].LogPrior)
+        println("Proposed parameter outside prior")
+        Chain.Geometry[PropNum].LL = -1e200
+        return false
     end
 end
+
 
 
 # Calculate the log-likelihood for the ODE model
@@ -573,18 +572,18 @@ end
 
 function UpdateODEGeometry!(Model::ODEModel, Chain::MarkovChain, PropNum::Int64, CalculateGradLL::Bool, CalculateHessianLL::Bool)
 
-if Model.UsePrior
-    for k = 1:Model.NumOfParas
-        Chain.Geometry[PropNum].LogPrior = logpdf(Model.Priors[k], Chain.Geometry[PropNum].Parameters[k])
 
-        # If the proposed parameter has zero prior probability mass then exit
-        if isinf(Chain.Geometry[PropNum].LogPrior)
-            #println("Proposed parameter outside prior")
-            Chain.Geometry[PropNum].LL = -1e200
-            return false
-        end
+for k = 1:Model.NumOfParas
+    Chain.Geometry[PropNum].LogPrior = logpdf(Model.Priors[k], Chain.Geometry[PropNum].Parameters[k])
+
+    # If the proposed parameter has zero prior probability mass then exit
+    if isinf(Chain.Geometry[PropNum].LogPrior)
+        #println("Proposed parameter outside prior")
+        Chain.Geometry[PropNum].LL = -1e200
+        return false
     end
 end
+
 
 
 # Calculate the log-likelihood for the ODE model

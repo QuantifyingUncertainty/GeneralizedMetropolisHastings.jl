@@ -19,13 +19,8 @@ if Chain.Sampler == "MH" ||
     if Chain.NumOfProposals == 1
 
         # Only 1 proposal so use optimal Metropolis-Hastings ratio
-        if Model.UsePrior
-            A[1] = (Chain.Geometry[1].LL + Chain.Geometry[1].LogPrior + Chain.Geometry[1].ProposalProbability[2])
-            A[2] = (Chain.Geometry[2].LL + Chain.Geometry[2].LogPrior + Chain.Geometry[2].ProposalProbability[1])
-        else
-            A[1] = (Chain.Geometry[1].LL + Chain.Geometry[1].ProposalProbability[2])
-            A[2] = (Chain.Geometry[2].LL + Chain.Geometry[2].ProposalProbability[1])
-        end
+        A[1] = (Chain.Geometry[1].LL + Chain.Geometry[1].LogPrior + Chain.Geometry[1].ProposalProbability[2])
+        A[2] = (Chain.Geometry[2].LL + Chain.Geometry[2].LogPrior + Chain.Geometry[2].ProposalProbability[1])
 
         if Chain.SampleIndicator == 1
             # Proposed point is 2

@@ -6,7 +6,6 @@ type ODEModel
     NumOfParas::Int64
     ParaNames::Array
     DefaultParas::Array{Float64}
-    UsePrior::Bool
     Priors::Array{Any}
 
     # Data
@@ -38,7 +37,6 @@ type GaussianBivariate
     NumOfParas::Int64
     ParaNames::Array
     DefaultParas::Array{Float64}
-    UsePrior::Bool
     Priors::Array{Any}
     LLEval::Function
 
@@ -50,14 +48,13 @@ type GaussianBivariate
     TargetCov::Array{Float64}
 
     # Now set up the functions
-    function GaussianBivariate(ModelType, ModelName, NumOfParas, ParaNames, DefaultParas, UsePrior, Priors, LLEval, TargetMean1, TargetMean2, TargetStd1, TargetStd2, Rho)
+    function GaussianBivariate(ModelType, ModelName, NumOfParas, ParaNames, DefaultParas, Priors, LLEval, TargetMean1, TargetMean2, TargetStd1, TargetStd2, Rho)
         this              = new()
         this.ModelType    = ModelType
         this.ModelName    = ModelName
         this.NumOfParas   = NumOfParas
         this.ParaNames    = ParaNames
         this.DefaultParas = DefaultParas
-        this.UsePrior     = UsePrior
         this.Priors       = Priors
         this.LLEval       = LLEval
 
@@ -81,7 +78,6 @@ type TargetOnlyModel
     NumOfParas::Int64
     ParaNames::Array
     DefaultParas::Array{Float64}
-    UsePrior::Bool
     Priors::Array{Any}
     LLEval::Function
 end
