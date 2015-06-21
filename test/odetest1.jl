@@ -58,9 +58,9 @@ end
 
 FHNFun                   = FHN
 DefaultInitialConditions = [-1.0, 1.0]
-NumOfSpecies             = 2
-ObservedSpecies          = [1, 2]
-UnobservedSpecies        = []
+NumOfStates             = 2
+ObservedStates          = [1, 2]
+UnobservedStates        = []
 abstol                   = 1e-8
 reltol                   = 1e-8
 InferInitialConditions   = false
@@ -79,9 +79,9 @@ MyODEModel = ODEModel( ModelType,
                        NumOfTimePoints,
                        FHNFun,
                        DefaultInitialConditions,
-                       NumOfSpecies,
-                       ObservedSpecies,
-                       UnobservedSpecies,
+                       NumOfStates,
+                       ObservedStates,
+                       UnobservedStates,
                        abstol,
                        reltol,
                        InferInitialConditions,

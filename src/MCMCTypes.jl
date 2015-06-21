@@ -17,9 +17,9 @@ type ODEModel
     # ODE specific
     ODEFunction::Function
     DefaultInitialConditions::Array{Float64}
-    NumOfSpecies::Int64
-    ObservedSpecies::Array{Int64}
-    UnobservedSpecies::Array{Int64}
+    NumOfStates::Int64
+    ObservedStates::Array{Int64}
+    UnobservedStates::Array{Int64}
     abstol::Float64
     reltol::Float64
     InferInitialConditions::Bool

@@ -348,7 +348,7 @@ end
 # Calculate the log-likelihood for the ODE model
 #try
     Sol = Sundials.cvode((t,y,ydot)->Model.ODEFunction(t,y,ydot,Chain.Geometry[PropNum].Parameters), Model.DefaultInitialConditions, Model.DataTimePoints[:,1], reltol=Model.reltol, abstol=Model.abstol)
-    #Sol = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfSpecies),Chain.Geometry[PropNum].Parameters), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
+    #Sol = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfStates),Chain.Geometry[PropNum].Parameters), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
     #println(typeof(Sol))
   #catch
 #    Chain.Geometry[PropNum].LL = -1e200
@@ -357,7 +357,7 @@ end
 
 Chain.Geometry[PropNum].LL = 0
 
-for s in Model.ObservedSpecies
+for s in Model.ObservedStates
     for t = 1:Model.NumOfTimePoints
         Chain.Geometry[PropNum].LL = Chain.Geometry[PropNum].LL + logpdf(Normal(Model.DataMeasurements[t,s], sqrt(Model.DataNoiseVariance[t,s])), Sol[t,s])
     end
@@ -367,7 +367,7 @@ end
 # Only if flag is "true" for calculating gradients
 if CalculateGradLL
     # Calculate the sensitivities of the ODE model wrt each parameter
-    Sol_fd  = Array(Float64, Model.NumOfTimePoints, Model.NumOfSpecies, Model.NumOfParas)
+    Sol_fd  = Array(Float64, Model.NumOfTimePoints, Model.NumOfStates, Model.NumOfParas)
     Epsilon = Model.abstol*100
 
     # Calculate the gradient of the log-likeilhood
@@ -379,17 +379,17 @@ if CalculateGradLL
         True_Epsilon = NewParas[i] - Chain.Geometry[PropNum].Parameters[i]
 
         Sol_fd[:,:,i] = Sundials.cvode((t,y,ydot)->Model.ODEFunction(t,y,ydot,NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1], reltol=Model.reltol, abstol=Model.abstol)
-        #Sol_fd[:,:,i] = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfSpecies),NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
+        #Sol_fd[:,:,i] = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfStates),NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
         Sol_fd[:,:,i] = (Sol_fd[:,:,i] - Sol)./True_Epsilon
 
-        #for s in Model.ObservedSpecies
+        #for s in Model.ObservedStates
         #    for t = 1:Model.NumOfTimePoints
         #        Chain.Geometry[PropNum].GradLL[i] = Chain.Geometry[PropNum].GradLL[i] -
         #                                            ((Sol[t,s]-Model.DataMeasurements[t,s])/Model.DataNoiseVariance[t,s])*Sol_fd[t,s,i]
         #    end
         #end
 
-        for s in Model.ObservedSpecies
+        for s in Model.ObservedStates
             Temp = ((Sol[:,s]-Model.DataMeasurements[:,s])./Model.DataNoiseVariance[:,s])'*Sol_fd[:,s,i]
             Chain.Geometry[PropNum].GradLL[i] = Chain.Geometry[PropNum].GradLL[i] - Temp[1];
         end
@@ -405,13 +405,13 @@ if CalculateGradLL
 
     # Now sample the some pseudo data and calculate LL
     Chain.ProposalDistribution[PropNum].TangentVectors = zeros(Model.NumOfParas, Chain.ProposalDistribution[PropNum].NumberOfVectors);
-    Pseudodata  = zeros(Model.NumOfTimePoints, length(Model.ObservedSpecies));
+    Pseudodata  = zeros(Model.NumOfTimePoints, length(Model.ObservedStates));
 
     # For each auxiliary tangent vector
     for TangNum = 1:Chain.ProposalDistribution[PropNum].NumberOfVectors
 
         # Sample pseudodata and calculate log-likelihood of sampling it
-        for s in Model.ObservedSpecies
+        for s in Model.ObservedStates
             for t = 1:Model.NumOfTimePoints
                 Pseudodata[t,s] = rand( Normal(Sol[t,s], sqrt(Model.DataNoiseVariance[t,s])) )
             end
@@ -421,7 +421,7 @@ if CalculateGradLL
         Temp = 0.0;
 
         for i = 1:Model.NumOfParas
-            for s in Model.ObservedSpecies
+            for s in Model.ObservedStates
                 Temp = ((Sol[:,s]-Pseudodata[:,s])./Model.DataNoiseVariance[:,s])'*Sol_fd[:,s,i]
                 Chain.ProposalDistribution[PropNum].TangentVectors[i,TangNum] = Chain.ProposalDistribution[PropNum].TangentVectors[i,TangNum] - Temp[1]
             end
@@ -442,10 +442,10 @@ if CalculateGradLL
         for i = 1:Model.NumOfParas
             for j = i:Model.NumOfParas
 
-                for SpeciesNum in Model.ObservedSpecies
+                for StatesNum in Model.ObservedStates
                     for t = 1:Model.NumOfTimePoints
                         Chain.Geometry[PropNum].HessianLL[i,j] = Chain.Geometry[PropNum].HessianLL[i,j] +
-                                                                 (Sol_fd[t,SpeciesNum,i]/Model.DataNoiseVariance[t,SpeciesNum]*Sol_fd[t,SpeciesNum,j])
+                                                                 (Sol_fd[t,StatesNum,i]/Model.DataNoiseVariance[t,StatesNum]*Sol_fd[t,StatesNum,j])
                     end
                 end
 
@@ -485,7 +485,7 @@ end
 #try
     Sol = Sundials.cvode((t,y,ydot)->Model.ODEFunction(t,y,ydot,Chain.Geometry[PropNum].Parameters), Model.DefaultInitialConditions, Model.DataTimePoints[:,1], reltol=Model.reltol, abstol=Model.abstol)
     #println(length(Model.DataTimePoints[:,1]))
-    #Sol = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfSpecies),Chain.Geometry[PropNum].Parameters), Model.DataTimePoints[:,1], Model.DefaultInitialConditions)
+    #Sol = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfStates),Chain.Geometry[PropNum].Parameters), Model.DataTimePoints[:,1], Model.DefaultInitialConditions)
     #println(length(Sol[2][:]))
     #println((Sol[2][:]))
   #catch
@@ -495,7 +495,7 @@ end
 
 Chain.Geometry[PropNum].LL = 0
 
-for s in Model.ObservedSpecies
+for s in Model.ObservedStates
     for t = 1:Model.NumOfTimePoints
         Chain.Geometry[PropNum].LL = Chain.Geometry[PropNum].LL + logpdf(Normal(Model.DataMeasurements[t,s], sqrt(Model.DataNoiseVariance[t,s])), Sol[t,s])
         #Chain.Geometry[PropNum].LL = Chain.Geometry[PropNum].LL + logpdf(Normal(Model.DataMeasurements[t,s], sqrt(Model.DataNoiseVariance[t,s])), Sol[2][t][s])
@@ -506,7 +506,7 @@ end
 # Only if flag is "true" for calculating gradients
 if CalculateGradLL
     # Calculate the sensitivities of the ODE model wrt each parameter
-    Sol_fd  = Array(Float64, Model.NumOfTimePoints, Model.NumOfSpecies, Model.NumOfParas)
+    Sol_fd  = Array(Float64, Model.NumOfTimePoints, Model.NumOfStates, Model.NumOfParas)
     Epsilon = Model.abstol*100
 
     # Calculate the gradient of the log-likeilhood
@@ -524,10 +524,10 @@ if CalculateGradLL
 
         Sol_fd[:,:,i] = Sundials.cvode((t,y,ydot)->Model.ODEFunction(t,y,ydot,NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1], reltol=Model.reltol, abstol=Model.abstol)
         Sol_fd[:,:,i] = (Sol_fd[:,:,i] - Sol)./True_Epsilon
-        #Sol_fd = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfSpecies),NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
+        #Sol_fd = ode23((t,x)->Model.ODEFunction(t,x,zeros(Model.NumOfStates),NewParas), Model.DefaultInitialConditions, Model.DataTimePoints[:,1])
         #Sol_fd[2] = (Sol_fd[2] - Sol[2])./True_Epsilon
 
-        for s in Model.ObservedSpecies
+        for s in Model.ObservedStates
             for t = 1:Model.NumOfTimePoints
                 Chain.Geometry[PropNum].GradLL[i] = Chain.Geometry[PropNum].GradLL[i] -
                                                     ((Sol[t,s]-Model.DataMeasurements[t,s])/Model.DataNoiseVariance[t,s])*Sol_fd[t,s,i]
@@ -551,12 +551,12 @@ if CalculateGradLL
             for i = 1:Model.NumOfParas
                 for j = i:Model.NumOfParas
 
-                    for SpeciesNum in Model.ObservedSpecies
+                    for StatesNum in Model.ObservedStates
                         for t = 1:Model.NumOfTimePoints
                             Chain.Geometry[PropNum].HessianLL[i,j] = Chain.Geometry[PropNum].HessianLL[i,j] +
-                                                                     (Sol_fd[t,SpeciesNum,i]/Model.DataNoiseVariance[t,SpeciesNum]*Sol_fd[t,SpeciesNum,j])
+                                                                     (Sol_fd[t,StatesNum,i]/Model.DataNoiseVariance[t,StatesNum]*Sol_fd[t,StatesNum,j])
                             #Chain.Geometry[PropNum].HessianLL[i,j] = Chain.Geometry[PropNum].HessianLL[i,j] +
-                            #                                         (Sol_fd[2][t][SpeciesNum]/Model.DataNoiseVariance[t,SpeciesNum]*Sol_fd[2][t][SpeciesNum])
+                            #                                         (Sol_fd[2][t][StatesNum]/Model.DataNoiseVariance[t,StatesNum]*Sol_fd[2][t][StatesNum])
                         end
                     end
 
