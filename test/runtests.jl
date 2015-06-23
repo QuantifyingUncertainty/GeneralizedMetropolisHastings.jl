@@ -1,30 +1,15 @@
 using GeneralizedMetropolisHastings
 using Base.Test
 
-unittests = [
-  "indicatorsampletest"]
+tests =
+  ["odetest1",
+   "gaussiantest1",
+   "gaussiantest2"]
 
-functionalitytests = [
-  "odetest1",
-  "gaussiantest1",
-  "gaussiantest2"]
+println("Running tests:")
 
-println("==================")
-println("Running unittests:")
-println("==================")
-
-for t in unittests
+for t in tests
   tfile = t*".jl"
   println("  * $(tfile) *")
   include(tfile)
 end
-
-println("===========================")
-println("Running functionalitytests:")
-println("===========================")
-
-# for t in functionalitytests
-#   tfile = t*".jl"
-#   println("  * $(tfile) *")
-#   include(tfile)
-# end
