@@ -1,34 +1,42 @@
-function SampleIndicator(Chain::MarkovChain)
-# Input: Chain
-# Output: Vector of samples of indicator variable
+function sample_indicator(chain::MarkovChain; matrixcreator::IndicatorMatrixCreateFunction = IndicatorMatrixStandard())
+  # Input: chain
+  # Optional: matrixcreator
+  # Output: Vector of samples of indicator variable
 
-# Initialise the acceptance probabilities
-A   = zeros(1,Chain.NumOfProposals + 1)
+  # Initialise
+  n = chain.NumOfProposals
+  v = zeros(n+1)
 
-for i = 1 : Chain.NumOfProposals + 1
-    A[i] = Chain.Geometry[i].LL + Chain.Geometry[i].LogPrior
+  for i = 1:n+1
+    v[i] = chain.Geometry[i].LL + chain.Geometry[i].LogPrior
+  end
+
+  v = (exp(v - maximum(v)) / sum(exp(v - maximum(v))))
+  a = create_indicator_matrix(v,n,matrixcreator)
+
+  # Sample indicator variable N times
+  result = sample_indicator_matrix(a,n,chain.SampleIndicator)
+
+  # Update the sample indicator
+  chain.SampleIndicator = result[end]
+
+  # Return the n results
+  result
+
 end
-Acc = (exp(A - maximum(A)) / sum(exp(A - maximum(A))))
 
-# Sample indicator variable N times
-result = sample_indicator_matrix(repmat(Acc,Chain.NumOfProposals+1,1),Chain.NumOfProposals,Chain.SampleIndicator)
+create_indicator_matrix(::IndicatorMatrixStationary,v::Vector{Float64},n::Int64) = repmat(v',n+1)
+create_indicator_matrix(::IndicatorMatrixOptimal,v::Vector{Float64},n::Int64) = eye(n+1)
 
-# Update the sample indicator
-Chain.SampleIndicator = result[end]
-
-result
-
-end
-
-function sample_indicator_matrix(A::Array{Float64,2},numproposals::Int64,startindex::Int64)
+function sample_indicator_matrix(a::Array{Float64,2},numsamples::Int64,startindex::Int64)
 
   #initialise variables
-  result = zeros(Int64,numproposals + 1)
-  result[1] = startindex
+  r = zeros(Int64,numsamples)
+  i = startindex
 
   #sample the indicator transition matrix numprop times
-  for i = 1:numproposals
-    result[i+1] = rand(Categorical(vec(A[result[i],:])))
+  for j = 1:numsamples
+    i = r[j] = rand(Categorical(vec(a[i,:])))
   end
 
   #return the indicator samples

@@ -1,35 +1,18 @@
 function MCMCRun( MySimulation::MCMCSimulation )
 
+  stepsize = MySimulation.InitialStepSize
+  numparas = MySimulation.Model.NumOfParas
+  numproposals = MySimulation.NumOfProposals
+
 #####################
 # Initialise chains #
 #####################
 
-Sampler         = MySimulation.Sampler
-NumOfProposals  = MySimulation.NumOfProposals
+  # Define array of chain geometries for each point in the state space
+  ChainGeometry = Array(MarkovChainGeometry,numproposals + 1)
 
-# Indicate which sample is the current, and which is the proposal
-SampleIndex = 1    # Initialise at 1
+  for i = 1:numproposals + 1
 
-AttemptedProposal = 0
-AcceptedProposal  = 0
-AttemptedExchange = 0
-AcceptedExchange  = 0
-
-# Initialise these to zero - we'll calculate once object exists
-LL                  = 0.0
-LogPrior            = 0.0
-
-# Set up matrix for storing probabilities of proposals
-ProposalProbability = zeros(MySimulation.NumOfProposals+1)
-
-GradLL              = zeros(MySimulation.Model.NumOfParas,1)
-GradLogPrior        = zeros(MySimulation.Model.NumOfParas,1)
-HessianLL           = zeros(MySimulation.Model.NumOfParas, MySimulation.Model.NumOfParas)
-HessianGradLogPrior = zeros(MySimulation.Model.NumOfParas, MySimulation.Model.NumOfParas)
-
-# Define array of chain geometries for each point in the state space
-ChainGeometry = Array(MarkovChainGeometry, MySimulation.NumOfProposals + 1)
-for i = 1:MySimulation.NumOfProposals + 1
     # Initialise parameters either from prior or from default paras
     if MySimulation.InitialiseFromPrior
         # NEED TO UPDATE!!!
@@ -38,64 +21,23 @@ for i = 1:MySimulation.NumOfProposals + 1
         Parameters = copy(MySimulation.Model.DefaultParas)
     end
 
-    ChainGeometry[i] = MarkovChainGeometry(Parameters, LL, LogPrior, ProposalProbability, GradLL, GradLogPrior, HessianLL, HessianGradLogPrior)
-end
+    ChainGeometry[i] = MarkovChainGeometry(numproposals,numparas)
+  end
+
+#######################
+# Initialise samplers #
+#######################
+
+  # Set up Markov chain proposal variables
+  println("Setting up Markov chain proposal...")
+
+  Sampler = Array{AbstractSampler,numproposals + 1}
+  for i = 1:numproposals + 1
+    Sampler[i] = create_sampler
+  end
 
 
 
-# Set up Markov chain proposal variables
-println("Setting up Markov chain proposal...")
-
-StepSize = MySimulation.InitialStepSize
-
-if Sampler == "MH"
-
-    # Set the proposal distribution for each of these samplers
-    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-
-    # Create proposal distribution object for MH
-    ProposalDistribution = ProposalDistributionMH(Density, StepSize, MySimulation.ProposalCovariance)
-
-elseif Sampler == "SmMALA"  || Sampler == "TrSmMALA"
-
-    # Set the proposal distribution for each of these samplers
-    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-
-    # Create proposal distribution object for SmMALA and TrSmMALA
-    ProposalDistribution = Array(ProposalDistributionSmMALA, MySimulation.NumOfProposals + 1)
-    for i = 1:(MySimulation.NumOfProposals + 1)
-      ProposalDistribution[i] = ProposalDistributionSmMALA(Density, StepSize)
-    end
-
-elseif Sampler == "TrSmMALA_Random"
-
-    # Set the proposal distribution for each of these samplers
-    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-
-    NumberOfVectors   = MySimulation.Model.AuxiliaryVars
-    TangentVectors = zeros(MySimulation.Model.NumOfParas, NumberOfVectors)
-
-    # Create proposal distribution object for SmMALA and TrSmMALA
-    ProposalDistribution = Array(ProposalDistributionSmMALARandom, MySimulation.NumOfProposals + 1)
-    for i = 1:(MySimulation.NumOfProposals + 1)
-      ProposalDistribution[i] = ProposalDistributionSmMALARandom(Density, StepSize, NumberOfVectors, TangentVectors)
-    end
-
-elseif Sampler == "AdaptiveMH"
-
-    # Set the proposal distribution for each of these samplers
-    Density = MvNormal(zeros(MySimulation.Model.NumOfParas), MySimulation.ProposalCovariance)
-
-    RunningMean = zeros(MySimulation.Model.NumOfParas)
-    RunningCov  = zeros(MySimulation.Model.NumOfParas)
-
-    # Create proposal distribution object for adaptive MH
-    ProposalDistribution = ProposalDistributionAdaptiveMH(Density, StepSize, RunningMean, RunningCov)
-
-elseif Sampler == "Gibbs" || Sampler == "BivariateStructuredMarginal" || Sampler == "BivariateStructuredMetropolis"
-    # Custom proposal so leave empty
-    ProposalDistribution = []
-end
 
 CurrentIteration = 1;
 
