@@ -1,8 +1,9 @@
-using GeneralizedMetropolisHastings
-using Base.Test
+#define test utilities
+include("util.h")
+srand(0)
 
+#all test categories
 alltests = [
-  #"indicatorsampletest",
   "unit",
   "performance",
   "functionality"]

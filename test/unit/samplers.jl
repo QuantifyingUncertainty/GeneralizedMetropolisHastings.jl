@@ -7,17 +7,19 @@ import GeneralizedMetropolisHastings.update_proposal!
 #############Test Metropolis-Hastings samplers####################
 
 ###test the MHNormal constructors
+s0 = MHNormal(2,eye(2),2.0)
 s1 = MHNormal(eye(2),2.0)
 s2 = MHNormal(2,2.0)
 @test s1.covariance == eye(2) && s1.initialscaling == 2.0
 @test s1.covariance == s2.covariance && s1.initialscaling == s2.initialscaling
 
 ###test the MHHeap constructors and equality operators
-h1 = MHHeap([BaseSample(2) for i=1:3],NormalDensity(2.0*eye(2)),zeros(2),2.0)
+h1 = MHHeap([BaseSample(2) for i=1:3],[NormalDensity(2) for i=1:3],NormalDensity(4.0*eye(2)),2.0)
 h2 = MHHeap(s1,3)
-@test h1 ==  MHHeap([BaseSample(2) for i=1:3],NormalDensity(2.0*eye(2)),zeros(2),2.0)
+@test h1 ==  MHHeap([BaseSample(2) for i=1:3],[NormalDensity(2) for i=1:3],NormalDensity(4.0*eye(2)),2.0)
 @test h2 == MHHeap(s1,3)
 @test h1 == h2
+@test numel(h1) == 3
 
 ###test the from! functions
 v1 = [1.0,2.0]
@@ -25,11 +27,11 @@ v2 = [4.0,0.0]
 h1.samples[2].values = v1
 b1 = BaseSample(v2)
 set_from!(s1,h1,h1.samples[2])
-@test h1.fromvalues == v1
+@test mean(h1.fromdensity.normal) == v1
 set_from!(s1,h1,h1.samples[1])
-@test h1.fromvalues == zeros(2)
+@test mean(h1.fromdensity.normal) == zeros(2)
 set_from!(s1,h1,b1)
-@test h1.fromvalues == v2
+@test mean(h1.fromdensity.normal) == v2
 
 ###test the propose! functions
 @test h1.samples[1].values == zeros(2)
@@ -75,18 +77,19 @@ end
 ###Test the sampler constructors
 sm1 = SmMALANormal(2,0.1)
 sm2 = TrSmMALANormal(2,0.1)
-sm3 = TrSmMALARandomNormal(2,0.1)
+sm3 = TrSmMALARandomNormal(2,10,0.1)
 
-@test typeof(sm1) <: GeneralizedMetropolisHastings.SmMALA && typeof(sm1) <: GeneralizedMetropolisHastings.SmMALANormalFamily
+@test typeof(sm1) <: GeneralizedMetropolisHastings.SmMALA && typeof(sm1) <: GeneralizedMetropolisHastings.SmMALANormalFamily && typeof(sm1) <: GeneralizedMetropolisHastings.SmMALAFullTensorNormalFamily
 @test typeof(sm2) <: GeneralizedMetropolisHastings.TrSmMALA && typeof(sm2) <: GeneralizedMetropolisHastings.SmMALANormalFamily && typeof(sm2) <: GeneralizedMetropolisHastings.TrSmMALANormalFamily
 @test typeof(sm3) <: GeneralizedMetropolisHastings.TrSmMALARandom && typeof(sm3) <: GeneralizedMetropolisHastings.SmMALANormalFamily && typeof(sm3) <: GeneralizedMetropolisHastings.TrSmMALANormalFamily
-@test nparas(sm1) == nparas(sm2) == nparas(sm3) == 2
+@test numparas(sm1) == numparas(sm2) == numparas(sm3) == 2
 
 ###Test the heap constructors
 smh1 = SmMALAHeap(sm1,4)
 smh2 = SmMALAHeap(sm2,4)
 smh3 = SmMALAHeap(sm3,4)
-@test smh1 == smh2 == smh3 #despite different samplers, all heaps should be the same
+@test smh1 == smh2 != smh3
+@test numel(smh1) == numel(smh2) == numel(smh3) == 4
 
 ###Test the mean and covariance calculation functions
 t1 = TensorSample(2)
@@ -137,6 +140,7 @@ set_from!(sm3,smh3,t1)
 println()
 println("====================")
 println("Test show() function")
+show(h1)
 show(smh1)
 println("End  show() function")
 println("====================")

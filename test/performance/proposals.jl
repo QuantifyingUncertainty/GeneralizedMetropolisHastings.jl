@@ -33,6 +33,22 @@ function testnormaldensity(m::Vector{Float64},c::Matrix{Float64},nprop::Int,imax
     pi[i] = GeneralizedMetropolisHastings.NormalDensity(m,c)
   end
 
+  #performance test of the update_density functions
+  gc()
+  println("================================================")
+  println("Updating the mean of the density")
+  @time for i=1:imax
+    update_density!(pi[i],m)
+  end
+  println("Updating the covariance of the density")
+  @time for i=1:imax
+    update_density!(pi[i],c)
+  end
+  println("Updating the mean and the covariance of the density")
+  @time for i=1:imax
+    update_density!(pi[i],m,c)
+  end
+
   #performance test the random sampling
   println("===============================================")
   println("Generating nprop*imax samples: (",nprop*imax,")")

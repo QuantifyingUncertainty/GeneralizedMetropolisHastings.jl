@@ -46,47 +46,88 @@ TensorSample(n::Int) = TensorSample(zeros(n))
                                                isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior) &&
                                            isequal(s1.tensorloglikelihood,s2.tensorloglikelihood) && isequal(s1.tensorlogprior,s2.tensorlogprior))
 
-function Base.show(io::IO,s::BaseSample)
-  println(io,"BaseSample with")
-  println(io,"values: ",s.values)
-  println(io,"loglikelihood: ",s.loglikelihood)
-  println(io,"logprior: ",s.logprior)
+type ApproximateTensorSample <: MCSample{SecondOrder}
+  values::Vector{Float64}
+  loglikelihood::Float64
+  logprior::Float64
+  gradloglikelihood::Vector{Float64}
+  gradlogprior::Vector{Float64}
+  tensorloglikelihood::Matrix{Float64}
+  tensorlogprior::Matrix{Float64}
+  tangentvectors::Matrix{Float64}
+end
+
+ApproximateTensorSample(s::Vector{Float64},ntangent::Int) = ApproximateTensorSample(s,NaN,NaN,fill(NaN,length(s)),fill(NaN,length(s)),fill(NaN,length(s),length(s)),fill(NaN,length(s),length(s)),fill(NaN,length(s),ntangent))
+ApproximateTensorSample(n::Int,ntangent::Int) = ApproximateTensorSample(zeros(n),ntangent)
+
+==(s1::ApproximateTensorSample,s2::ApproximateTensorSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
+                                                              isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior) &&
+                                                              isequal(s1.tensorloglikelihood,s2.tensorloglikelihood) && isequal(s1.tensorlogprior,s2.tensorlogprior) &&
+                                                              isequal(s1.tangentvectors,s2.tangentvectors))
+
+
+numparas(s::MCSample) = length(s.values)
+
+function Base.show(io::IO,s::BaseSample,p1::String = "",p2::String = "")
+  println(io,p1,typeof(s)," with")
+  println(io,p2," values: ",s.values)
+  println(io,p2," loglikelihood: ",s.loglikelihood)
+  println(io,p2," logprior: ",s.logprior)
   println(io)
   nothing
 end
 
-function Base.show(io::IO,s::GradientSample)
-  println(io,"GradientSample with")
-  println(io,"values: ",s.values)
-  println(io,"loglikelihood: ",s.loglikelihood)
-  println(io,"logprior: ",s.logprior)
-  println(io,"gradloglikelihood: ",s.gradloglikelihood)
-  println(io,"gradlogprior: ",s.gradlogprior)
+function Base.show(io::IO,s::GradientSample,p1::String = "",p2::String = "")
+  println(io,p1,typeof(s)," with")
+  println(io,p2," values: ",s.values)
+  println(io,p2," loglikelihood: ",s.loglikelihood)
+  println(io,p2," logprior: ",s.logprior)
+  println(io,p2," gradloglikelihood: ",s.gradloglikelihood)
+  println(io,p2," gradlogprior: ",s.gradlogprior)
   println(io)
   nothing
 end
 
-function Base.show(io::IO,s::TensorSample)
-  println(io,"TensorSample with")
-  println(io,"values: ",s.values)
-  println(io,"loglikelihood: ",s.loglikelihood)
-  println(io,"logprior: ",s.logprior)
-  println(io,"gradloglikelihood: ",s.gradloglikelihood)
-  println(io,"gradlogprior: ",s.gradlogprior)
-  println(io,"tensorloglikelihood: ")
+function Base.show(io::IO,s::TensorSample,p1::String = "",p2::String = "")
+  println(io,p1,typeof(s)," with")
+  println(io,p2," values: ",s.values)
+  println(io,p2," loglikelihood: ",s.loglikelihood)
+  println(io,p2," logprior: ",s.logprior)
+  println(io,p2," gradloglikelihood: ",s.gradloglikelihood)
+  println(io,p2," gradlogprior: ",s.gradlogprior)
+  println(io,p2," tensorloglikelihood: ")
   show(io,s.tensorloglikelihood)
   println(io)
-  println(io,"tensorlogprior: ")
+  println(io,p2," tensorlogprior: ")
   show(io,s.tensorlogprior)
   println(io)
   println(io)
   nothing
 end
 
+function Base.show(io::IO,s::ApproximateTensorSample,p1::String = "",p2::String = "")
+  println(io,p1,typeof(s)," with")
+  println(io,p2," values: ",s.values)
+  println(io,p2," loglikelihood: ",s.loglikelihood)
+  println(io,p2," logprior: ",s.logprior)
+  println(io,p2," gradloglikelihood: ",s.gradloglikelihood)
+  println(io,p2," gradlogprior: ",s.gradlogprior)
+  println(io,p2," tensorloglikelihood: ")
+  show(io,s.tensorloglikelihood)
+  println(io)
+  println(io,p2," tensorlogprior: ")
+  show(io,s.tensorlogprior)
+  println(io)
+  println(io,p2," tangentvectors: ")
+  display(s.tangentvectors)
+  println(io)
+  println(io)
+  nothing
+end
+
 function Base.show{S<:MCSample}(io::IO,v::Array{S})
-  println(typeof(v)," with ",length(v)," samples")
   for i=1:length(v)
-    show(io,v[i])
+    show(io,v[i],"[$i]"," ")
   end
 end
 

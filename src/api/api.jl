@@ -8,6 +8,9 @@ abstract MCSampler
 ### Their fields fully specify the simulation details (ex total number or number of burn-in iterations)
 abstract MCRunner
 
+### Variable to hold the results of the simulation
+abstract MCChain
+
 ### Tuner types
 abstract MCTuner
 

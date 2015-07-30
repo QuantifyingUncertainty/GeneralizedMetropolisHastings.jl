@@ -6,42 +6,44 @@ using Sundials
 #imports
 
 export
-  ###policy types
+  ###Policy types
   ValuesFromDefault,ValuesFromPrior,
   ProposalFromIndicator,ProposalFromAuxiliary,
   IndicatorMatrixStationary,IndicatorMatrixOptimal,
-  GenericPolicy,GenericPolicyDefaults,GenericPolicyPriors,
-  ProposalDensityType,ProposalTypeNormal,
-  MHNormal,
-	###types
+  GenericPolicy,
+	###Types
   ModelParameters,
-  BaseSample,GradientSample,TensorSample,
+  BaseSample,GradientSample,TensorSample,ApproximateTensorSample,
   NormalDensity,
   MHNormal,SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal,
-  TargetModel,
-	#ODEModel,TargetOnlyModel,GaussianBivariate,MarkovChain,MarkovChainGeometry,MarkovChainProposal,MCMCSimulation,
-	#ProposalDistributionMH, ProposalDistributionSmMALA, ProposalDistributionSmMALARandom, ProposalDistributionAdaptiveMH,
-	###functions
+  MHHeap,SmMALAHeap,
+  TargetModel,ODEModel,
+  MCChain,
+  GMHRunner,
+	###Functions
 	values,named,anonymous,numel, #from parameters.jl
-  nparas #from samplers.jl
+  numparas, #from samplers.jl
+  logprobability, #from densities.jl
+  chain, #from chains.jl
+  evaluate,loglikelihood,gradloglikelihood,tensorvalue, #specify for specific models
+  logprior!,gradlogprior!,tensorlogprior!, #from models.jl
+  loglikelihood!,gradient!,tensor!,update_geometry!,
+  initialize!,iterate!,run!,sample_indicator #form runners.jl
 
 include("api/api.jl")
 include("api/policies.jl")
 include("api/parameters.jl")
 include("api/samples.jl")
+include("api/chains.jl")
 include("densities/densities.jl")
 include("densities/NormalDensity.jl")
 include("samplers/samplers.jl")
 include("samplers/MetropolisHastings.jl")
 include("samplers/SmMALA.jl")
-#include("models/TargetModel.jl")
-
-#include("models/ODEModel.jl")
-
-#include("geometry/geometry.jl")
-#include("MCMCTypes.jl")
-#include("MCMCUpdateParameters.jl")
-#include("MCMCUpdateIndicator.jl")
-#include("MCMCRun.jl")
+include("models/models.jl")
+include("models/TargetModel.jl")
+include("models/ODEModel.jl")
+include("runners/indicator.jl")
+include("runners/GMHRunner.jl")
 
 end # module

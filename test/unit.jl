@@ -1,13 +1,16 @@
-using GeneralizedMetropolisHastings
-using Base.Test
+include("util.jl")
+srand(0) #to make the tests repeatable
 
 unittests = [
-  #"indicatorsampletest",
   "parameters",
   "policies",
   "samples",
   "proposals",
-  "samplers"]
+  "samplers",
+  "chains",
+  "models",
+  "indicator",
+  "runners"]
 
 println("===================")
 println("Running unit tests:")
@@ -17,5 +20,7 @@ for t in unittests
   tfile = t*".jl"
   println("  * $(tfile) *")
   include(string("unit/",tfile))
+  println()
+  println()
 end
 

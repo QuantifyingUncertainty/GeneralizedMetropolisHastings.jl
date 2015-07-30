@@ -1,5 +1,5 @@
-using GeneralizedMetropolisHastings
-using Base.Test
+include("util.jl")
+srand(0)
 
 performancetests = [
   "proposals",

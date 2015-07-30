@@ -2,31 +2,42 @@
 function update_geometry!(m::MCModel,b::MCSample{NullOrder})
   if isfinite(logprior!(m,b))
     loglikelihood!(m,b)
+  else
+    b.loglikelihood = -Inf
   end
+  b
 end
 
 function update_geometry!(m::MCModel,g::MCSample{FirstOrder})
-  if isfinite(logprior!(m,g))
+  if isfinite(logprior!(m,g)) && all(isfinite(gradlogprior!(m,g)))
     sol::Matrix{Float64} = loglikelihood!(m,g)
-    gradient!(m,g,res)
+    gradient!(m,g,sol)
+  else
+    b.loglikelihool = -Inf
   end
+  g
 end
 
 function update_geometry!(m::MCModel,t::MCSample{SecondOrder})
-  if isfinite(logprior!(m,t))
+  if isfinite(logprior!(m,t)) && all(isfinite(gradlogprior!(m,t))) && all(isfinite(tensorlogprior!(m,t)))
     sol::Matrix{Float64} = loglikelihood!(m,t);
     grad::Array{Float64,3} = gradient!(m,t,sol);
-    tensor!(m,t,grad)
+    tensor!(m,t,sol,grad)
+  else
+    t.loglikelihood = -Inf
   end
+  t
 end
 
 ###Calculation of the logprior for arbitrary models
 logprior!(m::MCModel,s::MCSample) = (s.logprior = sum(map((p,v)->logpdf(p,v),m.parameters.priors,s.values)))
+gradlogprior!(m::MCModel,s::MCSample) = (s.gradlogprior = map((p,v)->((logpdf(p,v+m.gradientepsilon)-logpdf(p,v))/m.gradientepsilon),m.parameters.priors,s.values))
+tensorlogprior!(m::MCModel,s::MCSample) = (s.tensorlogprior = zeros(s.tensorlogprior)) #does this need to be implemented?
 
 ###Calculation of the loglikelihood for arbitrary models and samples
 function loglikelihood!(m::MCModel,s::MCSample)
 
-  #you should implement the evaluate function for specific models
+  #call the evaluate function for specific models
   sol::Matrix{Float64} = evaluate(m,s.values)
 
   #calculate the log-likelihood TODO: separate out the noise model
@@ -36,96 +47,41 @@ function loglikelihood!(m::MCModel,s::MCSample)
   sol
 end
 
+###Calculation of the gradient from finite differences
 function gradient!(m::MCModel,s::MCSample,sol::Matrix{Float64})
 
-  #pre-allocate the result array
+  #pre-allocate the array for finite difference results
   fd  = Array(Float64,size(sol,1),size(sol,2),length(s.values))
-  paras = Array(Float64,length(s.values))
+  np = Array(Float64,length(s.values))
 
-  e = m.abstol*100.0
-
+  #calculate finite differences
   for i = 1:length(s.values)
-    newparas = copy(s.values)
-    newparas[i]  = newparas[i] + e
-    true_e = newparas[i] - s.values[i]
-    grad[:,:,i] = (evaluate(m,newparas) - sol)/true_e
-    s.gradloglikelihood = sum(((m.measurements-sol)./m.variance).*grad(:,:,i))
-
-    ###TODO FROM HERE
-    # Add gradient of prior
-    GradLogPrior = (logpdf(model.Priors[i],chain.Geometry[propnum].Parameters[i]+Epsilon) - logpdf(model.Priors[i],chain.Geometry[propnum].Parameters[i]) )./Epsilon
-    chain.Geometry[propnum].GradLL[i] = chain.Geometry[propnum].GradLL[i] + GradLogPrior
+    np = copy(s.values)
+    np[i]  = np[i] + m.gradientepsilon
+    realepsilon = np[i] - s.values[i]
+    fd[:,:,i] = (evaluate(m,np)-sol)/realepsilon
   end
+  s.gradloglikelihood = gradloglikelihood(m,sol,fd)
 
   #return the finite differences solution
   fd
 end
 
-
-
-
-################################################################################
-###Calculation of the log likelihood for TargetModels and for arbitrary samplers
-################################################################################
-function loglikelihood!(m::TargetModel,s::MCSample)
-
-  #calculate the log-likelihood using the target function
-  s.loglikelihood = m.target(s.values,m.custom)
-end
-
-#############################################################################################
-###Calculation of the gradient of the log likelihood for ODEModels and for arbitrary samplers
-#############################################################################################
-
-function calculate_tensor!(model::ODEModel,sampler::AbstractSampler,chain::MarkovChain,propnum::Int64,sol_fd)
-
-  # Calculation of the hessian of the log likelihood for ODEModels and for arbitrary samplers
-  chain.Geometry[propnum].HessianLL = zeros(model.NumOfParas,model.NumOfParas)
-
-  for i = 1:model.NumOfParas
-    for j = i:model.NumOfParas
-      for StatesNum in Model.ObservedStates
-        for t = 1:model.NumOfTimePoints
-          chain.Geometry[propnum].HessianLL[i,j] = chain.Geometry[PropNum].HessianLL[i,j] + (sol_fd[t,StatesNum,i]/model.DataNoiseVariance[t,StatesNum]*sol_fd[t,StatesNum,j])
-        end
-      end
-      chain.Geometry[propnum].HessianLL[j,i] = chain.Geometry[propnum].HessianLL[i,j];
+function tensor!(m::MCModel,t::TensorSample,sol::Matrix{Float64},grad::Array{Float64,3})
+  np = length(t.values)
+  for i=1:np
+    for j=i:np
+      t.tensorloglikelihood[i,j] = tensorvalue(m,grad,i,j)
+      t.tensorloglikelihood[j,i] = t.tensorloglikelihood[i,j]
     end
   end
-
 end
 
-function calculate_tensor!(model::ODEModel,sampler::ProposalDistributionSmMALARandom,chain::MarkovChain,propnum::Int64,sol_fd)
-
-  # Now sample the some pseudo data and calculate LL
-    Chain.ProposalDistribution[PropNum].TangentVectors = zeros(Model.NumOfParas, Chain.ProposalDistribution[PropNum].NumberOfVectors);
-    Pseudodata  = zeros(Model.NumOfTimePoints, length(Model.ObservedStates));
-
-    # For each auxiliary tangent vector
-    for TangNum = 1:Chain.ProposalDistribution[PropNum].NumberOfVectors
-
-        # Sample pseudodata and calculate log-likelihood of sampling it
-        for s in Model.ObservedStates
-            for t = 1:Model.NumOfTimePoints
-                Pseudodata[t,s] = rand( Normal(Sol[t,s], sqrt(Model.DataNoiseVariance[t,s])) )
-            end
-        end
-
-        # Now calculate the actual tangent vectors, i.e. derivative of LL using pseudodata
-        Temp = 0.0;
-
-        for i = 1:Model.NumOfParas
-            for s in Model.ObservedStates
-                Temp = ((Sol[:,s]-Pseudodata[:,s])./Model.DataNoiseVariance[:,s])'*Sol_fd[:,s,i]
-                Chain.ProposalDistribution[PropNum].TangentVectors[i,TangNum] = Chain.ProposalDistribution[PropNum].TangentVectors[i,TangNum] - Temp[1]
-            end
-        end
-
-    end
-
-    # Create approximate metric tensor
-    Chain.Geometry[PropNum].HessianLL = (1/Chain.ProposalDistribution[PropNum].NumberOfVectors)*(Chain.ProposalDistribution[PropNum].TangentVectors*Chain.ProposalDistribution[PropNum].TangentVectors');
-
+function tensor!(m::MCModel,t::ApproximateTensorSample,sol::Matrix{Float64},grad::Array{Float64,3})
+  for i=1:size(t.tangentvectors,2)
+    t.tangentvectors[:,i] = tangentvector(m,sol,grad)
+  end
+  t.tensorloglikelihood = (t.tangentvectors*t.tangentvectors')/length(t.tangentvectors)
 end
 
 

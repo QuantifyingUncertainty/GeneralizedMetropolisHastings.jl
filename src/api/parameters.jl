@@ -24,7 +24,7 @@ ModelParameters{P<:Prior,S<:String}(numparas::Int =0,p::P =Uniform(-Inf,Inf); na
   ModelParameters{P,S}(expand_names(numparas,names,index),fill(p,numparas),fill(0.0,numparas))
 
 #utility functions
-values(::ValuesFromDefault,p::ModelParameters) = p.defaults
+values(::ValuesFromDefault,p::ModelParameters) = copy(p.defaults)
 values(::ValuesFromPrior,p::ModelParameters) = map((x)->rand(x),p.priors)
 named(p::ModelParameters) = find(p.names .!= "")
 anonymous(p::ModelParameters) = find(p.names .== "")
@@ -36,7 +36,7 @@ numel(p::ModelParameters) = length(p.names)
 function Base.show(io::IO,p::ModelParameters)
   println(io,"ModelParameters with $(numel(p)) elements")
   for i = 1:numel(p)
-    println(io,"name: \"",p.names[i],"\", default: ",p.defaults[i]," prior: ",p.priors[i])
+    println(io,"  name: \"",p.names[i],"\", default: ",p.defaults[i]," prior: ",p.priors[i])
   end
   nothing
 end

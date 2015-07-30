@@ -15,30 +15,37 @@ type TrSmMALANormal <: TrSmMALA
 end
 type TrSmMALARandomNormal <: TrSmMALARandom
   nparas::Int
+  ntangent::Int
   initialscaling::Float64
 end
 typealias SmMALANormalFamily Union(SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal)
 typealias TrSmMALANormalFamily Union(TrSmMALANormal,TrSmMALARandomNormal)
+typealias SmMALAFullTensorNormalFamily Union(SmMALANormal,TrSmMALANormal)
 
 ### Number of a parameters
 nparas(s::SmMALANormalFamily) = s.nparas
 
 ### Type holding the state of the Markov Chain for a Generalized SmMALA sampler
-type SmMALAHeap <: MCHeap{TensorSample}
-  samples::Vector{TensorSample}
-  sampledensities::Vector{ProposalDensity}
-  fromdensity::ProposalDensity
+type SmMALAHeap{T<:MCSample{SecondOrder},P<:ProposalDensity} <: MCHeap{MCSample{SecondOrder}}
+  samples::Vector{T}
+  sampledensities::Vector{P}
+  fromdensity::P
   scaling::Float64
 end
 
 ### Construct an SmMALAHeap with normal proposal densities and the number of proposals per iteration
-SmMALAHeap(s::SmMALANormalFamily,nprops::Int) = SmMALAHeap([TensorSample(nparas(s)) for i=1:nprops],[NormalDensity(nparas(s)) for i=1:nprops],NormalDensity(nparas(s)),s.initialscaling)
+SmMALAHeap(s::SmMALAFullTensorNormalFamily,nprops::Int) =
+  SmMALAHeap{TensorSample,NormalDensity}([TensorSample(nparas(s)) for i=1:nprops],[NormalDensity(nparas(s)) for i=1:nprops],NormalDensity(nparas(s)),s.initialscaling)
+SmMALAHeap(s::TrSmMALARandomNormal,nprops::Int) =
+  SmMALAHeap{ApproximateTensorSample,NormalDensity}([ApproximateTensorSample(nparas(s),s.ntangent) for i=1:nprops],[NormalDensity(nparas(s)) for i=1:nprops],NormalDensity(nparas(s)),s.initialscaling)
 
 ### Set the point to sample from
 set_from!(s::SimpleManifoldMALA,h::SmMALAHeap,from::TensorSample) = update_proposal!(s,h.fromdensity,from,h.scaling)
 
 ### Propose a new set of values for sample j
-propose!(s::SimpleManifoldMALA,h::SmMALAHeap,t::TensorSample) = propose!(h.fromdensity,t)
+propose!{T<:MCSample{SecondOrder}}(s::SimpleManifoldMALA,h::SmMALAHeap,t::T) = propose!(h.fromdensity,t)
+
+### Calculate the logprobability of a proposal
 
 ### Update the sampling density from the values of the TensorSample
 update_proposal!(s::SimpleManifoldMALA,h::SmMALAHeap,j::Int) = update_proposal!(s,h.sampledensities[j],h.samples[j],h.scaling)

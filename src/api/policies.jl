@@ -28,13 +28,13 @@ immutable GenericPolicy <: RuntimePolicy
 end
 
 GenericPolicy(v::ValuesFrom,np::Int) = GenericPolicy(v,IndicatorMatrixStationary(),np)
-GenericPolicy(np::Int) = GenericPolicy(ValuesFromDefault(),IndicatorMatrixStationary(),np)
+GenericPolicy(np::Int) = GenericPolicy(ValuesFromPrior(),IndicatorMatrixStationary(),np)
 
-function Base.show(io::IO,p::GenericPolicy)
-  println(io,"GenericPolicy with following policy types:")
-  println(io,"initialize = ",typeof(p.initialize))
-  println(io,"indicate = ",typeof(p.indicate))
-  println(io,"propose = ",typeof(p.propose))
+function Base.show(io::IO,p::GenericPolicy,s::String ="")
+  println(io,s,"GenericPolicy with following policy types:")
+  println(io,s,"  initialize = ",typeof(p.initialize))
+  println(io,s,"  indicate = ",typeof(p.indicate))
+  println(io,s,"  propose = ",typeof(p.propose))
   println(io)
   nothing
 end
