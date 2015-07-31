@@ -33,3 +33,8 @@ abstract MCHeap{S<:MCSample}
 
 ### Tune types hold the temporary output of the sampler that is used for tuning the sampler
 abstract MCTune
+
+###Function to test that GMH module has loaded
+function print_gmh_module_loaded()
+  println("GeneralizedMetropolisHastings module loaded successfully")
+end
