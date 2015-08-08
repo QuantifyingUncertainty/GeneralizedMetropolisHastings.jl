@@ -40,7 +40,7 @@ p2b = ModelParameters([0.0,0.0,0.0],Uniform(0.0,10.0))
 p2c = ModelParameters([0.0,0.0,0.0])
 
 @test p2 == p2a
-@test p2c.priors[1] == Uniform(-Inf,Inf)
+@test p2c.priors[1] == Uniform(-1e43,1e43)
 
 p3 = ModelParameters([Uniform(0.0,10.0),Uniform(0.0,10.0),Uniform(0.0,10.0)])
 p4 = ModelParameters(3,Uniform(0.0,10.0))
