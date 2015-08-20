@@ -29,13 +29,10 @@ show(m)
 s = MHNormal([1.0 0.0;0.0 0.1],0.01)
 show(s)
 
-###Create a variable to store the state of the sampler
-h = MHHeap(s,nproposals+1)
-
 ###Create a Generalized Metropolis-Hastings runner (which will default to Standard MH because nproposals == 1)
 r = GMHRunner(nsamples,nproposals)
 show(r)
 
 ###Run the MCMC
-c = run!(r,m,s,h)
+c = run!(r,m,s)
 show(c)

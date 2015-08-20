@@ -1,5 +1,5 @@
 #define test utilities
-include("util.h")
+include("util.jl")
 srand(0)
 
 #all test categories

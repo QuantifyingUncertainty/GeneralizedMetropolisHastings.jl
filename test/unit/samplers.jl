@@ -1,5 +1,6 @@
 import GeneralizedMetropolisHastings.MHHeap
 import GeneralizedMetropolisHastings.SmMALAHeap
+import GeneralizedMetropolisHastings.create_heap
 import GeneralizedMetropolisHastings.set_from!
 import GeneralizedMetropolisHastings.propose!
 import GeneralizedMetropolisHastings.update_proposal!
@@ -20,6 +21,10 @@ h2 = MHHeap(s1,3)
 @test h2 == MHHeap(s1,3)
 @test h1 == h2
 @test numel(h1) == 3
+
+###test the create_heap factory function for MHNormal
+h3 = create_heap(s1,3)
+@test h2 == h3
 
 ###test the from! functions
 v1 = [1.0,2.0]
@@ -90,6 +95,11 @@ smh2 = SmMALAHeap(sm2,4)
 smh3 = SmMALAHeap(sm3,4)
 @test smh1 == smh2 != smh3
 @test numel(smh1) == numel(smh2) == numel(smh3) == 4
+
+###test the create_heap factory function for SmMALAHeap
+@test create_heap(sm1,4) == smh1
+@test create_heap(sm2,4) == smh2
+@test create_heap(sm3,4) == smh3
 
 ###Test the mean and covariance calculation functions
 t1 = TensorSample(2)

@@ -39,6 +39,10 @@ SmMALAHeap(s::SmMALAFullTensorNormalFamily,nprops::Int) =
 SmMALAHeap(s::TrSmMALARandomNormal,nprops::Int) =
   SmMALAHeap{ApproximateTensorSample,NormalDensity}([ApproximateTensorSample(nparas(s),s.ntangent) for i=1:nprops],[NormalDensity(nparas(s)) for i=1:nprops],NormalDensity(nparas(s)),s.initialscaling)
 
+###Define the create_heap factory function for SmMALAHeap
+create_heap(s::SmMALAFullTensorNormalFamily,nprops::Int) = SmMALAHeap(s,nprops)
+create_heap(s::TrSmMALARandomNormal,nprops::Int) = SmMALAHeap(s,nprops)
+
 ### Set the point to sample from
 set_from!(s::SimpleManifoldMALA,h::SmMALAHeap,from::TensorSample) = update_proposal!(s,h.fromdensity,from,h.scaling)
 

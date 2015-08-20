@@ -72,7 +72,7 @@ i1b = iterate!(r1,m1,s1,h1,1)
 i1c = iterate!(r1,m1,s1,h1,i1a[end])
 r1 = GMHRunner(nsamples,nprops1)
 srand(0)
-c1 = run!(r1,m1,s1,h1)
+c1 = run!(r1,m1,s1)
 show(c1)
 
 ###Test Generalized MH with a MHNormal sampler
@@ -86,7 +86,7 @@ i2b = iterate!(r2,m1,s1,h2,1)
 i2c = iterate!(r2,m1,s1,h2,i2a[end])
 r2 = GMHRunner(nsamples,nprops2)
 srand(0)
-c2 = run!(r2,m1,s1,h2)
+c2 = run!(r2,m1,s1)
 show(c2)
 
 ###Test Generalized MH with a MHNormal sampler
@@ -100,7 +100,7 @@ i3b = iterate!(r3,m1,s1,h3,1)
 i3c = iterate!(r3,m1,s1,h3,i3a[end])
 r3 = GMHRunner(nsamples,nprops3)
 srand(0)
-c3 = run!(r3,m1,s1,h3)
+c3 = run!(r3,m1,s1)
 show(c3)
 
 nothing

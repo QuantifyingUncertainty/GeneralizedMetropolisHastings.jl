@@ -28,6 +28,9 @@ end
 ###Construct an MHHeap from a MHNormal sampler and the number of proposals per iteration
 MHHeap(s::MHNormal,nprops::Int) = MHHeap{NormalDensity}([BaseSample(numparas(s)) for i=1:nprops],[NormalDensity(numparas(s)) for i=1:nprops],NormalDensity(s.initialscaling*s.initialscaling*s.covariance),s.initialscaling)
 
+###Define the create_heap factory function for MHHeap
+create_heap(s::MHNormal,nprops::Int) = MHHeap(s,nprops)
+
 ###Functions to set the current point to propose from
 set_from!(s::MHSampler,h::MHHeap,from::BaseSample) = update_density!(h.fromdensity,from.values)
 

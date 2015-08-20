@@ -1,9 +1,6 @@
 @everywhere using GeneralizedMetropolisHastings
 using Base.Test
 
-###Helper function to calculate boundaries for a uniform prior around a certain parameter value
-l_u(x::Float64,f::Float64) = x-x/f,x+x/f
-
 ###ODE for spring-mass dynamic system
 @everywhere function spring_mass_ode(t,y,ydot,paras)
   ydot[1] = y[2]
@@ -17,11 +14,15 @@ function spring_mass_data(t,y0,paras,noisevar)
   [y[:,1]+rand(Distributions.Normal(0.0,noisevar[1]),size(y,1)) y[:,2]+rand(Distributions.Normal(0.0,noisevar[2]),size(y,1))]
 end
 
-###Construct a model using the spring-mass ode and generated measurement data
-function spring_mass_model(timepoints,initialconditions,defaultparams,variance)
-  measurements = spring_mass_data(timepoints,initialconditions,defaultparams,variance)
-  l1,u1 = l_u(defaultparams[1],5.0)
-  l2,u2 = l_u(defaultparams[2],5.0)
-  parameters::GeneralizedMetropolisHastings.ModelParameters = GeneralizedMetropolisHastings.ModelParameters(defaultparams,[Distributions.Uniform(l1,u1),Distributions.Uniform(l2,u2)]; names = ["K","M"])
-  ODEModel(parameters,measurements,timepoints,repmat(variance,length(timepoints)),spring_mass_ode,initialconditions,2,[1,2]; name = "Spring + Mass")
+###Helper function to create a spring-mass MCModel
+### timepoints to evaluate the ODE
+### initialconditions of the dynamic system
+### defaultparams the default parameter values
+### noisevar the measurement noise variance
+### priorfraction: parameter to determine the boundaries of the uniform priors of the parameters
+function spring_mass_model(timepoints,initialconditions,defaultparams,noisevar,priorfraction =5.0)
+  measurements = spring_mass_data(timepoints,initialconditions,defaultparams,noisevar)
+  l,u = defaultparams-defaultparams./priorfraction,defaultparams+defaultparams./priorfraction #construct upper and lower bounds for the priors
+  parameters = GeneralizedMetropolisHastings.ModelParameters(defaultparams,[Distributions.Uniform(l[1],u[1]),Distributions.Uniform(l[2],u[2])]; names = ["K","M"])
+  ODEModel(parameters,measurements,timepoints,repmat(noisevar,length(timepoints)),spring_mass_ode,initialconditions,2,[1,2]; name = "Spring-Mass")
 end

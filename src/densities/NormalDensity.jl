@@ -39,7 +39,3 @@ function Base.show(io::IO,d::NormalDensity)
   println(io)
   nothing
 end
-
-###helper functions (not to be exported)
-display_info() = info("for size(σ) == (1,), σ is interpreted as a 1D std vector, not a 2D covariance matrix. Use NormalDensity(μ,s*eye(1)) for the covariance constructor")
-

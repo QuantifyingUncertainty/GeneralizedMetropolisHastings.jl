@@ -18,7 +18,7 @@ type MCChainWithGradient <: MCChain
   runtime::Float64
 end
 
-function chain(nparas::Int,nsamples::Int;storegradient::Bool=false,runtime::Float64=0.0)
+function create_chain(nparas::Int,nsamples::Int;storegradient::Bool=false,runtime::Float64=0.0)
   c::MCChain
   if !storegradient
     c = MCChainOrdinary(zeros(nparas,nsamples),zeros(nsamples),zeros(nsamples),0,0,runtime)

@@ -14,13 +14,13 @@ end
 ModelParameters{P<:Prior,S<:String}(d::Vector{Float64},p::Vector{P}; names::Vector{S} =String[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(d),names,index),p,d)
 
-ModelParameters{P<:Prior,S<:String}(d::Vector{Float64},p::P =Uniform(-1e43,1e43; names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:String}(d::Vector{Float64},p::P =Uniform(-1e43,1e43); names::Vector{S} =String[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(d),names,index),fill(p,length(d)),d)
 
 ModelParameters{P<:Prior,S<:String}(p::Vector{P}; names::Vector{S} =String[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(p),names,index),p,fill(0.0,length(p)))
 
-ModelParameters{P<:Prior,S<:String}(numparas::Int =0,p::P =Uniform(-Inf,Inf); names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:String}(numparas::Int =0,p::P =Uniform(-1e43,1e43); names::Vector{S} =String[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(numparas,names,index),fill(p,numparas),fill(0.0,numparas))
 
 #utility functions

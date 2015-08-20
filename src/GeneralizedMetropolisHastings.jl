@@ -3,6 +3,12 @@ module GeneralizedMetropolisHastings
 using Distributions
 using Sundials
 
+if VERSION < v"0.4.0-dev"
+    using Docile
+end
+
+@docstrings
+
 #imports
 
 export
@@ -24,7 +30,6 @@ export
   values,named,anonymous,numel, #from parameters.jl
   numparas, #from samplers.jl
   logprobability, #from densities.jl
-  chain, #from chains.jl
   evaluate,loglikelihood,gradloglikelihood,tensorvalue, #specify for specific models
   logprior!,gradlogprior!,tensorlogprior!, #from models.jl
   loglikelihood!,gradient!,tensor!,update_geometry!,

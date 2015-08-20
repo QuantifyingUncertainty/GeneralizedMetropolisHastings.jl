@@ -1,3 +1,10 @@
+###Default implementation of the heap factory function
+###Should be re-implemented for different samplers
+function create_heap(s::MCSampler,::Int)
+  println("create_heap not defined for $(typeof(s))")
+  nothing
+end
+
 ###Get the number of parameters
 numparas(s::MCSampler) = s.nparas
 

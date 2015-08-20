@@ -17,8 +17,9 @@ end
 
 GMHRunner(ns::Int,np::Int; burnin =0, initialize =ValuesFromPrior(), indicate =IndicatorMatrixStationary()) = GMHRunner(burnin,ns,np,GenericPolicy(initialize,indicate,np))
 
-function run!(r::GMHRunner,m::MCModel,s::MCSampler,h::MCHeap)
-  c = chain(numparas(s),r.nsamples)
+function run!(r::GMHRunner,m::MCModel,s::MCSampler)
+  h = create_heap(s,r.nproposals + 1)
+  c = create_chain(numparas(s),r.nsamples)
   tic()
   indicator::Int = 1
   initialize!(r,m,s,h,indicator)

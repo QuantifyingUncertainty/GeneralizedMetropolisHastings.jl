@@ -1,5 +1,6 @@
 import GeneralizedMetropolisHastings.MCChainOrdinary,
   GeneralizedMetropolisHastings.MCChainWithGradient,
+  GeneralizedMetropolisHastings.create_chain,
   GeneralizedMetropolisHastings.store_results!,
   GeneralizedMetropolisHastings.store_common!,
   GeneralizedMetropolisHastings.store_gradient!,
@@ -13,11 +14,11 @@ h2 = SmMALAHeap(s2,3)
 h2.samples[1].values = rand(2)
 
 ###Test the MCChain constructors
-c1 = chain(2,10)
-c2 = chain(2,10;storegradient = true,runtime = 1.0)
+c1 = create_chain(2,10)
+c2 = create_chain(2,10;storegradient = true,runtime = 1.0)
 @test typeof(c1) == MCChainOrdinary
 @test typeof(c2) == MCChainWithGradient
-@test c1 == chain(2,10;storegradient = false)
+@test c1 == create_chain(2,10;storegradient = false)
 @test c2.gradloglikelihood == zeros(2,10) && c2.runtime == 1.0
 
 ###Test add_acceptance
@@ -42,8 +43,8 @@ store_gradient!(c2,h2.samples[1])
 @test isequal(c2.gradloglikelihood[:,1],fill(NaN,2))
 
 ###Test store_results!
-c1 = chain(2,10)
-c2 = chain(2,10;storegradient = true)
+c1 = create_chain(2,10)
+c2 = create_chain(2,10;storegradient = true)
 @test c1.nsample == 0
 store_results!(c1,h1,[1,2,3])
 @test c1.nsample == 2 && c1.acceptance == 2
