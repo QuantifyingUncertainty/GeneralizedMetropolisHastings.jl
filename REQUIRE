@@ -1,4 +1,4 @@
-julia 0.4
+julia 0.3.11
 ZMQ 0.3.0
 IJulia 1.1.7
 PyPlot 2.1.1
