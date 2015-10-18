@@ -1,3 +1,5 @@
+import Distributions.logpdf
+
 ###Geometry calculations per sample type (null, first and second order)
 function update_geometry!(m::MCModel,b::MCSample{NullOrder})
   if isfinite(logprior!(m,b))

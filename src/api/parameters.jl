@@ -1,4 +1,6 @@
-typealias Prior UnivariateDistribution
+import Distributions.Uniform
+
+typealias Prior Distributions.UnivariateDistribution
 
 immutable ModelParameters{P<:Prior,S<:String}
   names::Vector{S}
@@ -46,7 +48,7 @@ function expand_names{S<:String}(numparas::Int,names::Vector{S},index::Vector{In
   @assert length(names) == length(index) || isempty(index) && numparas == length(names) "Number of names must equal number of index elements or equal total number of variables"
   @assert isempty(index) || maximum(index) <= numparas "Maximum index of named parameters is larger than total number of parameters"
   if isempty(index) && length(names) == numparas
-    index = [1:numparas]
+    index = collect(1:numparas)
   end
   nc = 0
   S[in(j,index)?names[nc+=1]:"" for j=1:numparas]

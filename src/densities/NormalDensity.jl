@@ -1,3 +1,5 @@
+import Distributions.MvNormal
+
 type NormalDensity <: ProposalDensity
   normal::MvNormal
 end

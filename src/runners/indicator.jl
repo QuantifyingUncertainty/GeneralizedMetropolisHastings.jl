@@ -25,7 +25,7 @@ function sample_indicator_matrix(a::Matrix{Float64},nsamples::Int,indicator::Int
   #sample the indicator transition matrix nsamples times
   indicators[1] = indicator
   for j = 2:nsamples
-    indicators[j] = rand(Categorical(vec(a[indicators[j-1],:])))
+    indicators[j] = rand(Distributions.Categorical(vec(a[indicators[j-1],:])))
   end
 
   #return the indicator samples

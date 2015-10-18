@@ -39,7 +39,7 @@ ODEModel(parameters::ModelParameters,
 evaluate(m::ODEModel,paras::Vector{Float64}) = Sundials.cvode((t,y,ydot)->m.ode(t,y,ydot,paras),m.initial,m.timepoints;reltol=m.reltol,abstol=m.abstol)[:,m.observed]
 
 ###Calculate the loglikelihood function / TODO: separate out the noise model
-loglikelihood(m::ODEModel,sol::Matrix{Float64}) = sum(map((μ,σ,x)->logpdf(Normal(μ,σ),x),m.measurements,sqrt(m.variance),sol))
+loglikelihood(m::ODEModel,sol::Matrix{Float64}) = sum(map((μ,σ,x)->logpdf(Distributions.Normal(μ,σ),x),m.measurements,sqrt(m.variance),sol))
 
 ###Calculate the gradient of the loglikelihood
 gradienthelper(m::ODEModel,data::Matrix{Float64},sol::Matrix{Float64},grad::Array{Float64,3}) = vec(sum((grad.*(data-sol)./m.variance),(1,2))) #.* does automatic broadcast(), summing result along first 2 dimensions
@@ -49,7 +49,7 @@ gradloglikelihood(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gra
 tensorvalue(m::ODEModel,grad::Array{Float64,3},i::Int,j::Int) = sum(grad[:,:,i].*grad[:,:,j]./m.variance)
 
 ###Generate pseudodata for the approximate metric tensor calculations
-pseudodata(m::ODEModel,sol::Matrix{Float64}) = map((μ,σ)->rand(Normal(μ,σ)),sol,sqrt(m.variance))
+pseudodata(m::ODEModel,sol::Matrix{Float64}) = map((μ,σ)->rand(Distributions.Normal(μ,σ)),sol,sqrt(m.variance))
 tangentvector(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,pseudodata(m,sol),sol,grad)
 
 ###Base functionality
