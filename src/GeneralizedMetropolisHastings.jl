@@ -1,15 +1,7 @@
 module GeneralizedMetropolisHastings
 
-using Distributions
-using Sundials
-
-if VERSION < v"0.4.0-dev"
-    using Docile
-end
-
-@docstrings
-
-#imports
+import Distributions
+import Sundials
 
 export
   ###Policy types
