@@ -1,5 +1,7 @@
 module GeneralizedMetropolisHastings
 
+using Compat
+
 import Distributions
 import Sundials
 

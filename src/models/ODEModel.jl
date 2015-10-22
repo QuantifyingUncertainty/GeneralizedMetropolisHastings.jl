@@ -1,6 +1,6 @@
 immutable ODEModel <: MCModel
   #Generic model specs
-  name::String
+  name::AbstractString
   parameters::ModelParameters
   gradientepsilon::Float64
 
@@ -29,7 +29,7 @@ ODEModel(parameters::ModelParameters,
          initial::Vector{Float64},
          nstates::Int,
          observed::Vector{Int};
-         name::String = "ODE",#From here on arguments are optional and have default values
+         name::AbstractString = "ODE",#From here on arguments are optional and have default values
          abstol::Float64 = 1e-6,
          reltol::Float64 = 1e-6,
          inferinitial = false) =

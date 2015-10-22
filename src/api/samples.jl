@@ -68,7 +68,7 @@ ApproximateTensorSample(n::Int,ntangent::Int) = ApproximateTensorSample(zeros(n)
 
 numparas(s::MCSample) = length(s.values)
 
-function Base.show(io::IO,s::BaseSample,p1::String = "",p2::String = "")
+function Base.show(io::IO,s::BaseSample,p1::AbstractString = "",p2::AbstractString = "")
   println(io,p1,typeof(s)," with")
   println(io,p2," values: ",s.values)
   println(io,p2," loglikelihood: ",s.loglikelihood)
@@ -77,7 +77,7 @@ function Base.show(io::IO,s::BaseSample,p1::String = "",p2::String = "")
   nothing
 end
 
-function Base.show(io::IO,s::GradientSample,p1::String = "",p2::String = "")
+function Base.show(io::IO,s::GradientSample,p1::AbstractString = "",p2::AbstractString = "")
   println(io,p1,typeof(s)," with")
   println(io,p2," values: ",s.values)
   println(io,p2," loglikelihood: ",s.loglikelihood)
@@ -88,7 +88,7 @@ function Base.show(io::IO,s::GradientSample,p1::String = "",p2::String = "")
   nothing
 end
 
-function Base.show(io::IO,s::TensorSample,p1::String = "",p2::String = "")
+function Base.show(io::IO,s::TensorSample,p1::AbstractString = "",p2::AbstractString = "")
   println(io,p1,typeof(s)," with")
   println(io,p2," values: ",s.values)
   println(io,p2," loglikelihood: ",s.loglikelihood)
@@ -105,7 +105,7 @@ function Base.show(io::IO,s::TensorSample,p1::String = "",p2::String = "")
   nothing
 end
 
-function Base.show(io::IO,s::ApproximateTensorSample,p1::String = "",p2::String = "")
+function Base.show(io::IO,s::ApproximateTensorSample,p1::AbstractString = "",p2::AbstractString = "")
   println(io,p1,typeof(s)," with")
   println(io,p2," values: ",s.values)
   println(io,p2," loglikelihood: ",s.loglikelihood)

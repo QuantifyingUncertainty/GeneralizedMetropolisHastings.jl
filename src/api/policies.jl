@@ -30,7 +30,7 @@ end
 GenericPolicy(v::ValuesFrom,np::Int) = GenericPolicy(v,IndicatorMatrixStationary(),np)
 GenericPolicy(np::Int) = GenericPolicy(ValuesFromPrior(),IndicatorMatrixStationary(),np)
 
-function Base.show(io::IO,p::GenericPolicy,s::String ="")
+function Base.show(io::IO,p::GenericPolicy,s::AbstractString ="")
   println(io,s,"GenericPolicy with following policy types:")
   println(io,s,"  initialize = ",typeof(p.initialize))
   println(io,s,"  indicate = ",typeof(p.indicate))

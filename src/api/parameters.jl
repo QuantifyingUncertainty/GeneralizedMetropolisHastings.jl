@@ -1,6 +1,6 @@
 typealias Prior Distributions.UnivariateDistribution
 
-immutable ModelParameters{P<:Prior,S<:String}
+immutable ModelParameters{P<:Prior,S<:AbstractString}
   names::Vector{S}
   priors::Vector{P}
   defaults::Vector{Float64}
@@ -11,16 +11,16 @@ immutable ModelParameters{P<:Prior,S<:String}
 end
 
 #Constructors
-ModelParameters{P<:Prior,S<:String}(d::Vector{Float64},p::Vector{P}; names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:AbstractString}(d::Vector{Float64},p::Vector{P}; names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(d),names,index),p,d)
 
-ModelParameters{P<:Prior,S<:String}(d::Vector{Float64},p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:AbstractString}(d::Vector{Float64},p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(d),names,index),fill(p,length(d)),d)
 
-ModelParameters{P<:Prior,S<:String}(p::Vector{P}; names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:AbstractString}(p::Vector{P}; names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(length(p),names,index),p,fill(0.0,length(p)))
 
-ModelParameters{P<:Prior,S<:String}(numparas::Int =0,p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =String[],index::Vector{Int} =Int[]) =
+ModelParameters{P<:Prior,S<:AbstractString}(numparas::Int =0,p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
   ModelParameters{P,S}(expand_names(numparas,names,index),fill(p,numparas),fill(0.0,numparas))
 
 #utility functions
@@ -42,7 +42,7 @@ function Base.show(io::IO,p::ModelParameters)
 end
 
 #Helper functions that are not needed outside the module
-function expand_names{S<:String}(numparas::Int,names::Vector{S},index::Vector{Int} =Int[])
+function expand_names{S<:AbstractString}(numparas::Int,names::Vector{S},index::Vector{Int} =Int[])
   @assert length(names) == length(index) || isempty(index) && numparas == length(names) "Number of names must equal number of index elements or equal total number of variables"
   @assert isempty(index) || maximum(index) <= numparas "Maximum index of named parameters is larger than total number of parameters"
   if isempty(index) && length(names) == numparas

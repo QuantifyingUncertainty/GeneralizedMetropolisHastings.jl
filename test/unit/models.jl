@@ -1,5 +1,5 @@
 ###Test ODEModel using a spring/mass dynamic system
-t1 = [0:0.1:10]
+t1 = collect(0:0.1:10)
 i1 = [-1.0,1.0]
 p1 = [100.0,10.0]
 n1 = [1e-1 1e-1]

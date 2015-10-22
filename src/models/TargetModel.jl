@@ -1,13 +1,13 @@
 immutable TargetModel <: MCModel
 
-  name::String
+  name::AbstractString
   parameters::ModelParameters
 
   target::Function #target function
   args::Dict #additional arguments for the target function
 end
 
-#TargetModel(t::Function;name::String =String[],parameters::ModelParameters =ModelParameters(0),args...) = TargetModel(name,parameters,t,args)
+#TargetModel(t::Function;name::AbstractString =AbstractString[],parameters::ModelParameters =ModelParameters(0),args...) = TargetModel(name,parameters,t,args)
 
 function Base.show(io::IO,t::TargetModel)
   println(io,"TargetModel ",t.name)
