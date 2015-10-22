@@ -34,7 +34,7 @@ end
 
 ###Initialize the sample of the indicator variable
 function initialize!(r::GMHRunner,m::MCModel,s::MCSampler,h::MCHeap,indicator)
-  h.samples[indicator].values = values(r.policy.initialize,m.parameters) #initialize the indicator sample with values
+  h.samples[indicator].values = initvalues(r.policy.initialize,m.parameters) #initialize the indicator sample with values
   update_geometry!(m,h.samples[indicator]) #update the geometry for the indicator sample
 end
 

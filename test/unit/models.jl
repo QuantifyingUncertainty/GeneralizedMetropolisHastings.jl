@@ -20,7 +20,7 @@ r1 = evaluate(m1,p1)
 s1 = BaseSample(p1)
 @test ~isfinite(s1.logprior)
 logprior!(m1,s1)
-@test isfinite(s1.logprior) && s1.logprior == logprior!(m1,BaseSample(values(ValuesFromPrior(),m1.parameters)))
+@test isfinite(s1.logprior) && s1.logprior == logprior!(m1,BaseSample(initvalues(ValuesFromPrior(),m1.parameters)))
 @test isfinite(logprior!(m1,BaseSample([80.0,10.0]))) && ~isfinite(logprior!(m1,BaseSample([79.0,10.0])))
 
 ###Test the loglikelihood! function (for MCModels, but testing it with ODEModel)

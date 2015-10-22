@@ -53,10 +53,10 @@ p7 = ModelParameters()
 @test p2c == p5
 @test p2 != p4
 @test p6 == p7
-@test values(ValuesFromDefault(),p2) == [1.0,2.0,3.0]
-@test values(ValuesFromDefault(),p3) == [0.0,0.0,0.0]
-@test values(ValuesFromPrior(),p3) != values(ValuesFromPrior(),p4) #random values should not be the same
-@test (srand(0);values(ValuesFromPrior(),p3)) == (srand(0);values(ValuesFromPrior(),p4)) #but they are the same if we reset the random generator
+@test initvalues(ValuesFromDefault(),p2) == [1.0,2.0,3.0]
+@test initvalues(ValuesFromDefault(),p3) == [0.0,0.0,0.0]
+@test initvalues(ValuesFromPrior(),p3) != initvalues(ValuesFromPrior(),p4) #random values should not be the same
+@test (srand(0);initvalues(ValuesFromPrior(),p3)) == (srand(0);initvalues(ValuesFromPrior(),p4)) #but they are the same if we reset the random generator
 
 println("Test of the show() function")
 println("====================")

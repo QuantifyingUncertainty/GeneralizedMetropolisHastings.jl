@@ -19,7 +19,7 @@ export
   MCChain,
   GMHRunner,
   ###Functions
-  values,named,anonymous,numel, #from parameters.jl
+  initvalues,named,anonymous,numel, #from parameters.jl
   numparas, #from samplers.jl
   logprobability, #from densities.jl
   evaluate,loglikelihood,gradloglikelihood,tensorvalue, #specify for specific models
