@@ -55,6 +55,7 @@ propose!{T<:MCSample{SecondOrder}}(s::SimpleManifoldMALA,h::SmMALAHeap,t::T) = p
 update_proposal!(s::SimpleManifoldMALA,h::SmMALAHeap,j::Int) = update_proposal!(s,h.sampledensities[j],h.samples[j],h.scaling)
 
 ### Base functionality
+import Base.==
 ==(h1::SmMALAHeap,h2::SmMALAHeap) = (h1.samples == h2.samples && h1.sampledensities == h2.sampledensities && h1.fromdensity == h2.fromdensity && h1.scaling == h2.scaling)
 
 #############LOCAL FUNCTIONS##########################

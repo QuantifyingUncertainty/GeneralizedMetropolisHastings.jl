@@ -55,6 +55,7 @@ store_gradient!(c::MCChain,s::MCSample) = (c.gradloglikelihood[:,c.nsample] = s.
 
 add_acceptance!(c::MCChain,indicators::Vector{Int}) = @simd for i=2:length(indicators) @inbounds indicators[i]!=indicators[i-1]?c.acceptance+=1:nothing end
 
+import Base.==
 ==(c1::MCChainOrdinary,c2::MCChainOrdinary) = (isequal(c1.values,c2.values) && isequal(c1.logprior,c2.logprior) && isequal(c1.loglikelihood,c2.loglikelihood))
 ==(c1::MCChainWithGradient,c2::MCChainWithGradient) = (isequal(c1.values,c2.values) && isequal(c1.logprior,c2.logprior) && isequal(c1.loglikelihood,c2.loglikelihood) && isequal(c1.gradloglikelihood,c2.gradloglikelihood))
 

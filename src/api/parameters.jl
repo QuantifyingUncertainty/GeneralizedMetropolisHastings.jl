@@ -31,6 +31,7 @@ anonymous(p::ModelParameters) = find(p.names .== "")
 numel(p::ModelParameters) = length(p.names)
 
 #overloaded functions and operators from Base package
+import Base.==
 ==(x::ModelParameters,y::ModelParameters) = isequal(x.names,y.names) && isequal(x.defaults,y.defaults) && isequal(x.priors,y.priors)
 
 function Base.show(io::IO,p::ModelParameters)

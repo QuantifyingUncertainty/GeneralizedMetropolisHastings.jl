@@ -9,8 +9,6 @@ end
 BaseSample(s::Vector{Float64}) = BaseSample(s,NaN,NaN)
 BaseSample(n::Int) = BaseSample(zeros(n))
 
-==(s1::BaseSample,s2::BaseSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior))
-
 ### GradientSample is used by samplers that compute (up to) the gradient of the log-target (for ex HMC)
 
 type GradientSample <: MCSample{FirstOrder}
@@ -23,9 +21,6 @@ end
 
 GradientSample(s::Vector{Float64}) = GradientSample(s,NaN,NaN,fill(NaN,length(s)),fill(NaN,length(s)))
 GradientSample(n::Int) = GradientSample(zeros(n))
-
-==(s1::GradientSample,s2::GradientSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
-                                               isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior))
 
 ### TensorSample is used by samplers that compute (up to) the tensor of the log-target (for ex SmMALA)
 
@@ -42,9 +37,7 @@ end
 TensorSample(s::Vector{Float64}) = TensorSample(s,NaN,NaN,fill(NaN,length(s)),fill(NaN,length(s)),fill(NaN,length(s),length(s)),fill(NaN,length(s),length(s)))
 TensorSample(n::Int) = TensorSample(zeros(n))
 
-==(s1::TensorSample,s2::TensorSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
-                                               isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior) &&
-                                           isequal(s1.tensorloglikelihood,s2.tensorloglikelihood) && isequal(s1.tensorlogprior,s2.tensorlogprior))
+### ApproximateTensorSample is used by samplers that approximate the calculation of the tensor of the log-target (for ex TrSmMALARandom)
 
 type ApproximateTensorSample <: MCSample{SecondOrder}
   values::Vector{Float64}
@@ -60,13 +53,19 @@ end
 ApproximateTensorSample(s::Vector{Float64},ntangent::Int) = ApproximateTensorSample(s,NaN,NaN,fill(NaN,length(s)),fill(NaN,length(s)),fill(NaN,length(s),length(s)),fill(NaN,length(s),length(s)),fill(NaN,length(s),ntangent))
 ApproximateTensorSample(n::Int,ntangent::Int) = ApproximateTensorSample(zeros(n),ntangent)
 
+numparas(s::MCSample) = length(s.values)
+
+import Base.==
+==(s1::BaseSample,s2::BaseSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior))
+==(s1::GradientSample,s2::GradientSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
+                                             isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior))
+==(s1::TensorSample,s2::TensorSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
+                                         isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior) &&
+                                         isequal(s1.tensorloglikelihood,s2.tensorloglikelihood) && isequal(s1.tensorlogprior,s2.tensorlogprior))
 ==(s1::ApproximateTensorSample,s2::ApproximateTensorSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&
                                                               isequal(s1.gradloglikelihood,s2.gradloglikelihood) && isequal(s1.gradlogprior,s2.gradlogprior) &&
                                                               isequal(s1.tensorloglikelihood,s2.tensorloglikelihood) && isequal(s1.tensorlogprior,s2.tensorlogprior) &&
                                                               isequal(s1.tangentvectors,s2.tangentvectors))
-
-
-numparas(s::MCSample) = length(s.values)
 
 function Base.show(io::IO,s::BaseSample,p1::AbstractString = "",p2::AbstractString = "")
   println(io,p1,typeof(s)," with")

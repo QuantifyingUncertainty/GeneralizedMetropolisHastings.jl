@@ -44,4 +44,5 @@ update_proposal!(::Metropolis,::MCHeap,::Int) = ()
 update_proposal!(s::MetropolisHastings,h::MCHeap,i::Int) = update_density!(h.sampledensities[i],h.samples[i])
 
 ### Base functionality
+import Base.==
 ==(h1::MHHeap,h2::MHHeap) = (h1.samples == h2.samples && h1.sampledensities == h2.sampledensities && h1.fromdensity == h2.fromdensity && h1.scaling == h2.scaling)

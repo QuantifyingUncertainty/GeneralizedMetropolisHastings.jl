@@ -1,13 +1,11 @@
-import Distributions.MvNormal
-
 type NormalDensity <: ProposalDensity
-  normal::MvNormal
+  normal::Distributions.MvNormal
 end
 
 ###Constructor with mean and covariance matrix
-NormalDensity(μ::Vector{Float64},Σ::Matrix{Float64}) = NormalDensity(MvNormal(μ,Σ))
+NormalDensity(μ::Vector{Float64},Σ::Matrix{Float64}) = NormalDensity(Distributions.MvNormal(μ,Σ))
 ###Constructor with zero mean and covariance matrix
-NormalDensity(Σ::Matrix{Float64}) = NormalDensity(MvNormal(zeros(size(Σ,1)),Σ))
+NormalDensity(Σ::Matrix{Float64}) = NormalDensity(Distributions.MvNormal(zeros(size(Σ,1)),Σ))
 ###Constructor with zero mean and eye covariance matrix
 NormalDensity(n::Int) = NormalDensity(zeros(n),eye(n))
 
@@ -15,10 +13,10 @@ NormalDensity(n::Int) = NormalDensity(zeros(n),eye(n))
 update_density!(d::NormalDensity,μ::Vector{Float64}) = @simd for i=1:length(d.normal.μ) @inbounds d.normal.μ[i] = μ[i] end
 
 ###update the covariance of the density
-update_density!(d::NormalDensity,Σ::Matrix{Float64}) = (d.normal = MvNormal(mean(d.normal),Σ))
+update_density!(d::NormalDensity,Σ::Matrix{Float64}) = (d.normal = Distributions.MvNormal(mean(d.normal),Σ))
 
 ###update the mean and the covariance of the density
-update_density!(d::NormalDensity,μ::Vector{Float64},Σ::Matrix{Float64}) = (d.normal = MvNormal(μ,Σ))
+update_density!(d::NormalDensity,μ::Vector{Float64},Σ::Matrix{Float64}) = (d.normal = Distributions.MvNormal(μ,Σ))
 
 ###draw a proposal and store it inside the values field of the sample
 propose!(d::NormalDensity,s::MCSample) = rand!(d.normal,s.values)
@@ -31,6 +29,7 @@ propose(d::NormalDensity,n::Int) = rand(d.normal,n)
 logprobability(d::NormalDensity,s::MCSample) = logpdf(d.normal,s.values)
 
 ###base functionality
+import Base.==
 ==(d1::NormalDensity,d2::NormalDensity) = (mean(d1.normal) == mean(d2.normal) && cov(d1.normal) == cov(d2.normal))
 
 function Base.show(io::IO,d::NormalDensity)
