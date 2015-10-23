@@ -9,7 +9,7 @@ nsamples = 2000
 nproposals = 1
 
 #Time points to simulate the spring-mass ODE
-timepoints = [0:0.1:10]
+timepoints = collect(0:0.1:10)
 
 ###Initial conditions for the spring-mass ODE (position and speed)
 initial = [-1.0,1.0]

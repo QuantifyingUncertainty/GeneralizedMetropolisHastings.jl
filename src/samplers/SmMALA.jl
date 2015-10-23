@@ -18,9 +18,9 @@ type TrSmMALARandomNormal <: TrSmMALARandom
   ntangent::Int
   initialscaling::Float64
 end
-typealias SmMALANormalFamily Union(SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal)
-typealias TrSmMALANormalFamily Union(TrSmMALANormal,TrSmMALARandomNormal)
-typealias SmMALAFullTensorNormalFamily Union(SmMALANormal,TrSmMALANormal)
+@compat typealias SmMALANormalFamily Union{SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal}
+@compat typealias TrSmMALANormalFamily Union{TrSmMALANormal,TrSmMALARandomNormal}
+@compat typealias SmMALAFullTensorNormalFamily Union{SmMALANormal,TrSmMALANormal}
 
 ### Number of a parameters
 nparas(s::SmMALANormalFamily) = s.nparas
