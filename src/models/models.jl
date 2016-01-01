@@ -15,7 +15,7 @@ function update_geometry!(m::MCModel,g::MCSample{FirstOrder})
     sol::Matrix{Float64} = loglikelihood!(m,g)
     gradient!(m,g,sol)
   else
-    b.loglikelihool = -Inf
+    b.loglikelihood = -Inf
   end
   g
 end
@@ -32,7 +32,7 @@ function update_geometry!(m::MCModel,t::MCSample{SecondOrder})
 end
 
 ###Calculation of the logprior for arbitrary models
-logprior!(m::MCModel,s::MCSample) = (s.logprior = sum(map((p,v)->logpdf(p,v),m.parameters.priors,s.values)))
+logprior!(m::MCModel,s::MCSample) = (s.logprior = sum(map(logpdf,m.parameters.priors,s.values)))
 gradlogprior!(m::MCModel,s::MCSample) = (s.gradlogprior = map((p,v)->((logpdf(p,v+m.gradientepsilon)-logpdf(p,v))/m.gradientepsilon),m.parameters.priors,s.values))
 tensorlogprior!(m::MCModel,s::MCSample) = (s.tensorlogprior = zeros(s.tensorlogprior)) #does this need to be implemented?
 

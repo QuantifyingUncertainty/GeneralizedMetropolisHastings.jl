@@ -1,56 +1,57 @@
-typealias Prior Distributions.UnivariateDistribution
-
-immutable ModelParameters{P<:Prior,S<:AbstractString}
-  names::Vector{S}
-  priors::Vector{P}
-  defaults::Vector{Float64}
-  function ModelParameters(n::Vector{S},p::Vector{P},d::Vector{Float64})
-    @assert length(n) == length(p) == length(d) "Number of names, priors and default values not equal"
-    new(n,p,d)
-  end
+###MCMC Parameter definition which is a scalar
+###Has a default value and a univariate prior, which can be discrete or continuous
+immutable MCParameterScalar{S<:Distributions.ValueSupport} <: MCParameter
+  name::AbstractString
+  default::eltype(S)
+  prior::Distributions.UnivariateDistribution{S}
 end
 
-#Constructors
-ModelParameters{P<:Prior,S<:AbstractString}(d::Vector{Float64},p::Vector{P}; names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
-  ModelParameters{P,S}(expand_names(length(d),names,index),p,d)
+###Local, non-exported helper types defining default behaviour
+typealias ContinuousType eltype(Distributions.Continuous)
+typealias DiscreteType eltype(Distributions.Discrete)
+typealias ContinuousDefaultPrior Distributions.Uniform
+typealias DiscreteDefaultPrior Distributions.DiscreteUniform
 
-ModelParameters{P<:Prior,S<:AbstractString}(d::Vector{Float64},p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
-  ModelParameters{P,S}(expand_names(length(d),names,index),fill(p,length(d)),d)
+###Local, non-exported helper functions defining default behaviour
+const defaultparametername::AbstractString = "Parameter"
+defaultparametervalue{S<:Distributions.ValueSupport}(::Type{S}) = zero(eltype(S))
+defaultparameterprior(l::ContinuousType,h::ContinuousType) = ContinuousDefaultPrior(l,h)
+defaultparameterprior(l::DiscreteType,h::DiscreteType) = DiscreteDefaultPrior(l,h)
+defaultparameterprior(::Type{Distributions.Continuous}) = ContinuousDefaultPrior(-1e43,1e43) #a continuous uniform covering quasi all 64-bit floating-point numbers
+defaultparameterprior(::Type{Distributions.Discrete}) = DiscreteDefaultPrior(-2^61,2^61) #a continuous uniform covering quasi all 64-bit integers
 
-ModelParameters{P<:Prior,S<:AbstractString}(p::Vector{P}; names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
-  ModelParameters{P,S}(expand_names(length(p),names,index),p,fill(0.0,length(p)))
+###Constructor functions of scalar parameter definitions
+parameter{S<:Distributions.ValueSupport}(n::AbstractString =defaultparametername,d::eltype{S} =defaultparametervalue(S),p::Distributions.UnivariateDistribution{S} =defaultparameterprior(S)) = (@assert insupport(p,d) ; MCParameterScalar(n,d,p))
+parameter{S<:Distributions.ValueSupport}(n::AbstractString,d::eltype{S},l::eltype{S},h::eltype{S}) = parameter(n,d,defaultparameterprior(l,h))
+parameter{S<:Distributions.ValueSupport}(d::eltype{S},p::Distributions.UnivariateDistribution{S} =defaultparameterprior(S)) = parameter(defaultparametername,d,p)
+parameter{S<:Distributions.ValueSupport}(d::eltype{S},l::eltype{S},h::eltype{S}) = parameter(defaultparametername,d,defaultparameterprior(l,h))
 
-ModelParameters{P<:Prior,S<:AbstractString}(numparas::Int =0,p::P =Distributions.Uniform(-1e43,1e43); names::Vector{S} =AbstractString[],index::Vector{Int} =Int[]) =
-  ModelParameters{P,S}(expand_names(numparas,names,index),fill(p,numparas),fill(0.0,numparas))
+###Vectorized constructor functions of scalar parameter definitions
+parameters{S<:Distributions.ValueSupport}(n::Vector{AbstractString},d::Vector{elval(S)},p::Vector{Distributions.UnivariateDistribution{S}}) = (@assert length(n) == length(d) == length(p) ; map(parameter,n,d,p))
+parameters{S<:Distributions.ValueSupport}(n::Vector{AbstractString},d::Vector{elval(S)},l::Vector{elval(S)},h::Vector{elval(S)}) = (@assert length(n) == length(d) == length(l) == length(h) ; map(parameter,n,d,l,h))
+parameters{S<:Distributions.ValueSupport}(n::Vector{AbstractString},d::Vector{elval(S)}) = (@assert length(n) == length(d) ; map(parameter,n,d))
+parameters{S<:Distributions.ValueSupport}(d::Vector{elval(S)},p::Vector{Distributions.UnivariateDistribution{S}}) = (@assert length(d) == length(p) ; map(parameter,d,p))
+parameters{S<:Distributions.ValueSupport}(d::Vector{elval(S)},l::Vector{elval(S)},h::Vector{elval(S)}) = (@assert length(d) == length(l) == length(h) ; map(parameter,d,l,h))
+parameters{S<:Distributions.ValueSupport}(n::Vector{AbstractString}) = map(parameter,n)
+parameters{S<:Distributions.ValueSupport}(d::Vector{elval(S)}) = map(parameter,d)
+parameters{S<:Distributions.ValueSupport}(::Type{S},nparas::Int) = [parameter{S}() for i=1:nparas]
 
-#utility functions
-initvalues(::ValuesFromDefault,p::ModelParameters) = copy(p.defaults)
-initvalues(::ValuesFromPrior,p::ModelParameters) = map((x)->rand(x),p.priors)
-named(p::ModelParameters) = find(p.names .!= "")
-anonymous(p::ModelParameters) = find(p.names .== "")
-numel(p::ModelParameters) = length(p.names)
+###Functionality to initialize values from parameter definitions as floating point values
+_initvalue{T<:AbstractFloat}(::Type{ValuesFromDefault},p::MCParameter) = T(p.default)
+_initvalue{T<:AbstractFloat}(::Type{ValueFromPrior},p::MCParameter) = T(rand(p.prior))
+_initvalues!{V<:ValuesFrom,T<:AbstractFloat}(::Type{V},p::Vector{MCParameter},v::Vector{T}) = (@simd for i=1:length(p) @inbounds v[i] = _initvalue(V,p[i]) end ; v)
+initvalues!{V<:ValuesFrom,T<:AbstractFloat}(::Type{V},p::Vector{MCParameter},v::Vector{T}) = (@assert length(p) == length(v) ; _initvalues(V,p,v))
+initvalues{V<:ValuesFrom,T<:AbstractFloat}(::Type{V},::Type{T},p::Vector{MCParameter}) = _initvalues(V,p,Vector{T}(length(p)))
+initvalues{V<:ValuesFrom}(::Type{V},p::Vector{MCParameter}) = initvalues(V,Float64,p)
 
-#overloaded functions and operators from Base package
-import Base.==
-==(x::ModelParameters,y::ModelParameters) = isequal(x.names,y.names) && isequal(x.defaults,y.defaults) && isequal(x.priors,y.priors)
 
-function Base.show(io::IO,p::ModelParameters)
-  println(io,"ModelParameters with $(numel(p)) elements")
-  for i = 1:numel(p)
-    println(io,"  name: \"",p.names[i],"\", default: ",p.defaults[i]," prior: ",p.priors[i])
-  end
+###Overloaded functions and operators from Base package
+function Base.show(io::IO,p::MCParameterScalar)
+  println(io,"Scalar Parameter with name: \"",p.name,"\", default: ",p.default," prior: ",p.prior)
   nothing
 end
 
-#Helper functions that are not needed outside the module
-function expand_names{S<:AbstractString}(numparas::Int,names::Vector{S},index::Vector{Int} =Int[])
-  @assert length(names) == length(index) || isempty(index) && numparas == length(names) "Number of names must equal number of index elements or equal total number of variables"
-  @assert isempty(index) || maximum(index) <= numparas "Maximum index of named parameters is larger than total number of parameters"
-  if isempty(index) && length(names) == numparas
-    index = collect(1:numparas)
-  end
-  nc = 0
-  S[in(j,index)?names[nc+=1]:"" for j=1:numparas]
-end
+
+
 
 

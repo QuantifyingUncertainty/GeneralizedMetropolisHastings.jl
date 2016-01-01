@@ -25,7 +25,7 @@ function create_chain(nparas::Int,nsamples::Int;storegradient::Bool=false,runtim
   else
     c = MCChainWithGradient(zeros(nparas,nsamples),zeros(nsamples),zeros(nsamples),zeros(nparas,nsamples),0,0,runtime)
   end
-  c
+  return c;
 end
 
 function store_results!(c::MCChainOrdinary,h::MCHeap,indicators::Vector{Int})
@@ -34,6 +34,7 @@ function store_results!(c::MCChainOrdinary,h::MCHeap,indicators::Vector{Int})
     store_common!(c,h.samples[indicators[i]])
   end
   add_acceptance!(c,indicators)
+  return c;
 end
 
 function store_results!(c::MCChainWithGradient,h::MCHeap,indicators::Vector{Int})
@@ -43,6 +44,7 @@ function store_results!(c::MCChainWithGradient,h::MCHeap,indicators::Vector{Int}
     store_gradient!(c,h.samples[indicators[i]])
   end
   add_acceptance!(c,indicators)
+  return c;
 end
 
 function store_common!(c::MCChain,s::MCSample)

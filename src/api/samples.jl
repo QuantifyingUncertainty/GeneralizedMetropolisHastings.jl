@@ -55,6 +55,7 @@ ApproximateTensorSample(n::Int,ntangent::Int) = ApproximateTensorSample(zeros(n)
 
 numparas(s::MCSample) = length(s.values)
 
+### Functionality from Base package
 import Base.==
 ==(s1::BaseSample,s2::BaseSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior))
 ==(s1::GradientSample,s2::GradientSample) = (isequal(s1.values,s2.values) && isequal(s1.loglikelihood,s2.loglikelihood) && isequal(s1.logprior,s2.logprior) &&

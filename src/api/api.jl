@@ -1,11 +1,17 @@
+### Measurement data
+abstract MCData
+
 ### Model to estimate distribution from
 abstract MCModel
+
+### Information about the parameter to be estimated (default value and/or prior distribution)
+abstract MCParameter
 
 ### Sampler types hold the components that fully specify a Monte Carlo sampler
 abstract MCSampler
 
-### Runner types indicate what type of simulation will be run (ex the Generalized MH way)
-### Their fields fully specify the simulation details (ex total number or number of burn-in iterations)
+### Runner types indicate what type of simulation will be run (e.g. the Generalized MH way)
+### Their fields fully specify the simulation details (e.g. total number or number of burn-in iterations)
 abstract MCRunner
 
 ### Variable to hold the results of the simulation
