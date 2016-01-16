@@ -5,15 +5,18 @@ using Compat
 import Distributions
 import Sundials
 
+import Base:
+  ==
+
 export
   ###Policy types
-  ValuesFromDefault,ValuesFromPrior,
-  ProposalFromIndicator,ProposalFromAuxiliary,
-  IndicatorMatrixStationary,IndicatorMatrixOptimal,
+  ValuesFrom,ValuesFromDefault,ValuesFromPrior,
+  ProposalFunction,ProposalFromIndicator,ProposalFromAuxiliary,
+  IndicatorFunction,IndicatorStationary,IndicatorCyclical,
   GenericPolicy,
   ###Types
-  MCParameter,
-#   BaseSample,GradientSample,TensorSample,ApproximateTensorSample,
+  Parameter,ParameterDefault,ParameterPrior,
+  Sample,BaseSample,GradientSample,TensorSample,TangentTensorSample,
 #   NormalDensity,LogNormalDensity,
 #   MHNormal,SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal,
 #   MHHeap,SmMALAHeap,
@@ -21,8 +24,10 @@ export
 #   MCChain,
 #   GMHRunner,
   ###Functions
-  parameter,parameters,initvalues!,initvalues, #from parameters.jl
-#   numparas, #from samplers.jl
+  parameter,parameters,initvalues!,initvalues,logprior, #from parameters.jl
+  sample,samples,numparas,numsamples,numtangents, #from samplers.jl
+  getvalue,getloglikelihood,getlogprior,getgradloglikelihood,getgradlogprior,gettensorloglikelihood,gettensorlogprior,gettangent,
+  setvalue!,setloglikelihood!,setlogprior!,setgradloglikelihood!,setgradlogprior!,settensorloglikelihood!,settensorlogprior!,settangent!,
 #   logprobability, #from densities.jl
 #   evaluate,loglikelihood,gradloglikelihood,tensorvalue, #specify for specific models
 #   logprior!,gradlogprior!,tensorlogprior!, #from models.jl
@@ -30,10 +35,14 @@ export
 #   initialize!,iterate!,run!,sample_indicator, #form runners.jl
   print_gmh_module_loaded
 
-include("api/api.jl")
-include("api/policies.jl")
-include("api/parameters.jl")
-# include("api/samples.jl")
+include("policies/policies.jl")
+include("parameters/parameters.jl")
+include("samples/samples.jl")
+include("samples/BaseSample.jl")
+include("samples/GradientSample.jl")
+include("samples/TensorSample.jl")
+include("samples/TangentTensorSample.jl")
+
 # include("api/chains.jl")
 # include("distributions/Normal.jl")
 # include("distributions/LogNormal.jl")

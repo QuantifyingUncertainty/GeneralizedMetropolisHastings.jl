@@ -2,8 +2,9 @@ include("util.jl")
 srand(0)
 
 performancetests = [
-  "proposals",
-  "samplers"]
+  "parameters"]
+  #"proposals",
+  #"samplers"]
 
 println("==========================")
 println("Running performance tests:")

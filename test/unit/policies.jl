@@ -1,9 +1,9 @@
 #test the basic constructors for generic policies
-p1 = GenericPolicy(ValuesFromPrior(),IndicatorMatrixStationary(),2)
-p2 = GenericPolicy(ValuesFromDefault(),IndicatorMatrixStationary(),1)
+p1 = GenericPolicy(ValuesFromPrior(),IndicatorStationary(),2)
+p2 = GenericPolicy(ValuesFromDefault(),IndicatorStationary(),1)
 
-@test typeof(p1.initialize) == ValuesFromPrior && typeof(p1.propose) == ProposalFromAuxiliary && typeof(p1.indicate) == IndicatorMatrixStationary
-@test typeof(p2.initialize) == ValuesFromDefault && typeof(p2.propose) == ProposalFromIndicator && typeof(p2.indicate) == IndicatorMatrixStationary
+@test typeof(p1.initialize) == ValuesFromPrior && typeof(p1.propose) == ProposalFromAuxiliary && typeof(p1.indicate) == IndicatorStationary
+@test typeof(p2.initialize) == ValuesFromDefault && typeof(p2.propose) == ProposalFromIndicator && typeof(p2.indicate) == IndicatorStationary
 
 #test default constructors for most often used policies
 p3 = GenericPolicy(ValuesFromDefault(),1)
