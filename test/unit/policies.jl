@@ -1,25 +1,20 @@
-#test the basic constructors for generic policies
-p1 = GenericPolicy(ValuesFromPrior(),IndicatorStationary(),2)
-p2 = GenericPolicy(ValuesFromDefault(),IndicatorStationary(),1)
+@test GeneralizedMetropolisHastings._num2proposefrom(1) == ProposeFromIndicator
+@test GeneralizedMetropolisHastings._num2proposefrom(2) == ProposeFromAuxiliary
+@test_throws AssertionError GeneralizedMetropolisHastings._num2proposefrom(0)
 
-@test typeof(p1.initialize) == ValuesFromPrior && typeof(p1.propose) == ProposalFromAuxiliary && typeof(p1.indicate) == IndicatorStationary
-@test typeof(p2.initialize) == ValuesFromDefault && typeof(p2.propose) == ProposalFromIndicator && typeof(p2.indicate) == IndicatorStationary
+p1 = GeneralizedMetropolisHastings._policy(Val{:generic},InitializeFromDefault,ProposeFromAuxiliary,IndicatorStationary,Float64)
+@test typeof(p1) <: GenericPolicy && p1.initialize == InitializeFromDefault && p1.propose == ProposeFromAuxiliary && p1.indicate == IndicatorStationary && p1.numbertype == Float64
 
-#test default constructors for most often used policies
-p3 = GenericPolicy(ValuesFromDefault(),1)
-p4 = GenericPolicy(2)
+p2 = policy(:generic,InitializeFromDefault,IndicatorStationary,10)
+p3 = policy(:generic,InitializeFromPrior,IndicatorCyclical,1,Float32)
 
-@test p1 == p4
-@test p2 == p3
-
-#test equality operators
-@test GenericPolicy(ValuesFromPrior(),3) == GenericPolicy(2) #should be equal
-@test GenericPolicy(2) != GenericPolicy(1) #the ProposalFunction will be different
+@test p1 == p2
+@test typeof(p3) <: GenericPolicy && p3.initialize == InitializeFromPrior && p3.propose == ProposeFromIndicator && p3.indicate == IndicatorCyclical && p3.numbertype == Float32
 
 println("====================")
 println("Test show() function")
 show(p1)
-show(p2)
+show(p3)
 println("End  show() function")
 println("====================")
 println()

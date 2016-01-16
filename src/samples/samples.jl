@@ -1,8 +1,8 @@
-abstract DerivateOrder
-type ZeroOrder <: DerivateOrder end
-type FirstOrder <: DerivateOrder end
-type SecondOrder <: DerivateOrder end
-type ThirdOrder <: DerivateOrder end
+abstract DerivativeOrder
+type ZeroOrder <: DerivativeOrder end
+type FirstOrder <: DerivativeOrder end
+type SecondOrder <: DerivativeOrder end
+type ThirdOrder <: DerivativeOrder end
 typealias GradientOrder Union{FirstOrder,SecondOrder,ThirdOrder}
 typealias TensorOrder Union{SecondOrder,ThirdOrder}
 typealias DTensorOrder ThirdOrder

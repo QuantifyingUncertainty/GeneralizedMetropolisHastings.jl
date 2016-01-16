@@ -10,10 +10,10 @@ import Base:
 
 export
   ###Policy types
-  ValuesFrom,ValuesFromDefault,ValuesFromPrior,
-  ProposalFunction,ProposalFromIndicator,ProposalFromAuxiliary,
-  IndicatorFunction,IndicatorStationary,IndicatorCyclical,
-  GenericPolicy,
+  InitializeFrom,InitializeFromDefault,InitializeFromPrior,
+  ProposeFrom,ProposeFromIndicator,ProposeFromAuxiliary,
+  GenerateIndicator,IndicatorStationary,IndicatorCyclical,
+  RuntimePolicy,GenericPolicy,
   ###Types
   Parameter,ParameterDefault,ParameterPrior,
   Sample,BaseSample,GradientSample,TensorSample,TangentTensorSample,
@@ -24,6 +24,7 @@ export
 #   MCChain,
 #   GMHRunner,
   ###Functions
+  policy, #form policies.jl
   parameter,parameters,initvalues!,initvalues,logprior, #from parameters.jl
   sample,samples,numparas,numsamples,numtangents, #from samplers.jl
   getvalue,getloglikelihood,getlogprior,getgradloglikelihood,getgradlogprior,gettensorloglikelihood,gettensorlogprior,gettangent,
@@ -36,6 +37,7 @@ export
   print_gmh_module_loaded
 
 include("policies/policies.jl")
+include("policies/GenericPolicy.jl")
 include("parameters/parameters.jl")
 include("samples/samples.jl")
 include("samples/BaseSample.jl")

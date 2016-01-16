@@ -1,22 +1,20 @@
 #Generic runtime policy
-immutable GenericPolicy{T<:Number} <: RuntimePolicy{T}
-  initialize::InitializeFrom
-  propose::ProposeFrom
-  indicate::GenerateIndicator
-  numbertype::Type{T}
+immutable GenericPolicy{I<:InitializeFrom,P<:ProposeFrom,G<:GenerateIndicator,N<:Number} <: RuntimePolicy{N}
+  initialize::Type{I}
+  propose::Type{P}
+  indicate::Type{G}
+  numbertype::Type{N}
+  GenericPolicy() = new(I,P,G,N)
 end
 
-_policy{T<:Number}(::Type{Val{:generic}},i::InitializeFrom)
+_policy(::Type{Val{:generic}},I::DataType,P::DataType,G::DataType,N::DataType) = GenericPolicy{I,P,G,N}()
 
-GenericPolicy() = GenericPolicy(v,i,nproposals>1?ProposalFromAuxiliary():ProposalFromIndicator())
-GenericPolicy(v::ValuesFrom,nproposals::Integer) = GenericPolicy(v,IndicatorStationary(),nproposals)
-GenericPolicy(nproposals::Integer) = GenericPolicy(ValuesFromPrior(),nproposals)
-
-function Base.show(io::IO,p::GenericPolicy,s::AbstractString ="")
-  println(io,s,"GenericPolicy with following policy types:")
-  println(io,s,"  initialize = ",typeof(p.initialize))
-  println(io,s,"  indicate = ",typeof(p.indicate))
-  println(io,s,"  propose = ",typeof(p.propose))
+function Base.show(io::IO,p::GenericPolicy)
+  println(io,"GenericPolicy with policy traits:")
+  println(io,"  initialize = ",p.initialize.name.name)
+  println(io,"  propose = ",p.propose.name.name)
+  println(io,"  indicate = ",p.indicate.name.name)
+  println(io,"  number type = ",p.numbertype)
   println(io)
   nothing
 end

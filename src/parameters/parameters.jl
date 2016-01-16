@@ -1,116 +1,101 @@
 ###Local, non-exported helper types defining default behaviour
-typealias ContinuousType eltype(Distributions.Continuous)
-typealias DiscreteType eltype(Distributions.Discrete)
-typealias ValueType Union{ContinuousType,DiscreteType}
-typealias UnivariatePriorType Distributions.UnivariateDistribution
+typealias ValueType Union{Distributions.Continuous,Distributions.Discrete}
 
-###Local, non-exported helper functions defining default behaviour
-@inline _defaultparametervalue{T<:AbstractFloat}(::Type{T}) = zero(T)
-@inline _defaultparametervalue(p::UnivariatePriorType,::Type{ContinuousType}) = median(p)
-@inline _defaultparametervalue(p::UnivariatePriorType,::Type{DiscreteType}) = trunc(DiscreteType,median(p))
-@inline _defaultparameterprior(l::ContinuousType,h::ContinuousType) = Distributions.Uniform(l,h)
-@inline _defaultparameterprior(l::DiscreteType,h::DiscreteType) = Distributions.DiscreteUniform(l,h)
-
-###Unnamed parameter which has a default value but no prior
-immutable UnnamedParameterDefault{T<:AbstractFloat} <: MCParameter
-  default::T
-end
+### Paramater base type
+abstract Parameter
 
 ###Named MCMC parameter which has a default value but no prior
-immutable NamedParameterDefault{N<:AbstractString,T<:AbstractFloat} <: MCParameter
-  name::AbstractString
-  default::T
-  NamedParameterDefault(n::N,d::T) = new(n,d)
-end
-
-###Unnamed parameter which has a prior distribution and/or a default value
-immutable UnnamedParameterUnivariate{P<:UnivariatePriorType,V<:ValueType} <: MCParameter
-  prior::P
-  default::V
-  UnnamedParameterUnivariate(p::P,d::V) = (@assert Distributions.insupport(p,d) ; new(p,d))
+immutable ParameterDefault{N<:Number} <: Parameter
+  key::AbstractString
+  default::N
+  ParameterDefault(key::AbstractString,def::N) = new(key,def)
 end
 
 ###Named MCMC parameter which has a prior distribution and/or a default value
-immutable NamedParameterUnivariate{N<:AbstractString,P<:UnivariatePriorType,V<:ValueType} <: MCParameter
-  name::N
-  prior::P
+immutable ParameterUnivariate{U<:Distributions.UnivariateDistribution,V<:ValueType} <: Parameter
+  key::AbstractString
+  prior::U
   default::V
-  NamedParameterUnivariate(n::N,p::P,d::V) = (@assert Distributions.insupport(p,d) ; new(n,p,d))
+  ParameterUnivariate(key::AbstractString,pri::U,def::V) = (@assert Distributions.insupport(pri,def) ; new(key,pri,def))
 end
 
-typealias ParameterDefault Union{UnnamedParameterDefault,NamedParameterDefault}
-typealias ParameterUnivariate Union{UnnamedParameterUnivariate,NamedParameterUnivariate}
-
-###Factory functions for unnamed parameters with only a default value
-parameter(d::AbstractFloat) = UnnamedParameterDefault{typeof(d)}(d)
-parameter{T<:AbstractFloat}(::Type{T} =DefaultFloatType) = parameter(_defaultparametervalue(T))
+###Local, non-exported helper functions defining default behaviour
+@inline _defaultkey() = ""
+@inline _defaultvalue{N<:Number}(::Type{N}) = zero(N)
+@inline _defaultvalue(::Type{Distributions.Continuous}) = mean(p)
+@inline _defaultvalue(::Type{Distributions.Discrete}) = trunc(DiscreteType,mean(p))
+@inline _defaultprior(l::Distributions.Continuous,h::Distributions.Continuous) = Distributions.Uniform(l,h)
+@inline _defaultprior(l::Distributions.Discrete,h::Distributions.Discrete) = Distributions.DiscreteUniform(l,h)
 
 ###Factory functions for named parameters with only a default value
-parameter(n::AbstractString,d::AbstractFloat) = NamedParameterDefault{typeof(n),typeof(d)}(n,d)
-parameter{T<:AbstractFloat}(n::AbstractString,::Type{T} =DefaultFloatType) = parameter(n,_defaultparametervalue(T))
+parameter(k::AbstractString,d::Number) = ParameterDefault{typeof(d)}(k,d)
+parameter{N<:Number}(k::AbstractString,::Type{N}) = parameter(k,_defaultvalue(N))
 
-###Factory functions for unnamed parameters with a prior distribution
-parameter(p::UnivariatePriorType,d::ValueType) = UnnamedParameterUnivariate{typeof(p),eltype(p)}(p,d)
-parameter(p::UnivariatePriorType) = parameter(p,_defaultparametervalue(p,eltype(p)))
-parameter{V<:ValueType}(l::V,h::V,d::V) = parameter(_defaultparameterprior(l,h),d)
-parameter{V<:ValueType}(l::V,h::V) = parameter(_defaultparameterprior(l,h))
+###Factory functions for unnamed parameters with only a default value
+parameter(d::Number) = parameter(_defaultkey(),d)
+parameter{N<:Number}(::Type{N}) = parameter(_defaultvalue(N))
 
 ###Factory functions for named parameters with a prior distribution
-parameter(n::AbstractString,p::UnivariatePriorType,d::ValueType) = NamedParameterUnivariate{typeof(n),typeof(p),eltype(p)}(n,p,d)
-parameter(n::AbstractString,p::UnivariatePriorType) = parameter(n,p,_defaultparametervalue(p,eltype(p)))
-parameter{V<:ValueType}(n::AbstractString,l::V,h::V,d::V) = parameter(n,_defaultparameterprior(l,h),d)
-parameter{V<:ValueType}(n::AbstractString,l::V,h::V) = parameter(n,_defaultparameterprior(l,h))
+parameter(k::AbstractString,p::Distributions.UnivariateDistribution,d::ValueType) = ParameterUnivariate{typeof(p),eltype(p)}(k,p,d)
+parameter(k::AbstractString,p::Distributions.UnivariateDistribution) = parameter(k,p,_defaultvalue(p,eltype(p)))
+parameter{V<:ValueType}(k::AbstractString,l::V,h::V,d::V) = parameter(k,_defaultprior(l,h),d)
+parameter{V<:ValueType}(k::AbstractString,l::V,h::V) = parameter(k,_defaultprior(l,h))
+
+###Factory functions for unnamed parameters with a prior distribution
+parameter(p::Distributions.UnivariateDistribution,d::ValueType) = parameter(_defaultkey(),p,d)
+parameter(p::Distributions.UnivariateDistribution) = parameter(p,_defaultvalue(p,eltype(p)))
+parameter{V<:ValueType}(l::V,h::V,d::V) = parameter(_defaultprior(l,h),d)
+parameter{V<:ValueType}(l::V,h::V) = parameter(_defaultprior(l,h))
 
 ###Vectorised factory functions
-parameters{T<:AbstractFloat}(v::AbstractVector{T}) = map(parameter,v)
-parameters{T<:AbstractFloat}(n::Integer,t::Type{T} =DefaultFloatType) = [parameter(t) for i=1:n]
-parameters{N<:AbstractString,T<:AbstractFloat}(n::AbstractVector{N},v::AbstractVector{T}) = (@assert length(n) == length(v) ; map(parameter,n,v))
-parameters{N<:AbstractString,T<:AbstractFloat}(n::AbstractVector{N},t::Type{T} =DefaultFloatType) = [parameter(ni,t) for ni in n]
+parameters{N<:Number}(k::AbstractVector,v::AbstractVector{N}) = (@assert length(k) == length(v) ; map(parameter,k,v))
+parameters{N<:Number}(k::AbstractVector,::Type{N}) = [parameter(ki,N) for ki in k]
+parameters{N<:Number}(v::AbstractVector{N}) = map(parameter,v)
+parameters{N<:Number}(n::Integer,::Type{N}) = [parameter(N) for i=1:n]
 
-parameters{P<:UnivariatePriorType,V<:ValueType}(p::AbstractVector{P},v::AbstractVector{V}) = (@assert length(p) == length(v) ; map(parameter,p,v))
-parameters{P<:UnivariatePriorType}(p::AbstractVector{P}) = map(parameter,p)
+parameters{P<:Distributions.Distribution,V<:ValueType}(k::AbstractVector,p::AbstractVector{P},v::AbstractVector{V}) = (@assert length(k) == length(p) == length(v) ; map(parameter,k,p,v))
+parameters{P<:Distributions.Distribution}(k::AbstractVector,p::AbstractVector{P}) = (@assert length(k) == length(p) ; map(parameter,k,p))
+parameters{V<:ValueType}(k::AbstractVector,l::Vector{V},h::Vector{V},d::Vector{V}) = (@assert length(k) == length(l) == length(h) == length(d) ; map(parameter,k,l,h,d))
+parameters{V<:ValueType}(k::AbstractVector,l::Vector{V},h::Vector{V}) = (@assert length(k) == length(l) == length(h) ; map(parameter,k,l,h))
+parameters{P<:Distributions.Distribution,V<:ValueType}(p::AbstractVector{P},v::AbstractVector{V}) = (@assert length(p) == length(v) ; map(parameter,p,v))
+parameters{P<:Distributions.Distribution}(p::AbstractVector{P}) = map(parameter,p)
 parameters{V<:ValueType}(l::Vector{V},h::Vector{V},d::Vector{V}) = (@assert length(l) == length(h) == length(d) ; map(parameter,l,h,d))
 parameters{V<:ValueType}(l::Vector{V},h::Vector{V}) = (@assert length(l) == length(h) ; map(parameter,l,h))
 
-parameters{N<:AbstractString,P<:UnivariatePriorType,V<:ValueType}(n::AbstractVector{N},p::AbstractVector{P},v::AbstractVector{V}) = (@assert length(n) == length(p) == length(v) ; map(parameter,n,p,v))
-parameters{N<:AbstractString,P<:UnivariatePriorType}(n::AbstractVector{N},p::AbstractVector{P}) = (@assert length(n) == length(p) ; map(parameter,n,p))
-parameters{N<:AbstractString,V<:ValueType}(n::AbstractVector{N},l::Vector{V},h::Vector{V},d::Vector{V}) = (@assert length(n) == length(l) == length(h) == length(d) ; map(parameter,n,l,h,d))
-parameters{N<:AbstractString,V<:ValueType}(n::AbstractVector{N},l::Vector{V},h::Vector{V}) = (@assert length(n) == length(l) == length(h) ; map(parameter,n,l,h))
-
 ###Functionality to initialize MCMC from parameter definitions
 #for individual parameters
-@inline _initvalue{P<:ParameterUnivariate,T<:AbstractFloat}(::Type{ValuesFromPrior},p::P,::Type{T} =DefaultFloatType) = T(rand(p.prior)) #special case for initializing from prior
-@inline _initvalue{V<:ValuesFrom,T<:AbstractFloat}(::Type{V},p::MCParameter,::Type{T} =DefaultFloatType) = T(p.default) #general case initializes to default value
+@inline _initvalue{I<:InitializeFrom,N<:Number}(::Type{I},p::Parameter,::Type{N}) = N(p.default) #general case initializes to default value
+@inline _initvalue{P<:ParameterUnivariate,N<:Number}(::Type{InitializeFromPrior},p::P,::Type{N}) = N(rand(p.prior)) #special case for initializing from prior
 
 #vectorized internal function
-@inline _initvalues!{V<:ValuesFrom,P<:MCParameter,T<:AbstractFloat}(::Type{V},p::AbstractVector{P},v::AbstractVector{T}) = (@simd for i=1:length(p) @inbounds v[i] = _initvalue(V,p[i],T) end ; v)
+@inline _initvalues!{I<:InitializeFrom,P<:Parameter,N<:Number}(::Type{I},p::AbstractVector{P},v::AbstractVector{N}) = (@simd for i=1:length(p) @inbounds v[i] = _initvalue(V,p[i],N) end ; v)
 
 #exported initvalue functions
-initvalues!{V<:ValuesFrom,P<:MCParameter,T<:AbstractFloat}(::Type{V},p::AbstractVector{P},v::AbstractVector{T}) = (@assert length(p) == length(v) ; _initvalues!(V,p,v))
-initvalues{V<:ValuesFrom,P<:MCParameter,T<:AbstractFloat}(::Type{V},p::AbstractVector{P},::Type{T} =DefaultFloatType) = _initvalues!(V,p,Vector{T}(length(p)))
+initvalues!{I<:InitializeFrom,P<:Parameter,N<:Number}(::Type{I},p::AbstractVector{P},v::AbstractVector{N}) = (@assert length(p) == length(v) ; _initvalues!(I,p,v))
+initvalues{I<:InitializeFrom,P<:Parameter,N<:Number}(::Type{I},p::AbstractVector{P},::Type{N}) = _initvalues!(I,p,Vector{N}(length(p)))
 
 ###Functionality to calculate the logprior
-@inline _logprior{P<:ParameterUnivariate,T<:AbstractFloat}(p::P,v::T) = T(Distributions.logpdf(p.prior,v))
-@inline _logprior{P<:ParameterDefault,T<:AbstractFloat}(p::P,v::T) = zero(T)
+@inline _logprior{N<:Number}(p::ParameterUnivariate,v::N) = N(Distributions.logpdf(p.prior,v))
+@inline _logprior{N<:Number}(p::ParameterDefault,v::N) = zero(N)
 
 ###vectorized internal logprior function
-@inline _logprior{P<:MCParameter,T<:AbstractFloat}(p::AbstractVector{P},v::AbstractVector{T}) = (s = zero(T) ; @simd for i=1:length(p) @inbounds s += _logprior(p[i],v[i]) end ; s)
-@inline _logprior{P<:ParameterDefault,T<:AbstractFloat}(p::AbstractVector{P},v::AbstractVector{T}) = zero(T)
+@inline _logprior{P<:Parameter,N<:Number}(p::AbstractVector{P},v::AbstractVector{N}) = (s = zero(N) ; @simd for i=1:length(p) @inbounds s += _logprior(p[i],v[i]) end ; s)
+@inline _logprior{P<:ParameterDefault,N<:Number}(p::AbstractVector{P},v::AbstractVector{N}) = zero(N)
 
 ###exported logprior function
-logprior{P<:MCParameter,T<:AbstractFloat}(p::P,v::T) = _logprior(p,v)
-logprior{P<:MCParameter,T<:AbstractFloat}(p::AbstractVector{P},v::AbstractVector{T}) = (@assert length(p) == length(v) ; _logprior(p,v))
+logprior{P<:Parameter,N<:Number}(p::P,v::N) = _logprior(p,v)
+logprior{P<:Parameter,N<:Number}(p::AbstractVector{P},v::AbstractVector{N}) = (@assert length(p) == length(v) ; _logprior(p,v))
 
 ###Overloaded functions and operators from Base package
 import Base.==
-function =={P<:MCParameter}(p1::P,p2::P)
+function =={P<:Parameter}(p1::P,p2::P)
   for f in fieldnames(p1)
     isequal(getfield(p1,f),getfield(p2,f))?continue:(return false)
   end
   return true
 end
 
-function Base.show{P<:MCParameter}(io::IO,p::P,n::AbstractString ="")
+function Base.show(io::IO,p::Parameter,n::AbstractString ="")
   println(io,n,typeof(p).name.name)
   for f in fieldnames(p)
     println(io," ",f,": ",getfield(p,f))
@@ -118,8 +103,8 @@ function Base.show{P<:MCParameter}(io::IO,p::P,n::AbstractString ="")
   nothing
 end
 
-function Base.show{P<:MCParameter}(io::IO,v::AbstractVector{P})
-  e = isa(eltype(v),Union)?"MCParameter":eltype(v).name.name
+function Base.show{P<:Parameter}(io::IO,v::AbstractVector{P})
+  e = isa(eltype(v),Union)?"Parameter":eltype(v).name.name
   println(io)
   println(io,"Array{$e} with")
   for i=1:length(v)
@@ -128,7 +113,7 @@ function Base.show{P<:MCParameter}(io::IO,v::AbstractVector{P})
   println(io)
 end
 
-Base.display{P<:MCParameter}(io::IO,v::AbstractVector{P}) = Base.show{P}(io,v)
+Base.display{P<:Parameter}(io::IO,v::AbstractVector{P}) = Base.show{P}(io,v)
 
 
 
