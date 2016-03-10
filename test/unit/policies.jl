@@ -19,7 +19,7 @@ end
 p1 = policy(:gmh,10)
 p2 = policy(:gmh,1,initialize=:default,indicator=:cyclical,samplerstates=:test,sampletype=Int,calculationtype=Float32)
 
-for args in [(p1,(:prior,:auxiliary,:stationary,:nprocs,Float64,Float64)),
+for args in [(p1,(:prior,:auxiliary,:stationary,:nworkers,Float64,Float64)),
              (p2,(:default,:indicator,:cyclical,:test,Int,Float32))]
     for (i,f) in enumerate([:initialize,:propose,:indicator,:samplerstates])
         @test traittype(getfield(args[1],f)) == Val{args[2][i]}

@@ -17,7 +17,7 @@ end
 ##################################################
 
 ###ODE for spring-mass dynamic system
-function springmassoworkde(t,y,ydot,paras)
+function springmassode(t,y,ydot,paras)
     ydot[1] = y[2]
     ydot[2] = -paras[1]/paras[2]*y[1] #-K/M*X
 end
