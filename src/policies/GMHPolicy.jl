@@ -15,7 +15,7 @@ _num2propose(n::Integer) = (@assert n > 0 ; n>1?trait(:propose,:auxiliary):trait
 _policy(::Type{Val{:gmh}},nprops::Int;
         initialize =:prior,
         indicator =:stationary,
-        samplerstates =:nprocs,
+        samplerstates =:nworkers,
         sampletype =Float64,
         calculationtype =Float64) =
     GMHPolicy{sampletype,calculationtype}(trait(:initialize,initialize),_num2propose(nprops),trait(:indicator,indicator),trait(:samplerstates,samplerstates))

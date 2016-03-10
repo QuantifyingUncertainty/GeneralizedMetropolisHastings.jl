@@ -6,11 +6,11 @@ end
 
 @inline _noise(::Type{Val{:gaussian}},v::AbstractVector) = NoiseModelGaussian{eltype(v),typeof(v)}(v,map(Distributions.Normal,zeros(v),sqrt(v)))
 
-function loglikelihood{T<:AbstractFloat}(n::NoiseModelGaussian,measurements::AbstractArray{T},modeldata::AbstractArray{T})
-    r = zero(T)
+function loglikelihood(n::NoiseModelGaussian,measurements::AbstractArray,modeldata::AbstractArray)
+    r = 0
     for j=1:length(n.distributions)
         @simd for i=1:size(measurements,1)
-            @inbounds r+= convert(T,logpdf(n.distributions[j],modeldata[i,j]-measurements[i,j]))
+            @inbounds r+= logpdf(n.distributions[j],modeldata[i,j]-measurements[i,j])
         end
     end
     r

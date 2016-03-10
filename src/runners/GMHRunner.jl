@@ -50,6 +50,7 @@ function run!(::Type{Val{:indicator}},runner_::GMHRunner,model_::AbstractModel,s
     end
     for i=1:runner_.numiterations
         iterateandstore!(runner_,model_,samplerstates_,indicator_,chain_)
+        mod(i,period(tuner_))==0?println("Iteration $i/$(runner_.numiterations)"):nothing
     end
     chain_
 end
@@ -72,6 +73,7 @@ function run!(::Type{Val{:auxiliary}},runner_::GMHRunner,model_::AbstractModel,s
     end
     for i=1:runner_.numiterations
         iterateandstore!(runner_,model_,indicatorstate_,samplerstates_,indicator_,chain_)
+        mod(i,period(tuner_))==0?println("Iteration $i/$(runner_.numiterations)"):nothing
     end
     chain_
 end
