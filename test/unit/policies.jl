@@ -1,20 +1,37 @@
-@test GeneralizedMetropolisHastings._num2proposefrom(1) == ProposeFromIndicator
-@test GeneralizedMetropolisHastings._num2proposefrom(2) == ProposeFromAuxiliary
-@test_throws AssertionError GeneralizedMetropolisHastings._num2proposefrom(0)
+###Test the trait types
+for args in [(:initialize,InitializeFrom,[:default,:prior]),
+            (:propose,ProposeFrom,[:indicator,:auxiliary]),
+            (:indicator,IndicatorType,[:stationary,:cyclical]),
+            (:samplerstates,SamplerStates,[:nprocs,:nworkers,:test])]
+    for j in args[3]
+        t = trait(args[1],j)
+        @test typeof(t) == args[2]
+        @test traitvalue(t) == j
+        @test traittype(t) == Val{j}
+    end
+end
 
-p1 = GeneralizedMetropolisHastings._policy(Val{:generic},InitializeFromDefault,ProposeFromAuxiliary,IndicatorStationary,Float64)
-@test typeof(p1) <: GenericPolicy && p1.initialize == InitializeFromDefault && p1.propose == ProposeFromAuxiliary && p1.indicate == IndicatorStationary && p1.numbertype == Float64
+###Test GMHPolicy
+@test traittype(GeneralizedMetropolisHastings._num2propose(1)) == Val{:indicator}
+@test traittype(GeneralizedMetropolisHastings._num2propose(2)) == Val{:auxiliary}
+@test_throws AssertionError GeneralizedMetropolisHastings._num2propose(0)
 
-p2 = policy(:generic,InitializeFromDefault,IndicatorStationary,10)
-p3 = policy(:generic,InitializeFromPrior,IndicatorCyclical,1,Float32)
+p1 = policy(:gmh,10)
+p2 = policy(:gmh,1,initialize=:default,indicator=:cyclical,samplerstates=:test,sampletype=Int,calculationtype=Float32)
 
-@test p1 == p2
-@test typeof(p3) <: GenericPolicy && p3.initialize == InitializeFromPrior && p3.propose == ProposeFromIndicator && p3.indicate == IndicatorCyclical && p3.numbertype == Float32
+for args in [(p1,(:prior,:auxiliary,:stationary,:nprocs,Float64,Float64)),
+             (p2,(:default,:indicator,:cyclical,:test,Int,Float32))]
+    for (i,f) in enumerate([:initialize,:propose,:indicator,:samplerstates])
+        @test traittype(getfield(args[1],f)) == Val{args[2][i]}
+    end
+    args[1].sampletype == args[2][5]
+    args[1].calculationtype == args[2][6]
+end
 
 println("====================")
 println("Test show() function")
 show(p1)
-show(p3)
+show(p2)
 println("End  show() function")
 println("====================")
 println()

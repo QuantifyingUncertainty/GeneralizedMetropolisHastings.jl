@@ -1,28 +1,41 @@
-###Default implementation of the heap factory function
-###Should be re-implemented for different samplers
-function create_heap(s::MCSampler,::Int)
-  println("create_heap not defined for $(typeof(s))")
-  nothing
-end
+### Sampler types hold the components that fully specify a Monte Carlo sampler
+abstract AbstractSampler
 
-###Get the number of parameters
-numparas(s::MCSampler) = s.nparas
+### SamplerState types hold the temporary components used by a Monte Carlo sampler during its run
+### This means that SamplerState types represent the internal state ("local variables") of a Monte Carlo sampler
+abstract AbstractSamplerState{S<:AbstractSample}
 
-###Get the number of elements in the heap
-numel(h::MCHeap) = length(h.samples)
+### Factory functions for samplers
+### Currently implemented samplers: :mh (Metropolis-Hastings)
+### Currently implemented proposal densities: :normal, :lognormal
+sampler(name::Symbol,density::Symbol,args...) = _sampler(Val{name},Val{density},args...)
 
-###Vectorized versions of the in-place proposal function for arbitrary samplers and heaps
-propose!(s::MCSampler,h::MCHeap,indicator::Int,from::MCSample) = (set_from!(s,h,from); @simd for j=1:numel(h) @inbounds j!=indicator?propose!(s,h,h.samples[j]):nothing end)
-propose!(s::MCSampler,h::MCHeap,indicator::Int) = propose!(s,h,indicator,h.samples[indicator]) #propose from the current iterator
+### Factory functions for SamplerStates
+samplerstate{N<:Number,T<:AbstractFloat}(s::AbstractSampler,nsamples::Integer,::Type{N},::Type{T}) = _samplerstate(s,nsamples,N,T)
 
-###Vectorized versions of the in-place update function for arbitrary samplers and heaps
-update_proposals!(s::MCSampler,h::MCHeap,indicator::Int) = @simd for j=1:numel(h) @inbounds j!=indicator?update_proposal!(s,h,j):nothing end
+###Get the from field of the samplerstate
+from(s::AbstractSamplerState) = s.from
+proposals(s::AbstractSamplerState) = s.proposals
+
+###Functions that need to be implemented for specific samplers
+setfrom!(state::AbstractSamplerState,sample::AbstractSample) = throw(MethodError(setfrom!, (state,sample)))
+setfrom!(state::AbstractSamplerState,sample::AbstractSample,i::Integer) = throw(MethodError(setfrom!, (state,sample,i)))
+propose!(state::AbstractSamplerState) = throw(MethodError(propose!, (sampler,state)))
+acceptanceratio!(state::AbstractSamplerState) = throw(MethodError(acceptanceratio!, (state)))
+acceptanceratio(state::AbstractSamplerState) = throw(MethodError(acceptanceratio, (state)))
+tune!(sampler::AbstractSampler,state::AbstractSamplerState,args...) = nothing
 
 ###Generic show function for any sampler
-Base.show(io::IO,s::MCSampler) = dump(io,s)
+function show(io::IO,s::AbstractSampler)
+    println(io,"AbstractSampler $(samplername(s)) with fields:")
+    println(io,"  $(fieldnames(s))")
+    nothing
+end
 
 ###Generic show for heaps
-function Base.show(io::IO,h::MCHeap)
-  println(io,typeof(h)," with ",length(h.samples)," samples")
-  show(io,h.samples)
+function show(io::IO,s::AbstractSamplerState)
+    println(io,"AbstractSamplerState $(samplerstatename(s)) with fields: ")
+    println(io,"  $(fieldnames(s))")
+    nothing
 end
+

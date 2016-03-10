@@ -1,77 +1,36 @@
-import GeneralizedMetropolisHastings.update_density!
-import GeneralizedMetropolisHastings.propose!
-
-m1 = zeros(2)
-m2 = ones(2)
-m3 = [4.0,2.0,0.0]
-Σ1 = eye(2)
-Σ2 = [1.0 0.0;0.0 4.0]
-Σ3 = 4.0*eye(2)
-
 println("======================")
 println("Tests of NormalDensity")
 println("======================")
 
-###test the constructors
-n1 = NormalDensity(Σ1)
-n2 = NormalDensity(m2,Σ2)
-n3 = NormalDensity(m1,Σ3)
-n4 = NormalDensity(m3,eye(3))
+@test NormalDensity <: SymmetricDensity
 
-@test length(n1.normal) == 2 && mean(n1.normal) == m1 && cov(n1.normal) == Σ1
-@test length(n2.normal) == 2 && mean(n2.normal) == m2 && cov(n2.normal) == Σ2
-@test length(n3.normal) == 2 && mean(n3.normal) == m1 && cov(n3.normal) == Σ3
+###Test construction
+d1 = density(:normal,ones(2),0.1*eye(2))
+@test isa(d1,NormalDensity)
+@test issymmetric(d1)
+@test mean(d1.distribution) == ones(2)
+@test cov(d1.distribution) == 0.1*eye(2)
 
-###test the equality operators
-@test NormalDensity(eye(3)) == NormalDensity(zeros(3),eye(3))
-@test NormalDensity(eye(3)) != NormalDensity(ones(3),eye(3))
-@test NormalDensity(eye(3)) != NormalDensity(eye(2))
+###Test conditioning of the distribution
+condition!(d1,2*ones(2))
+@test mean(d1.distribution) == 2*ones(2)
+@test cov(d1.distribution) == 0.1*eye(2)
 
-###test the update functions
-@test n1 != n2 != n3
-@test update_density!(n1,m2) == update_density!(n2,Σ1) == update_density!(n3,m2,Σ1)
-@test mean(update_density!(n1,m1).normal) == m1
+condition!(d1,3*ones(2),0.2*eye(2))
+@test mean(d1.distribution) == 3*ones(2)
+@test cov(d1.distribution) == 0.2*eye(2)
 
-###test the propose function
-s1 = BaseSample(2)
-s2 = BaseSample(2)
-srand(0) ; v1 = m1 + randn(2) ; v2 = m1 + randn(2)
-srand(0) ; propose!(n1,s1) ; propose!(n2,s2)
-@test v1 == s1.values
+@test_throws MethodError condition!(d1,ones(2),d1)
 
-###test the vectorized propose functions
-vs1 = [BaseSample(2) for i=1:2]
-@test vs1[1].values == vs1[2].values == zeros(2)
-srand(0) ; propose!(n1,vs1)
-@test vs1[1].values == v1 && vs1[2].values == v2
-srand(0) ; propose!([n1,n2],vs1)
-@test vs1[1].values == s1.values && vs1[2].values == s2.values
+###Test proposing and calculatinng the logprobability
+for i in [1,3]
+    s1 = samples(:base,2,i,Float64,Float64)
+    z1 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
+    @test (srand(i+23) ; propose!(d1,s1) ; s1.values) == (srand(i+23) ; rand!(d1.distribution,z1))
+    p1 = Distributions.logpdf(d1.distribution,s1.values) ; isa(p1,Number)?collect(p1):p1
+    @test_approx_eq logprobability(d1,s1.values) p1
+end
 
-###testing the sampling behaviour
-imax = 100000
-vs2 = [BaseSample(3) for i=1:imax]
-propose!(n4,vs2)
-@test_approx_eq_eps mapreduce((x)->(x.values),+,vs2)/imax m3 0.01
-
-###test the calculcation of proposal probabilities
-n10 = NormalDensity([1.0,1.0],eye(2))
-n11 = NormalDensity([2.0,2.0],eye(2))
-s10 = BaseSample([1.0,1.0])
-s11 = BaseSample([2.0,2.0])
-@test logprobability(n10,s11) == logprobability(n11,s10) #symmetric distribution
-@test logprobability(n10,s10) != logprobability(n10,s11)
-@test logprobability([n10,n11],s11) == logprobability([n11,n10],s10)
-@test_approx_eq_eps logprobability(n10,[s10,s11]) [-1.8379,-2.8379] 1e-4
-
-###test the show functions
-println()
-println("====================")
-println("Test show() function")
-show(n1)
-show(n4)
-println("End  show() function")
-println("====================")
-println()
 
 #################################################################################
 
@@ -79,62 +38,73 @@ println("=========================")
 println("Tests of LogNormalDensity")
 println("=========================")
 
-###test the constructors
-l1 = LogNormalDensity(Σ1)
-l2 = LogNormalDensity(m2,Σ2)
-l3 = LogNormalDensity(m1,Σ3)
-l4 = LogNormalDensity(m3,eye(3))
+@test LogNormalDensity <: ASymmetricDensity
 
-@test length(l1.μ) == 2 && l1.μ == m1 && l1.Σ == Σ1
-@test length(l2.μ) == 2 && l2.μ == m2 && l2.Σ == Σ2
-@test length(l3.μ) == 2 && l3.μ == m1 && l3.Σ == Σ3
+###Test construction
+d2 = density(:lognormal,exp(ones(2)),0.1*eye(2))
+@test isa(d2,LogNormalDensity)
+@test !issymmetric(d2)
+@test_approx_eq Distributions.median(d2.distribution) exp(ones(2))
+@test_approx_eq Distributions.location(d2.distribution) ones(2)
+@test_approx_eq Distributions.scale(d2.distribution) 0.1*eye(2)
 
-###test the equality operators
-@test LogNormalDensity(eye(3)) == LogNormalDensity(zeros(3),eye(3))
-@test LogNormalDensity(eye(3)) != LogNormalDensity(ones(3),eye(3))
-@test LogNormalDensity(eye(3)) != LogNormalDensity(eye(2))
+###Test conditioning of the distribution
+condition!(d2,exp(2*ones(2)))
+@test_approx_eq Distributions.median(d2.distribution) exp(2*ones(2))
+@test_approx_eq Distributions.location(d2.distribution) 2*ones(2)
+@test_approx_eq Distributions.scale(d2.distribution) 0.1*eye(2)
 
-###test the update functions
-@test l1 != l2 != l3
-@test update_density!(l1,m2) == update_density!(l2,Σ1) == update_density!(l3,m2,Σ1)
-@test update_density!(l1,m1).μ == m1
+condition!(d2,exp(ones(2)),0.01*eye(2))
+@test_approx_eq Distributions.location(d2.distribution) ones(2)
+@test_approx_eq Distributions.scale(d2.distribution) 0.01*eye(2)
 
-###test the propose function
-s1 = BaseSample(2)
-s2 = BaseSample(2)
-srand(0) ; v1 = m1 + randn(2) ; v2 = m1 + randn(2)
-srand(0) ; propose!(l1,s1) ; propose!(l2,s2)
-@test_approx_eq v1 log(s1.values)
+###Test proposing and calculatinng the logprobability
+for i in [1,3]
+    s2 = samples(:base,2,i,Float64,Float64)
+    z2 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
+    @test (srand(i+23) ; propose!(d2,s2) ; s2.values) == (srand(i+23) ; rand!(d2.distribution,z2))
+    p2 = Distributions.logpdf(d2.distribution,s2.values) ; isa(p2,Number)?collect(p2):p2
+    @test_approx_eq logprobability(d2,s2.values) p2
+end
 
-###test the vectorized propose functions
-vs1 = [BaseSample(2) for i=1:2]
-@test vs1[1].values == vs1[2].values == zeros(2)
-srand(0) ; propose!(l1,vs1)
-@test_approx_eq v1 log(vs1[1].values)
-@test_approx_eq v2 log(vs1[2].values)
-srand(0) ; propose!([l1,l2],vs1)
-@test vs1[1].values == s1.values && vs1[2].values == s2.values
+println("============================")
+println("Tests of DistributionWrapper")
+println("============================")
 
-###testing the sampling behaviour
-imax = 200000
-vs2 = [BaseSample(3) for i=1:imax]
-propose!(l4,vs2)
-@test_approx_eq_eps log(mapreduce((x)->(x.values),+,vs2)/imax) m3+diag(eye(3))/2 0.01
+###Test construction
+d3 = density(Distributions.Uniform(0.0,10.0);symmetric = true)
+d4 = density(Distributions.LogNormal(1.0,0.1);symmetric = false)
+d5 = density(Distributions.Geometric(0.3))
+@test isa(d3,DistributionWrapper)
+@test isa(d4,DistributionWrapper)
+@test isa(d5,DistributionWrapper)
+@test issymmetric(d3)
+@test !issymmetric(d4)
+@test !issymmetric(d5)
 
-###test the calculcation of proposal probabilities
-l10 = LogNormalDensity([1.0,1.0],eye(2))
-l11 = LogNormalDensity([2.0,2.0],eye(2))
-s10 = BaseSample([1.0,1.0])
-s11 = BaseSample([2.0,2.0])
-@test logprobability(l10,s11) != logprobability(l11,s10) #asymmetric distribution
-@test_approx_eq logprobability(LogNormalDensity([1.0],eye(1)),[BaseSample([1.0]),BaseSample([2.0])]) [-1.4189,-1.6592]
+###Test proposing
+srand(467) ; s3 = propose!(d3,samples(:base,1,1,Float64,Float64)) ; s4 = propose!(d4,samples(:base,1,2,Float64,Float64)) ; s5 = propose!(d5,samples(:base,1,3,Float64,Float64))
+srand(467) ; r3 = rand!(d3.distribution,zeros(1)) ; r4 = rand!(d4.distribution,zeros(1,2)) ; r5 = rand!(d5.distribution,zeros(1,3))
+@test s3.values == r3
+@test s4.values == r4
+@test s5.values == r5
+
+###Test calculating the logpdf
+@test logprobability(d3,s3.values) == Distributions.logpdf!(zeros(1),d3.distribution,s3.values)
+@test logprobability(d4,s4.values) == Distributions.logpdf!(zeros(2),d4.distribution,s4.values)
+@test logprobability(d5,s5.values) == Distributions.logpdf!(zeros(3),d5.distribution,s5.values)
 
 ###test the show functions
 println()
 println("====================")
 println("Test show() function")
-show(l1)
-show(l4)
+println("====================")
+show(d1)
+show(d2)
+show(d3)
+show(d4)
+show(d5)
+println("====================")
 println("End  show() function")
 println("====================")
 println()

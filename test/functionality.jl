@@ -1,11 +1,12 @@
-include("util.jl")
 srand(0)
 
 functionalitytests = [
-  "springmasstest1"
-  "springmasstest2"
-  #"gaussiantest1",
-  #"gaussiantest2"
+    "modelplots",
+    "springmasstest1",
+    "springmasstest2",
+    "springmasstest3",
+    "sincostest1",
+    "sincostest2"
   ]
 
 println("============================")

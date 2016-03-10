@@ -1,10 +1,7 @@
-include("util.jl")
+@everywhere include("util.jl")
 srand(0)
 
-performancetests = [
-  "parameters"]
-  #"proposals",
-  #"samplers"]
+performancetests = []
 
 println("==========================")
 println("Running performance tests:")
