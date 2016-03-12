@@ -111,6 +111,7 @@ function iterateandstore!(runner_::GMHRunner,model_::AbstractModel,indicatorstat
     sampleindicator!(indicator_)
     store?store!(runner_,indicatorstate_,samplerstates_,indicator_,chain_):nothing
     updatefrom!(runner_,indicatorstate_,samplerstates_,indicator_)
+    geometry!(model_,from(indicatorstate_))
 end
 
 function iterateandstore!(runner_::GMHRunner,model_::AbstractModel,samplerstates_::Vector,indicator_::AbstractIndicatorMatrix,chain_::AbstractChain,store::Bool =true)
@@ -119,6 +120,7 @@ function iterateandstore!(runner_::GMHRunner,model_::AbstractModel,samplerstates
     sampleindicator!(indicator_)
     store?store!(runner_,samplerstates_[1],samplerstates_,indicator_,chain_):nothing
     updatefrom!(runner_,samplerstates_[1],samplerstates_,indicator_)
+    geometry!(model_,from(samplerstates_[1]))
 end
 
 function iterate!(runner_::GMHRunner,model_::AbstractModel,samplerstates_::Vector)
