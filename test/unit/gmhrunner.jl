@@ -85,11 +85,11 @@ for i=1:length(gmhpolicies)
     println("Testing of run! function")
     srand(435) ; gmhc = run!(gmhrunners[i],model1,sampler1,tuner1)
     @test numsamples(gmhc) == gmhchainsamples[i]
-    show(round(samples(gmhc)',3)) ; println()
+    println("Results of the run!")
+    show(round(samples(gmhc),3)) ; println()
     show(round(loglikelihood(gmhc),3)) ; println()
 end
 
-println("Warnings should be printed below this line")
 gmhmodel1 = sincosmodel!(0:0.1:10,[0.5,0.5],[0.01,0.01],[0.4,0.4],[0.6,0.6])
 gmhsamplerstate1 = samplerstate(sampler1,1,Float64,Float64)
 initialize!(gmhrunners[1],gmhmodel1,from(gmhsamplerstate1),chain(:standard,2,10,Float64,Float64),false)
