@@ -31,7 +31,6 @@ export
     parameters,
     data,
     noise,
-    samples,
     sampler,
     tuner,
     model,
