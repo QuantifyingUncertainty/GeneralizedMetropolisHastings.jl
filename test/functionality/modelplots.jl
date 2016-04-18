@@ -1,4 +1,4 @@
-using PyPlot
+import PyPlot
 
 #Time points to simulate the spring-mass ODE
 timepoints1 = 0:0.1:10
@@ -31,10 +31,10 @@ show(m2)
 
 ######################
 
-figure("functionality/modelplots")
-subplot(211)
-plot(timepoints1,datavalues(m1.measurements))
-title(m1.name)
-subplot(212)
-title(m2.name)
-plot(timepoints2,datavalues(m2.measurements))
+PyPlot.figure("functionality/modelplots")
+PyPlot.subplot(211)
+PyPlot.plot(timepoints1,datavalues(m1.measurements))
+PyPlot.title(m1.name)
+PyPlot.subplot(212)
+PyPlot.title(m2.name)
+PyPlot.plot(timepoints2,datavalues(m2.measurements))

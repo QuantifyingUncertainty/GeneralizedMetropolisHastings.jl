@@ -1,4 +1,5 @@
 #define test utilities
+include("imports.jl")
 include("util.jl")
 srand(0)
 

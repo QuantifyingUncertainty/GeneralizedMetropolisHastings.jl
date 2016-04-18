@@ -19,14 +19,14 @@ proposed(state::AbstractTunerState) = state.proposed
 rate(state::AbstractTunerState) = accepted(state)./proposed(state)
 total(state::AbstractTunerState) = sum(proposed(state))
 index(state::AbstractTunerState) = state.index
-numsteps(state::AbstractTunerState) = length(state.accepted)
+numtunesteps(state::AbstractTunerState) = length(state.accepted)
 
 current(state::AbstractTunerState) = (a = state.accepted[state.index] ; p = state.proposed[state.index] ; tuple(a,p))
 
 tune(tuner::AbstractTuner,state::AbstractTunerState) = ()
 
 @inline function accepted!(state::AbstractTunerState,indicator::AbstractIndicatorMatrix)
-    if state.index <= numsteps(state)
+    if state.index <= numtunesteps(state)
         state.accepted[state.index] += accepted(indicator)
         state.proposed[state.index] += numsamples(indicator)
     else

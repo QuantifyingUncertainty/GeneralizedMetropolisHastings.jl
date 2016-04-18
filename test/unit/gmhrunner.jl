@@ -21,7 +21,7 @@ for i=1:length(gmhpolicies)
     gmhsegment1 = segment(gmhpolicies[i],model1,sampler1,gprops1)
     remotesegments1 = remotesegments(gmhpolicies[i],model1,sampler1,gprops1)
     @test numproposals(indicator1) == numsamples(indicator1) == gprops1
-    @test numsteps(tunerstate1) == 2
+    @test numtunesteps(tunerstate1) == 2
     @test numparas(chain1) == nparas1 && numsamples(chain1) == gmhchainsamples[i]
     @test remotesegments1.numsegments == GeneralizedMetropolisHastings._numjobsegments(gmhpolicies[i],gprops1)
     @test remotesegments1.numproposalspersegment == GeneralizedMetropolisHastings._numproposalspersegment(gprops1,remotesegments1.numsegments)

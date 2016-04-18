@@ -1,6 +1,3 @@
-using GeneralizedMetropolisHastings
-using Base.Test
-
 function objectsizetostr(a::Any)
   bytes = Base.summarysize(a)
   result = ""
@@ -17,7 +14,7 @@ end
 ##################################################
 
 ###ODE for spring-mass dynamic system
-function springmassode(t,y,ydot,paras)
+@everywhere function springmassode(t,y,ydot,paras)
     ydot[1] = y[2]
     ydot[2] = -paras[1]/paras[2]*y[1] #-K/M*X
 end
@@ -46,11 +43,11 @@ end
 #####################################################
 
 ###Target function
-function sincos(t,paras)
+@everywhere function sincos(t,paras)
     hcat(sin(2*pi*paras[1]*t),cos(2*pi*paras[2]*t))
 end
 
-function sincos!(r,t,paras)
+@everywhere function sincos!(r,t,paras)
     p1 = 2*pi*paras[1]
     p2 = 2*pi*paras[2]
     @simd for i=1:length(t)

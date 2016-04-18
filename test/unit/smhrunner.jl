@@ -6,7 +6,7 @@ smhrunner2 = runner(smhpolicy2,niter1;numburnin = nburnin1)
 indicator1,tunerstate1,chain1 = GeneralizedMetropolisHastings.createcommon(smhrunner1,tuner1,nparas1,sprops1,sprops1)
 samplerstate1 = samplerstate(sampler1,sprops1,Float64,Float64)
 @test numproposals(indicator1) == 1 && numsamples(indicator1) == 1
-@test numsteps(tunerstate1) == 2
+@test numtunesteps(tunerstate1) == 2
 @test numparas(chain1) == 2 && numsamples(chain1) == 4
 
 #test updating the from field

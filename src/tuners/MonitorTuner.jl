@@ -44,7 +44,7 @@ function show(io::IO,state::MonitorTunerState)
 end
 
 function showstep(t::MonitorTuner,state::MonitorTunerState)
-    if verbose(t) && state.index <= numsteps(state)
+    if verbose(t) && state.index <= numtunesteps(state)
         a,p = current(state)
         println("  accepted/proposed = $(a)/$(p)")
         println("  acceptance rate = $(round(a/p,3))")

@@ -14,9 +14,9 @@ s1 = tunerstate(t1,100,Float64)
 s2 = tunerstate(t2,32,Float64)
 s3 = tunerstate(t3,33,Float32)
 
-@test all(isnan(rate(s1))) && numsteps(s1) == 10
-@test all(isnan(rate(s2))) && numsteps(s2) == 8
-@test all(isnan(rate(s3))) && numsteps(s3) == 9
+@test all(isnan(rate(s1))) && numtunesteps(s1) == 10
+@test all(isnan(rate(s2))) && numtunesteps(s2) == 8
+@test all(isnan(rate(s3))) && numtunesteps(s3) == 9
 
 s1.proposed[s1.index] = 10 ; s1.accepted[s1.index] = 8
 s2.proposed[s2.index] = 40 ; s2.accepted[s2.index] = 25

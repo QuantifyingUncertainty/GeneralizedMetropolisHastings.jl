@@ -60,7 +60,7 @@ function show(io::IO,state::ScaleTunerState)
 end
 
 function showstep(t::ScaleTuner,state::ScaleTunerState)
-    if verbose(t) && state.index <= numsteps(state)
+    if verbose(t) && state.index <= numtunesteps(state)
         a,p = current(state)
         println("  accepted/proposed = $a/$p")
         println("  acceptance rate = $(round(a/p,3))")

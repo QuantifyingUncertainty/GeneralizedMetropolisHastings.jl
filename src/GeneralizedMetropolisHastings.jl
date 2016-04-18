@@ -1,52 +1,42 @@
 module GeneralizedMetropolisHastings
 
-using Compat
+import Compat
 
-import StatsFuns
 import Distributions
 import Sundials
 
-import Base: ==
-import Base: size, length, eltype, show, display, time, similar, copy!, copy
+import Base: ==, size, length, eltype, show, display, time, similar, copy!, copy
 
 import Distributions: MvNormal,MvLogNormal
 import Distributions: rand!,logpdf!,logpdf,location,location!
 
 export
-    ###Policy trait types
-    AbstractPolicyTrait,MHRunnerType,InitializeFrom,ProposeFrom,IndicatorType,JobSegments,ChainType,StoreDuring,
-    AbstractPolicy,MHRuntimePolicy,
-    ###Types
-    AbstractParameter,ParameterDefault,ParameterUnivariate,
-    AbstractData,DataArray,DataFunction,
-    AbstractNoiseModel,NoiseModelGaussian,
-    AbstractSample,BaseSample,GradientSample,TensorSample,TangentTensorSample,
-    AbstractProposalDensity,SymmetricDensity,ASymmetricDensity,DistributionWrapper,NormalDensity,LogNormalDensity,
-    AbstractSampler,MHNormal,MHLogNormal,
-    AbstractSamplerState,
-#   MHNormal,SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal,
-    AbstractTuner,MonitorTuner,ScaleTuner,
-    AbstractTunerState,AbstractTunerStore,
-    AbstractModel,TargetModel,ODEModel,
-    AbstractChain,ChainStandard,ChainGradient,
-    AbstractIndicatorMatrix,IndicatorStationary,
-    AbstractJobSegment,GMHSegment,RemoteSegments,
-    AbstractRunner,AbstractMHRunner,SMHRunner,GMHRunner,
+    ###Abstract Types
+    AbstractPolicyTrait,AbstractPolicy,
+    AbstractParameter,
+    AbstractData,
+    AbstractNoiseModel,
+    AbstractSample,
+    AbstractProposalDensity,SymmetricDensity,ASymmetricDensity,
+    AbstractSampler,AbstractSamplerState,
+    AbstractTuner,AbstractTunerState,
+    AbstractModel,
+    AbstractChain,
+    AbstractIndicatorMatrix,
+    AbstractJobSegment,AbstractRemoteSegments,
+    AbstractRunner,AbstractMHRunner,
   ###Functions
-    trait,traitvalue,traittype,policy, #form policies.jl
-    parameter,parameters,initvalues!,initvalues,logprior!,logprior, #from parameters.jl
-    data,numvalues,numvars,generate!,dataindex,datavalues, #from data.jl
-    noise,loglikelihood,applynoise!, #from noise.jl
-    sample,samples,numparas,numsamples,numtangents,sampletype,calculationtype,similar,copy!,copy, #from samples.jl
-    density,condition!,propose!,logprobability,logprobability!,issymmetric, #from densities.jl
-    sampler,samplerstate,setfrom!,propose!,acceptanceratio!,acceptanceratio,tune!,from,proposals, #from samplers
-    tuner,tunerstate,rate,accepted,proposed,total,index,numsteps,current,tune,nextindex!,period,verbose,needstuning,accepted!,showstep, #from tuners.jl
-    model,geometry!,evaluate!,loglikelihood,measurements,#from models.jl
-    chain,store!,accepted!,logposterior, #from chains.jl
-    indicator,numproposals,transitionprobability!,sampleindicator!,indicatorsamples,accepted, #from indicators.jl
-    segment,numproposals,iterate!,getsamples, #from jobsegments.jl
-    remotesegments,numtotalproposals,iterate!,retrievesamples!,
-    runner,run!,initialize!,updatefrom!,auxiliary!,
+    trait,
+    policy,
+    parameters,
+    data,
+    noise,
+    samples,
+    sampler,
+    tuner,
+    model,
+    runner,
+    run!,
     print_gmh_module_loaded
 
 include("policies/traits.jl")

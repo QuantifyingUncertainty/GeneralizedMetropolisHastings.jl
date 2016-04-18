@@ -38,8 +38,8 @@ indicator2,tunerstate2,chain2 = GeneralizedMetropolisHastings.createcommon(mhrun
 
 @test numproposals(indicator1) == sprops1 && numsamples(indicator1) == sprops1
 @test numproposals(indicator2) == gprops1 && numsamples(indicator2) == gprops1
-@test numsteps(tunerstate1) == 2
-@test numsteps(tunerstate2) == 1
+@test numtunesteps(tunerstate1) == 2
+@test numtunesteps(tunerstate2) == 1
 @test numparas(chain1) == nparas1 && numsamples(chain1) == niter1
 @test numparas(chain2) == nparas1 && numsamples(chain2) == (nburnin1 + niter1)*gprops1 + 1
 
