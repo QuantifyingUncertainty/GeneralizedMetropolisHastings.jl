@@ -23,22 +23,27 @@ _tuner(::Type{Val{:scale}},period::Int,targetrate::Real,score::Function,scorearg
 
 ##########################################################################################################
 
-type ScaleTunerState <: AbstractTunerState
-    accepted::Int
-    proposed::Int
-    totalproposed::Int
-    function ScaleTunerState(accepted::Int,proposed::Int,totalproposed::Int)
-        @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
-        @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
-        @assert totalproposed >= 0 "Total number of proposed MCMC samples should be non-negative"
-        new(accepted,proposed,totalproposed)
+type ScaleTunerState{T<:AbstractFloat} <: AbstractTunerState
+    accepted::Vector{Int}
+    proposed::Vector{Int}
+    scalefactor::Vector{T}
+    index::Int
+    function ScaleTunerState(accepted::Vector{Int},proposed::Vector{Int},scalefactor::Vector{T},index::Int)
+        @assert index > 0 "Total number of proposed MCMC samples should be non-negative"
+        new(accepted,proposed,scalefactor,index)
     end
 end
 
-_tunerstate(tuner::ScaleTuner,a::Int,p::Int,t::Int) = ScaleTunerState(a,p,t)
-_tunerstate(tuner::ScaleTuner) = ScaleTunerState(0,0,0)
+function _tunerstate{T<:AbstractFloat}(tuner::ScaleTuner,nburnin::Int,::Type{T})
+    nsteps = ceil(Int,nburnin/tuner.period)
+    ScaleTunerState{T}(zeros(Int,nsteps),zeros(Int,nsteps),zeros(T,nsteps),1)
+end
 
-tune(tuner::ScaleTuner,state::ScaleTunerState) = max(1/2,tuner.score(state.accepted/state.proposed-tuner.targetrate,tuner.scoreargs...))
+function tune(tuner::ScaleTuner,state::ScaleTunerState)
+    r = state.accepted[state.index]/state.proposed[state.index]
+    s = max(1/2,tuner.score(r-tuner.targetrate,tuner.scoreargs...))
+    state.scalefactor[state.index] = convert(eltype(state.scalefactor),s)
+end
 
 function show(io::IO,tuner::ScaleTuner)
     println(io,"ScaleTuner: period = $(tuner.period), verbose = $(tuner.verbose) ,targetrate = $(tuner.targetrate)")
@@ -46,5 +51,19 @@ function show(io::IO,tuner::ScaleTuner)
 end
 
 function show(io::IO,state::ScaleTunerState)
-    println(io,"ScaleTunerState: accepted = $(state.accepted), proposed = $(state.proposed), totalproposed = $(state.totalproposed)")
+    println(io,"ScaleTunerState: ")
+    println(io," accepted = $(accepted(state))")
+    println(io," proposed = $(proposed(state))")
+    println(io," scalefactor = $(round(state.scalefactor,3))")
+    println(io," acceptance rate = $(round(rate(state),3))")
+    println(io," total proposed = $(total(state))")
+end
+
+function showstep(t::ScaleTuner,state::ScaleTunerState)
+    if verbose(t) && state.index <= numsteps(state)
+        a,p = current(state)
+        println("  accepted/proposed = $a/$p")
+        println("  acceptance rate = $(round(a/p,3))")
+        println("  scalefactor = $(round(state.scalefactor[state.index],3))")
+    end
 end

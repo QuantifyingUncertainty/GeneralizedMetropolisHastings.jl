@@ -6,8 +6,19 @@ immutable BaseSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArr
     BaseSample(v::AbstractArray{N},ll::AbstractVector{T},lp::AbstractVector{T}) = new(v,ll,lp)
 end
 
+### Constructors
+function BaseSample{N<:Number,T<:AbstractFloat}(nparas::Integer,nsamples::Integer,::Type{N},::Type{T})
+    v = zeros(N,_valuestuple(nparas,nsamples))
+    ll = Vector{T}(nsamples)
+    lp = Vector{T}(nsamples)
+    BaseSample{N,T,typeof(ll),typeof(v)}(v,ll,lp)
+end
+
 ### Factory function
-@inline _samples{N<:Number,T<:AbstractFloat}(::Type{Val{:base}},nparas::Integer,nsamples::Integer,::Type{N},::Type{T}) =
-    BaseSample{N,T,Vector,Array}(zeros(N,_valuestuple(nparas,nsamples)),Vector{T}(nsamples),Vector{T}(nsamples))
+_samples{N<:Number,T<:AbstractFloat}(::Type{Val{:base}},nparas::Integer,nsamples::Integer,::Type{N},::Type{T}) = BaseSample(nparas,nsamples,N,T)
+
+@inline sampletypename(s::BaseSample) = :base
+
+
 
 

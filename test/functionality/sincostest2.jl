@@ -28,14 +28,14 @@ s5 = sampler(:mh,:normal,0.001,eye(2))
 show(s5)
 
 ###Create a tuner that scales the proposal density
-t5 = tuner(:scale,2,0.5,:erf)
+t5 = tuner(:scale,10,0.5,:erf)
 show(t5)
 
 ###Create a Generalized Metropolis-Hastings runner (which will default to Standard MH because nproposals == 1)
-p5 = policy(:gmh,nproposals5)
-r5 = runner(:gmh,niterations5,nproposals5,p5;numburnin=nburnin5)
+p5 = policy(:mh,nproposals5)
+r5 = runner(p5,niterations5,nproposals5;numburnin=nburnin5)
 show(r5)
 
 ###Run the MCMC
-c5 = run!(r5,m5,s5;tuner=t5)
+c5 = run!(r5,m5,s5,t5)
 show(c5)

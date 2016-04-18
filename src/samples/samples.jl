@@ -13,28 +13,69 @@ typealias DTensorOrder ThirdOrder
 
 #Factory functions for all different types of samples
 #Currently implemented as symbols are: :base, :gradient, :tensor, :tangent
-samples{N<:Number,T<:AbstractFloat}(s::Symbol,nparams::Integer,nsamples::Integer,::Type{N},::Type{T}) = _samples(Val{s},nparams,nsamples,N,T)
-samples{N<:Number,T<:AbstractFloat}(s::Symbol,nparams::Integer,nsamples::Integer,ntangents::Integer,::Type{N},::Type{T}) = _samples(Val{s},nparams,nsamples,ntangents,N,T)
+samples{N<:Number,T<:AbstractFloat}(s::Symbol,nparams::Integer,nsamples::Integer,::Type{N},::Type{T},args...) = _samples(Val{s},nparams,nsamples,N,T,args...)
 
 ### Functionality
 numparas(s::AbstractSample) = size(s.values,1)
 numsamples(s::AbstractSample) = size(s.values,2)
-eltype(s::AbstractSample) = eltype(s.values)
+sampletype(s::AbstractSample) = eltype(s.values)
+calculationtype(s::AbstractSample) = eltype(s.loglikelihood)
+similar(s::AbstractSample,nsamples::Integer =numsamples(s),tosamplename::Symbol =sampletypename(s)) = _samples(Val{tosamplename},numparas(s),nsamples,sampletype(s),calculationtype(s))
 
-function copy!{S<:AbstractSample}(dest::S,src::S)
+function _copy!(dest::AbstractSample,src::AbstractSample)
     for f in fieldnames(dest)
         copy!(getfield(dest,f),getfield(src,f))
     end
+    dest
 end
 
-function copy!{S<:AbstractSample}(dest::S,src::S,sindex::Integer)
-    @assert numsamples(dest) == 1
+function _copy!(dest::AbstractSample,destindex::Integer,src::AbstractSample,srcindex::Integer)
+    ndestsamples = numsamples(dest)
     for f in fieldnames(dest)
         destvals = getfield(dest,f)
-        l = length(destvals)
-        copy!(destvals,1,getfield(src,f),(sindex-1)*l+1,l)
+        copylength = div(length(destvals),ndestsamples)
+        copy!(destvals,(destindex-1)*copylength+1,getfield(src,f),(srcindex-1)*copylength+1,copylength)
     end
+    dest
 end
+
+function _copy!(dest::AbstractSample,destindex::AbstractVector,src::AbstractSample,srcindex::AbstractVector)
+    ndestsamples = numsamples(dest)
+    ncopysamples = length(destindex)
+    for f in fieldnames(dest)
+        destvals = getfield(dest,f)
+        copylength = ncopysamples>0?div(length(destvals),ndestsamples):0
+        for i=1:ncopysamples
+            copy!(destvals,(destindex[i]-1)*copylength+1,getfield(src,f),(srcindex[i]-1)*copylength+1,copylength)
+        end
+    end
+    dest
+end
+
+function copy!(dest::AbstractSample,src::AbstractSample)
+    @assert numparas(dest) == numparas(src) && numsamples(dest) == numsamples(src)
+    _copy!(dest,src)
+end
+
+function copy!(dest::AbstractSample,destindex::Integer,src::AbstractSample,srcindex::Integer)
+    @assert numparas(dest) == numparas(src) && destindex <= numsamples(dest) && srcindex <= numsamples(src)
+    _copy!(dest,destindex,src,srcindex)
+end
+
+function copy!(dest::AbstractSample,destindex::AbstractVector,src::AbstractSample,srcindex::AbstractVector)
+    @assert numparas(dest) == numparas(src) && maximum(destindex) <= numsamples(dest) && maximum(srcindex) <= numsamples(src)
+    _copy!(dest,destindex,src,srcindex)
+end
+
+function copy!(dest::AbstractSample,src::AbstractSample,srcindex::AbstractVector)
+    @assert numparas(dest) == numparas(src) && numsamples(dest) == length(srcindex) && maximum(srcindex) <= numsamples(src)
+    _copy!(dest,1:length(srcindex),src,srcindex)
+end
+
+copy(src::AbstractSample) = _copy!(similar(src),src)
+copy(src::AbstractSample,i::Integer) = _copy!(similar(src,1),1,src,i)
+copy(src::AbstractSample,srcindex::AbstractVector) = _copy!(similar(src,length(srcindex)),1:length(srcindex),src,srcindex)
+copy(src::AbstractSample,srcindex::AbstractVector,to::Symbol) = _copy!(similar(src,length(srcindex),to),1:length(srcindex),src,srcindex)
 
 function =={S<:AbstractSample}(s1::S,s2::S)
     for f in fieldnames(s1)
@@ -66,9 +107,8 @@ end
 display{S<:AbstractSample}(io::IO,v::AbstractVector{S}) = Base.show{S}(io,v)
 
 ######################################################
-@inline _valuestuple(s1::Integer,s2::Integer) = (s2>1?(s1,s2):(s1,)) #if values is one-dimensional, then tensor can be two-dimensional
-@inline _tensortuple(::Type{Val{1}},s1::Integer,s2::Integer,s3::Integer) = (s1,s2) #if values is one-dimensional, then tensor can be two-dimensional
-@inline _tensortuple(::Type{Val{2}},s1::Integer,s2::Integer,s3::Integer) = (s1,s2,s3) #if values is two-dimensional, then tensor should be three-dimensional
+@inline _valuestuple(s1::Integer,s2::Integer) = s2==1?(s1,):(s1,s2) #if s2 == 1, then values should be one-dimensional
+@inline _tensortuple(s1::Integer,s2::Integer,s3::Integer) = s3==1?(s1,s2):(s1,s2,s3) #if s3 == 1, then tensor should be two-dimensional
 
 
 

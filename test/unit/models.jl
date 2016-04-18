@@ -42,7 +42,7 @@ r2 = evaluate!(m2,p2)
 @test numparas(m2) == 2
 
 ###Test the evaluate function for TargetModel
-@test_approx_eq_eps evaluate!(m2,p2) datavalues(m2.measurements) 2.0
+@test_approx_eq_eps evaluate!(m2,p2) datavalues(m2.measurements) 0.5
 @test_approx_eq_eps evaluate!(m2,p2) sincos(t2,p2) 0.001
 
 @test_approx_eq loglikelihood(m2,r2) loglikelihood(m2.noisemodel,datavalues(m2.measurements),r2)
@@ -60,13 +60,13 @@ d3 = [1.0,1.0]
 p3 = [0.5,2.0/3.0]
 v3 = [1e-2,1e-2]
 
-m3 = sincosmodel(t3,p3,v3,d3)
+m3 = sincosmodel!(t3,p3,v3,d3)
 r3 = evaluate!(m3,p3)
 
 @test numparas(m3) == 2
 
 ###Test the evaluate function for TargetModel
-@test_approx_eq_eps evaluate!(m3,p3) datavalues(m3.measurements) 2.0
+@test_approx_eq_eps evaluate!(m3,p3) datavalues(m3.measurements) 0.5
 @test_approx_eq_eps evaluate!(m3,p3) sincos(t3,p3) 0.001
 
 @test_approx_eq loglikelihood(m3,r3) loglikelihood(m3.noisemodel,datavalues(m3.measurements),r3)

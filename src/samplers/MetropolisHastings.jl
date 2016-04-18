@@ -83,7 +83,7 @@ end
 end
 
 @inline function setfrom!(state::MHSamplerState,from::BaseSample,i::Integer)
-    copy!(state.from,from,i)
+    copy!(state.from,1,from,i)
     state
 end
 

@@ -35,10 +35,10 @@ t1 = tuner(:scale,100,0.5,:erf)
 show(t1)
 
 ###Create a Generalized Metropolis-Hastings runner (which will default to Standard MH because nproposals == 1)
-p1 = policy(:gmh,nproposals1)
-r1 = runner(:gmh,niterations1,nproposals1,p1;numburnin=nburnin1)
+p1 = policy(:mh,nproposals1)
+r1 = runner(p1,niterations1;numburnin=nburnin1)
 show(r1)
 
 ###Run the MCMC
-c1 = run!(r1,m1,s1;tuner=t1)
+c1 = run!(r1,m1,s1,t1)
 show(c1)

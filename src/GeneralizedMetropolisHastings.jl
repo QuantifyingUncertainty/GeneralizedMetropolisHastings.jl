@@ -7,15 +7,15 @@ import Distributions
 import Sundials
 
 import Base: ==
-import Base: size, length, eltype, show, display, time, copy!
+import Base: size, length, eltype, show, display, time, similar, copy!, copy
 
 import Distributions: MvNormal,MvLogNormal
 import Distributions: rand!,logpdf!,logpdf,location,location!
 
 export
     ###Policy trait types
-    AbstractPolicyTrait,InitializeFrom,ProposeFrom,IndicatorType,SamplerStates,
-    AbstractPolicy,GMHPolicy,
+    AbstractPolicyTrait,MHRunnerType,InitializeFrom,ProposeFrom,IndicatorType,JobSegments,ChainType,StoreDuring,
+    AbstractPolicy,MHRuntimePolicy,
     ###Types
     AbstractParameter,ParameterDefault,ParameterUnivariate,
     AbstractData,DataArray,DataFunction,
@@ -26,29 +26,32 @@ export
     AbstractSamplerState,
 #   MHNormal,SmMALANormal,TrSmMALANormal,TrSmMALARandomNormal,
     AbstractTuner,MonitorTuner,ScaleTuner,
-    AbstractTunerState,
+    AbstractTunerState,AbstractTunerStore,
     AbstractModel,TargetModel,ODEModel,
     AbstractChain,ChainStandard,ChainGradient,
     AbstractIndicatorMatrix,IndicatorStationary,
-    AbstractRunner,GMHRunner,
+    AbstractJobSegment,GMHSegment,RemoteSegments,
+    AbstractRunner,AbstractMHRunner,SMHRunner,GMHRunner,
   ###Functions
     trait,traitvalue,traittype,policy, #form policies.jl
     parameter,parameters,initvalues!,initvalues,logprior!,logprior, #from parameters.jl
     data,numvalues,numvars,generate!,dataindex,datavalues, #from data.jl
     noise,loglikelihood,applynoise!, #from noise.jl
-    sample,samples,numparas,numsamples,numtangents,copy!, #from samples.jl
+    sample,samples,numparas,numsamples,numtangents,sampletype,calculationtype,similar,copy!,copy, #from samples.jl
     density,condition!,propose!,logprobability,logprobability!,issymmetric, #from densities.jl
     sampler,samplerstate,setfrom!,propose!,acceptanceratio!,acceptanceratio,tune!,from,proposals, #from samplers
-    tuner,tunerstate,rate,accepted,proposed,totalproposed,tune,resetburnin!,period,verbose, #from tuners.jl
+    tuner,tunerstate,rate,accepted,proposed,total,index,numsteps,current,tune,nextindex!,period,verbose,needstuning,accepted!,showstep, #from tuners.jl
     model,geometry!,evaluate!,loglikelihood,measurements,#from models.jl
     chain,store!,accepted!,logposterior, #from chains.jl
     indicator,numproposals,transitionprobability!,sampleindicator!,indicatorsamples,accepted, #from indicators.jl
-    runner,samplerstates,initialize!,iterate!,updatefrom!,iterateandstore!,iterateandtune!,run!,
+    segment,numproposals,iterate!,getsamples, #from jobsegments.jl
+    remotesegments,numtotalproposals,iterate!,retrievesamples!,
+    runner,run!,initialize!,updatefrom!,auxiliary!,
     print_gmh_module_loaded
 
 include("policies/traits.jl")
 include("policies/policies.jl")
-include("policies/GMHPolicy.jl")
+include("policies/MHRuntimePolicy.jl")
 include("parameters/parameters.jl")
 include("data/data.jl")
 include("data/DataArray.jl")
@@ -78,7 +81,13 @@ include("tuners/ScaleTuner.jl")
 include("chains/chains.jl")
 include("chains/ChainStandard.jl")
 include("chains/ChainGradient.jl")
+include("jobsegments/jobsegments.jl")
+include("jobsegments/GMHSegment.jl")
+include("jobsegments/remotesegments.jl")
+include("jobsegments/MHRemoteSegments.jl")
 include("runners/runners.jl")
+include("runners/MHRunner.jl")
+include("runners/SMHRunner.jl")
 include("runners/GMHRunner.jl")
 
 function print_gmh_module_loaded()

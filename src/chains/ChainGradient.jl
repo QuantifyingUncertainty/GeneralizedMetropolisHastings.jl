@@ -5,27 +5,25 @@ type ChainGradient{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray
     values::A
     loglikelihood::V
     gradloglikelihood::A
+    numburnin::Int
     accepted::Int
     proposed::Int
     runtime::Real
-    ChainGradient(v::AbstractArray{N},ll::AbstractVector{T},gl::AbstractArray{T},a::Int,p::Int,r::Real) = new(v,ll,gl,a,p,r)
+    ChainGradient(v::AbstractArray{N},ll::AbstractVector{T},gl::AbstractArray{T},b::Int,a::Int,p::Int,r::Real) = new(v,ll,gl,b,a,p,r)
 end
 
-@inline function _chain{N<:Number,T<:AbstractFloat}(::Type{Val{:gradient}},nparas::Int,nsamples::Int,::Type{N},::Type{T})
+@inline function _chain{N<:Number,T<:AbstractFloat}(::Type{Val{:gradient}},nparas::Int,nsamples::Int,::Type{N},::Type{T};numburnin::Int =0)
     v = zeros(N,_valuestuple(nparas,nsamples))
-    ChainGradient{N,T,Vector,Array}(v,Vector{T}(nsamples),similar(v,T),0,0,0.0)
+    ChainGradient{N,T,Vector,Array}(v,Vector{T}(nsamples),similar(v,T),numburnin,0,0,0.0)
 end
 
 function store!{O<:GradientOrder}(c::ChainGradient,s::AbstractSample{O},j::Int)
-    @assert numparas(c) == numparas(s) && j <= numsamples(s)
+    nparas = numparas(s)
+    @assert numparas(c) == nparas && j <= numsamples(s)
     if c.proposed < numsamples(c)
         c.proposed += 1
-        @simd for i=1:numparas(s)
-            @inbounds c.values[i,c.proposed] = s.values[i,j]
-        end
-        @simd for i=1:numparas(s)
-            @inbounds c.gradloglikelihood[i,c.proposed] = s.gradloglikelihood[i,j]
-        end
+        copy!(c.values,(c.proposed-1)*nparas+1,s.values,(j-1)*nparas+1,nparas)
+        copy!(c.gradloglikelihood,(c.proposed-1)*nparas+1,s.gradloglikelihood,(j-1)*nparas+1,nparas)
         c.loglikelihood[c.proposed] = s.loglikelihood[j]
     else
         warn("Chain is full. Additional results cannot be stored")

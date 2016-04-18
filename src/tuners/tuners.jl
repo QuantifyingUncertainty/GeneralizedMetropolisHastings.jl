@@ -5,31 +5,40 @@ tuner(s::Symbol,p::Int,args...;keyargs...) = _tuner(Val{s},p,args...;keyargs...)
 
 period(tuner::AbstractTuner) = tuner.period
 verbose(tuner::AbstractTuner) = tuner.verbose
+needstuning(tuner::AbstractTuner,i::Int) = mod(i,period(tuner))==0
 
-############################################################################ver
+############################################################################
 
 abstract AbstractTunerState
 
 ###Factory function for tunerstates
-tunerstate(t::AbstractTuner,args...) = _tunerstate(t,args...)
-
-tune(tuner::AbstractTuner,state::AbstractTunerState) = ()
+tunerstate{T<:AbstractFloat}(t::AbstractTuner,nburnin::Int,::Type{T}) = _tunerstate(t,nburnin,T)
 
 accepted(state::AbstractTunerState) = state.accepted
 proposed(state::AbstractTunerState) = state.proposed
-totalproposed(state::AbstractTunerState) = state.totalproposed
-rate(state::AbstractTunerState) = state.accepted/state.proposed
+rate(state::AbstractTunerState) = accepted(state)./proposed(state)
+total(state::AbstractTunerState) = sum(proposed(state))
+index(state::AbstractTunerState) = state.index
+numsteps(state::AbstractTunerState) = length(state.accepted)
+
+current(state::AbstractTunerState) = (a = state.accepted[state.index] ; p = state.proposed[state.index] ; tuple(a,p))
+
+tune(tuner::AbstractTuner,state::AbstractTunerState) = ()
 
 @inline function accepted!(state::AbstractTunerState,indicator::AbstractIndicatorMatrix)
-    state.accepted += accepted(indicator)
-    state.proposed += numsamples(indicator)
-    state.totalproposed += numsamples(indicator)
+    if state.index <= numsteps(state)
+        state.accepted[state.index] += accepted(indicator)
+        state.proposed[state.index] += numsamples(indicator)
+    else
+        warn("TunerState is full. Additional tuning steps cannot be stored")
+    end
 end
 
-@inline function resetburnin!(state::AbstractTunerState)
-    (state.accepted, state.proposed) = (0, 0)
-    state
-end
+@inline nextindex!(state::AbstractTunerState) = (state.index+=1)
+
+
+
+
 
 
 

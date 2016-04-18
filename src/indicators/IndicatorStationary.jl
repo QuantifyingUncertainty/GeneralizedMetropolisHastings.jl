@@ -4,7 +4,7 @@ immutable IndicatorStationary{T<:AbstractFloat} <: AbstractIndicatorMatrix
     IndicatorStationary(s::Vector{T},i::Vector{Int}) = new(s,i)
 end
 
-_indicator{T<:AbstractFloat}(::Type{Val{:stationary}},numproposals::Int,numsamples::Int,::Type{T}) = IndicatorStationary{T}(zeros(T,numproposals+1),zeros(Int,numsamples+1))
+_indicator{T<:AbstractFloat}(::Type{Val{:stationary}},nproposals::Int,nsamples::Int,::Type{T}) = IndicatorStationary{T}(zeros(T,nproposals+1),zeros(Int,nsamples+1))
 
 numproposals(indicator::IndicatorStationary) = length(indicator.stationary) - 1
 
@@ -41,10 +41,15 @@ function _calculatetransition(indicator::IndicatorStationary)
 end
 
 function sampleindicator!(indicator::IndicatorStationary)
-    c = Distributions.Categorical(indicator.stationary)
-    indicator.samples[1] = length(indicator.stationary)
-    @simd for i=2:length(indicator.samples)
-        @inbounds indicator.samples[i] = rand(c)
+    try
+        c = Distributions.Categorical(indicator.stationary)
+        indicator.samples[1] = length(indicator.stationary)
+        @simd for i=2:length(indicator.samples)
+            @inbounds indicator.samples[i] = rand(c)
+        end
+    catch e
+        println("Stationary probability values: ",indicator.stationary)
+        throw(e)
     end
     indicator.samples
 end

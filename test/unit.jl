@@ -11,7 +11,11 @@ unittests = [
     "models",
     "tuners",
     "chains",
-    "runners"]
+    "jobsegments",
+    "runners",
+    "mhrunner",
+    "smhrunner",
+    "gmhrunner"]
 
 println("===================")
 println("Running unit tests:")

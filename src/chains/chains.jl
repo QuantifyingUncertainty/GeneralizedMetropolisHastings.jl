@@ -1,6 +1,6 @@
 abstract AbstractChain
 
-chain{N<:Number,T<:AbstractFloat}(s::Symbol,nparas::Int,nsamples::Int,::Type{N},::Type{T},args...) = _chain(Val{s},nparas,nsamples,N,T,args...)
+chain{N<:Number,T<:AbstractFloat}(s::Symbol,nparas::Int,nsamples::Int,::Type{N},::Type{T},args...;keyargs...) = _chain(Val{s},nparas,nsamples,N,T,args...;keyargs...)
 
 numparas(c::AbstractChain) = size(c.values,1)
 numsamples(c::AbstractChain) = size(c.values,2)

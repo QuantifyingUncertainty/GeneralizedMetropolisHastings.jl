@@ -46,8 +46,22 @@ end
 #####################################################
 
 ###Target function
-sincos(t,paras) = hcat(sin(2*pi*paras[1]*t),cos(2*pi*paras[2]*t))
-sincos!(r,t,paras) = (r = hcat(sin(2*pi*paras[1]*t),cos(2*pi*paras[2]*t)))
+function sincos(t,paras)
+    hcat(sin(2*pi*paras[1]*t),cos(2*pi*paras[2]*t))
+end
+
+function sincos!(r,t,paras)
+    p1 = 2*pi*paras[1]
+    p2 = 2*pi*paras[2]
+    @simd for i=1:length(t)
+        @inbounds r[i,1] = sin(p1*t[i])
+    end
+    @simd for i=1:length(t)
+        @inbounds r[i,2] = cos(p2*t[i])
+    end
+    r
+end
+
 sincosdata(t,paras,n) = data(:array,t,applynoise!(n,sincos(t,paras)))
 
 function sincosmodel(t,modelvals,variance,paraminit...)

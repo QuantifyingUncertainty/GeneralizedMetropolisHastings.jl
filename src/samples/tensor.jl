@@ -14,12 +14,16 @@ immutable TensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractA
                  tl::AbstractArray{T},tp::AbstractArray{T}) = new(v,ll,lp,gl,gp,tl,tp)
 end
 
-### Factory function
-@inline function _samples{N<:Number,T<:AbstractFloat}(::Type{Val{:tensor}},nparas::Integer,nsamples::Integer,::Type{N},::Type{T})
+function TensorSample{N<:Number,T<:AbstractFloat}(nparas::Integer,nsamples::Integer,::Type{N},::Type{T})
     v = zeros(N,_valuestuple(nparas,nsamples))
-    u = _tensortuple(Val{ndims(v)},nparas,nparas,nsamples)
+    u = _tensortuple(nparas,nparas,nsamples)
     TensorSample{N,T,Vector,Array,Array}(v,Vector{T}(nsamples),Vector{T}(nsamples),similar(v,T),similar(v,T),similar(v,T,u),similar(v,T,u))
 end
+
+### Factory function
+_samples{N<:Number,T<:AbstractFloat}(::Type{Val{:tensor}},nparas::Integer,nsamples::Integer,::Type{N},::Type{T}) = TensorSample(nparas,nsamples,N,T)
+
+@inline sampletypename(s::TensorSample) = :tensor
 
 ################################################################################################################################################################
 ### TangentTensorSample is used by samplers that approximate the calculation of the tensor of the log-target (for ex TrSmMALARandom)
@@ -37,12 +41,18 @@ immutable TangentTensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:Ab
                         tl::AbstractArray{T},tp::AbstractArray{T},tv::AbstractArray{T}) = new(v,ll,lp,gl,gp,tl,tp,tv)
 end
 
-@inline function _samples{N<:Number,T<:AbstractFloat}(::Type{Val{:tangent}},nparas::Integer,nsamples::Integer,ntangents::Integer,::Type{N},::Type{T})
+function TangentTensorSample{N<:Number,T<:AbstractFloat}(nparas::Integer,nsamples::Integer,ntangents::Integer,::Type{N},::Type{T})
     v = zeros(N,_valuestuple(nparas,nsamples))
-    u1 = _tensortuple(Val{ndims(v)},nparas,nparas,nsamples)
-    u2 = _tensortuple(Val{ndims(v)},nparas,ntangents,nsamples)
+    u1 = _tensortuple(nparas,nparas,nsamples)
+    u2 = _tensortuple(nparas,ntangents,nsamples)
     TangentTensorSample{N,T,Vector,Array,Array}(v,Vector{T}(nsamples),Vector{T}(nsamples),similar(v,T),similar(v,T),similar(v,T,u1),similar(v,T,u1),similar(v,T,u2))
 end
 
+_samples{N<:Number,T<:AbstractFloat}(::Type{Val{:tangent}},nparas::Integer,nsamples::Integer,::Type{N},::Type{T},ntangents::Integer) = TangentTensorSample(nparas,nsamples,ntangents,N,T)
+
 ### Additional functionality for tangent tensor samples
 numtangents(s::TangentTensorSample) = size(s.tangentvectors,2)
+
+similar(s::TangentTensorSample,nsamples::Integer =numsamples(s),tosamplename::Symbol =sampletypename(s)) = (args=tosamplename==:tangent?(numtangents(s),):() ; _samples(Val{tosamplename},numparas(s),nsamples,sampletype(s),calculationtype(s),args...))
+
+@inline sampletypename(s::TangentTensorSample) = :tangent

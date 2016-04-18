@@ -1,7 +1,7 @@
 abstract AbstractIndicatorMatrix
 
 ###Factory function. Currently implemented is :stationary
-indicator(s::Symbol,args...) = _indicator(Val{s},args...)
+indicator{T<:AbstractFloat}(s::Symbol,nproposals::Int,nsamples::Int,::Type{T},args...) = _indicator(Val{s},nproposals,nsamples,T,args...)
 
 indicatorsamples(indicator::AbstractIndicatorMatrix) = indicator.samples
 

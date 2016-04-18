@@ -35,10 +35,10 @@ t2 = tuner(:scale,5,0.5,:erf)
 show(t2)
 
 ###Create a Generalized Metropolis-Hastings runner (which will run in as many samplerstates as there are processes running)
-p2 = policy(:gmh,nproposals2)
-r2 = runner(:gmh,niterations2,nproposals2,p2;numburnin=nburnin2)
+p2 = policy(:mh,nproposals2)
+r2 = runner(p2,niterations2,nproposals2;numburnin=nburnin2)
 show(r2)
 
 ###Run the MCMC
-c2 = run!(r2,m2,s2;tuner=t2)
+c2 = run!(r2,m2,s2,t2)
 show(c2)

@@ -18,25 +18,39 @@ _tuner(::Type{Val{:monitor}},period::Int;verbose::Bool =true) = MonitorTuner(per
 ##########################################################################################################
 
 type MonitorTunerState <: AbstractTunerState
-    accepted::Int # Number of accepted MCMC samples during current tuning period
-    proposed::Int # Number of proposed MCMC samples during current tuning period
-    totalproposed::Int # Total number of proposed MCMC samples during burnin
+    accepted::Vector{Int} # Number of accepted MCMC samples during current tuning period
+    proposed::Vector{Int} # Number of proposed MCMC samples during current tuning period
+    index::Int
 
-    function MonitorTunerState(accepted::Int,proposed::Int,totalproposed::Int)
-        @assert accepted >= 0 "Number of accepted MCMC samples should be non-negative"
-        @assert proposed >= 0 "Number of proposed MCMC samples should be non-negative"
-        @assert totalproposed >= 0 "Total number of proposed MCMC samples should be non-negative"
-        new(accepted, proposed, totalproposed)
+    function MonitorTunerState(accepted::Vector{Int},proposed::Vector{Int},index::Int)
+        @assert index > 0 "Total number of proposed MCMC samples should be non-negative"
+        new(accepted,proposed,index)
     end
 end
 
-_tunerstate(tuner::MonitorTuner,accepted::Int,proposed::Int,totalproposed::Int) = MonitorTunerState(accepted,proposed,totalproposed)
-_tunerstate(tuner::MonitorTuner) = MonitorTunerState(0,0,0)
+function _tunerstate{T<:AbstractFloat}(tuner::MonitorTuner,nburnin::Int,::Type{T})
+    nsteps = ceil(Int,nburnin/tuner.period)
+    MonitorTunerState(zeros(Int,nsteps),zeros(Int,nsteps),1)
+end
 
 show(io::IO,tuner::MonitorTuner) = println(io,"MonitorTuner: period = $(tuner.period), verbose = $(tuner.verbose)")
 
 function show(io::IO,state::MonitorTunerState)
-    println(io,"MonitorTunerState: accepted = $(state.accepted), proposed = $(state.proposed), totalproposed = $(state.totalproposed)")
+    println(io,"MonitorTunerState: ")
+    println(io," accepted = $(accepted(state))")
+    println(io," proposed = $(proposed(state))")
+    println(io," acceptance rate = $(round(rate(state),3))")
+    println(io," total proposed = $(total(state))")
 end
+
+function showstep(t::MonitorTuner,state::MonitorTunerState)
+    if verbose(t) && state.index <= numsteps(state)
+        a,p = current(state)
+        println("  accepted/proposed = $(a)/$(p)")
+        println("  acceptance rate = $(round(a/p,3))")
+    end
+end
+
+
 
 

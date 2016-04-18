@@ -30,11 +30,15 @@ show(m3)
 s3 = sampler(:mh,:normal,0.1,[1.0 0.0;0.0 0.1])
 show(s3)
 
+###Create a tuner that scales the proposal density
+t3 = tuner(:scale,5,0.5,:erf)
+show(t3)
+
 ###Create a Generalized Metropolis-Hastings runner (which will run in 3 separate batches because of samplerstates=:test)
-p3 = policy(:gmh,nproposals3;samplerstates=:test)
-r3 = runner(:gmh,niterations3,nproposals3,p3;numburnin=nburnin3)
+p3 = policy(:mh,nproposals3;jobsegments=:test)
+r3 = runner(p3,niterations3,nproposals3;numburnin=nburnin3)
 show(r3)
 
 ###Run the MCMC
-c3 = run!(r3,m3,s3)
+c3 = run!(r3,m3,s3,t3)
 show(c3)
