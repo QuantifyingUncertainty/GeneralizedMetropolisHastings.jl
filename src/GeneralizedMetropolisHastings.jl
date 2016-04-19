@@ -25,17 +25,18 @@ export
     AbstractIndicatorMatrix,
     AbstractJobSegment,AbstractRemoteSegments,
     AbstractRunner,AbstractMHRunner,
-  ###Functions
-    trait,
+    ###Functions
+    trait,traitvalue,traittype,
     policy,
     parameters,
-    data,
+    data,dataindex,datavalues,
     noise,
     sampler,
     tuner,
-    model,
+    model,evaluate!,applynoise!,measurements,numparas,
     runner,
     run!,
+    samples,numsamples,loglikelihood,logprior,logposterior,
     print_gmh_module_loaded
 
 include("policies/traits.jl")

@@ -18,6 +18,7 @@ _runner(::Type{Val{:generalized}},policy::MHRuntimePolicy,niterations::Int,nprop
 function run!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSampler,tuner_::AbstractTuner)
     indicatorstate_ = samplerstate(sampler_,1,runner_.policy.sampletype,runner_.policy.calculationtype)
     segments_ = remotesegments(runner_.policy,model_,sampler_,runner_.numproposals)
+    show(segments_)
     indicator_,tunerstate_,chain_ = createcommon(runner_,tuner_,numparas(model_),numtotalproposals(segments_),runner_.numindicatorsamples)
     tic()
     burnin!(runner_,model_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_,indicator_,chain_)
