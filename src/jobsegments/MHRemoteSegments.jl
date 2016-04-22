@@ -58,7 +58,7 @@ function retrievesamples!(segments_::MHRemoteSegments,sampleindex_::AbstractVect
     insegmentindex = _prop2segment(segments_,sampleindex_)
     segments_.prop2collected = _segment2collected(segments_,insegmentindex)
     @sync begin
-        map!((r,i)->remotecall_fetch(r.where,getsamples,r,i),segments_.collectedsamples,segments_.remote,insegmentindex)
+        map!((r,i)->(~isempty(i)?remotecall_fetch(r.where,getsamples,r,i):samples(:base,0,0,Float64,Float64)),segments_.collectedsamples,segments_.remote,insegmentindex)
     end
     segments_.collectedsamples
 end
