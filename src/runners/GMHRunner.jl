@@ -50,6 +50,7 @@ end
 
 function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                   indicator_::AbstractIndicatorMatrix,chain_::AbstractChain,storeduring::Bool)
+    prepare!(runner_,indicatorstate_,segments_,indicator_)
     auxiliary!(runner_,model_,indicatorstate_)
     segmentacceptances = iterate!(segments_,proposals(indicatorstate_))
     transitionprobability!(indicator_,acceptanceratio!(indicatorstate_),segmentacceptances)
@@ -61,7 +62,17 @@ function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::Abst
         throw(e)
     end
     storeduring?store!(runner_,indicatorstate_,segments_,indicator_,chain_):nothing
-    updatefrom!(runner_,indicatorstate_,segments_,indicator_)
+end
+
+function prepare!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
+                  segments_::AbstractRemoteSegments,indicator_::AbstractIndicatorMatrix)
+    indicatorend = indicatorsamples(indicator_)[end]
+    if indicatorend != numproposals(indicator_) + 1
+        prepare!(segments_,indicatorstate_,indicatorend)
+    else
+        prepareindicator!(indicatorstate_)
+    end
+    indicatorstate_
 end
 
 function auxiliary!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::AbstractSamplerState)
@@ -89,15 +100,6 @@ function store!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,segment
         end
     end
     accepted!(chain_,indicator_)
-end
-
-function updatefrom!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
-                     segments_::AbstractRemoteSegments,indicator_::AbstractIndicatorMatrix)
-    indicatorend = indicatorsamples(indicator_)[end]
-    if indicatorend != numproposals(indicator_) + 1
-        setfrom!(indicatorstate_,getsamples(segments_,indicatorend))
-    end
-    indicatorstate_
 end
 
 function tune!(runner_::AbstractRunner,sampler_::AbstractSampler,indicatorstate_::AbstractSamplerState,

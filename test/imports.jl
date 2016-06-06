@@ -7,10 +7,10 @@ import Base.Test: @test,@test_approx_eq,@test_approx_eq_eps,@test_throws
     ###Types
     AbstractParameter,ParameterDefault,ParameterUnivariate,
     DataArray,DataFunction,
+    AbstractBactrian,Bactrian,
     AbstractNoiseModel,NoiseModelGaussian,
     BaseSample,GradientSample,TensorSample,TangentTensorSample,
     SymmetricDensity,ASymmetricDensity,DistributionWrapper,NormalDensity,LogNormalDensity,
-    MHNormal,MHLogNormal,
     MonitorTuner,ScaleTuner,
     AbstractModel,TargetModel,ODEModel,
     ChainStandard,ChainGradient,
@@ -22,13 +22,15 @@ import Base.Test: @test,@test_approx_eq,@test_approx_eq_eps,@test_throws
     parameter,parameters,initvalues!,initvalues,logprior!,logprior, #from parameters.jl
     data,numvalues,numvars,generate!,dataindex,datavalues, #from data.jl
     noise,loglikelihood,applynoise!, #from noise.jl
-    samples,numparas,numsamples,numtangents,sampletype,calculationtype,similar, #from samples.jl
-    density,condition!,propose!,logprobability,logprobability!,issymmetric, #from densities.jl
-    sampler,samplerstate,setfrom!,propose!,acceptanceratio!,acceptanceratio,tune!,from,proposals, #from samplers
+    samples,numparas,numsamples,numtangents,sampletype,calculationtype,similar,offset!, #from samples.jl
+    distribution,distributions,recenter,rescale,update, #from distributions.jl
+    density,condition!,scale!,update!,propose!,logprobability,logprobability!,issymmetric, #from densities.jl
+    sampler,samplerstate,setfrom!,propose!,acceptance!,acceptance,tune!,from,proposals,prepare!,prepareindicator!,prepareauxiliary!, #from samplers
     tuner,tunerstate,rate,accepted,proposed,total,index,numtunesteps,current,tune,nextindex!,period,verbose,needstuning,accepted!,showstep, #from tuners.jl
     model,geometry!,evaluate!,loglikelihood,measurements,#from models.jl
     chain,store!,accepted!,logposterior, #from chains.jl
     indicator,numproposals,transitionprobability!,sampleindicator!,indicatorsamples,accepted, #from indicators.jl
     segment,numproposals,iterate!,getsamples, #from jobsegments.jl
     remotesegments,numtotalproposals,iterate!,retrievesamples!,
-    runner,run!,initialize!,updatefrom!,auxiliary!
+    runner,run!,initialize!,prepare!,auxiliary!,
+    sincos,sincos!,springmassode,springmassdata,springmassnoisy

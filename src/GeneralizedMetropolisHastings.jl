@@ -2,13 +2,15 @@ module GeneralizedMetropolisHastings
 
 import Compat
 
+import PDMats
 import Distributions
 import Sundials
+import ForwardDiff
 
 import Base: ==, size, length, eltype, show, display, time, similar, copy!, copy
+import Base: mean, var, rand, rand!, scale!
 
-import Distributions: MvNormal,MvLogNormal
-import Distributions: rand!,logpdf!,logpdf,location,location!
+import Distributions: pdf,logpdf!,logpdf,location,location!,scale
 
 export
     ###Abstract Types
@@ -30,6 +32,8 @@ export
     policy,
     parameters,
     data,dataindex,datavalues,
+    distribution,distributions,
+    density,
     noise,
     sampler,
     tuner,
@@ -46,19 +50,20 @@ include("parameters/parameters.jl")
 include("data/data.jl")
 include("data/DataArray.jl")
 include("data/DataFunction.jl")
+include("distributions/distributions.jl")
+include("distributions/Bactrian.jl")
+include("proposals/proposals.jl")
+include("proposals/DistributionWrapper.jl")
 include("noise/noise.jl")
 include("noise/NoiseModelGaussian.jl")
 include("samples/samples.jl")
 include("samples/base.jl")
 include("samples/gradient.jl")
 include("samples/tensor.jl")
-include("proposals/proposals.jl")
-include("proposals/DistributionWrapper.jl")
-include("proposals/NormalDensity.jl")
-include("proposals/LogNormalDensity.jl")
 include("samplers/samplers.jl")
 include("samplers/MetropolisHastings.jl")
-# include("samplers/SmMALA.jl")
+include("samplers/AdaptiveMetropolis.jl")
+include("samplers/SmMALA.jl")
 include("indicators/indicators.jl")
 include("indicators/IndicatorStationary.jl")
 include("models/models.jl")
@@ -79,6 +84,9 @@ include("runners/runners.jl")
 include("runners/MHRunner.jl")
 include("runners/SMHRunner.jl")
 include("runners/GMHRunner.jl")
+include("testutil/util.jl")
+include("testutil/sincos.jl")
+include("testutil/springmass.jl")
 
 function print_gmh_module_loaded()
   println("$module_name(current_module()) module loaded successfully")

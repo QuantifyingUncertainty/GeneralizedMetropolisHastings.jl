@@ -45,13 +45,13 @@ end
 
 function iterate!(runner_::SMHRunner,model_::AbstractModel,samplerstate_::AbstractSamplerState,
                   indicator_::AbstractIndicatorMatrix,chain_::AbstractChain,storeduring::Bool)
+    prepare!(runner_,samplerstate_,indicator_)
     propose!(samplerstate_)
     geometry!(model_,proposals(samplerstate_))
     a = acceptanceratio!(samplerstate_)
     transitionprobability!(indicator_,a)
     sampleindicator!(indicator_)
     storeduring?store!(runner_,samplerstate_,indicator_,chain_):nothing
-    updatefrom!(runner_,samplerstate_,indicator_)
 end
 
 function store!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,
@@ -64,12 +64,7 @@ function store!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,
     accepted!(chain_,indicator_)
 end
 
-function updatefrom!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,indicator_::AbstractIndicatorMatrix)
-    if indicatorsamples(indicator_)[2] != 2
-        setfrom!(samplerstate_,proposals(samplerstate_))
-    end
-    samplerstate_
-end
+prepare!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,indicator_::AbstractIndicatorMatrix) = preparesamplerstate!(samplerstate_,indicatorsamples(indicator_)[2]!=2)
 
 function tune!(runner_::SMHRunner,sampler_::AbstractSampler,samplerstate_::AbstractSamplerState,tuner_::AbstractTuner,tunerstate_::AbstractTunerState)
     tvals = tune(tuner_,tunerstate_)

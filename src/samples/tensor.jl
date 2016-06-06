@@ -1,8 +1,8 @@
-
+typealias AbstractTensorSample AbstractSample{SecondOrder}
 #############################################################################################################################################################
 ### TensorSample is used by samplers that compute (up to) the tensor of the log-target (for ex SmMALA)
 
-immutable TensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray,D<:AbstractArray} <: AbstractSample{SecondOrder}
+immutable TensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray,D<:AbstractArray} <: AbstractTensorSample
     values::A
     loglikelihood::V
     logprior::V
@@ -28,7 +28,7 @@ _samples{N<:Number,T<:AbstractFloat}(::Type{Val{:tensor}},nparas::Integer,nsampl
 ################################################################################################################################################################
 ### TangentTensorSample is used by samplers that approximate the calculation of the tensor of the log-target (for ex TrSmMALARandom)
 
-immutable TangentTensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray,D<:AbstractArray} <: AbstractSample{SecondOrder}
+immutable TangentTensorSample{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray,D<:AbstractArray} <: AbstractTensorSample
     values::A
     loglikelihood::V
     logprior::V

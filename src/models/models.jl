@@ -2,9 +2,9 @@ abstract AbstractModel
 
 ### Factory function
 model(s::Symbol,args...;keyargs...) = _model(Val{s},args...;keyargs...)
-
 numparas(m::AbstractModel) = length(m.parameters)
 parameters(m::AbstractModel) = m.parameters
+mutates(m::AbstractModel) = false
 
 initialize!(i::InitializeFrom,m::AbstractModel,s::AbstractSample) = (initvalues!(i,parameters(m),s.values) ; s)
 
@@ -29,7 +29,7 @@ end
 function geometry!(m::AbstractModel,s::AbstractSample{FirstOrder},i::Integer)
     r::AbstractArray = evaluate!(m,s.values[:,i])
     s.loglikelihood[i] = loglikelihood(m,r)
-    #gradlogprior!(m,s,r,i)
+    gradlogprior!(m,s,r,i)
     #gradloglikelihood!(m,s,r,i)
 end
 
@@ -37,7 +37,7 @@ function geometry!(m::AbstractModel,s::AbstractSample{SecondOrder},i::Integer)
     r::AbstractArray = evaluate!(m,s.values[:,i])
     s.loglikelihood[i] = loglikelihood(m,r)
     #gradlogprior!(m,s,r,i)
-    #gradloglikelihood!(m,s,r,i)
+    #gradloglikelihood!(m,s,r,i)j
     #tensorlogprior!(m,s,r,i)
     #tensorloglikelihood!(m,s,r,i)
 end
@@ -48,12 +48,31 @@ evaluate!(m::AbstractModel,v::AbstractVector) = throw(MethodError(evaluate!, (m,
 ###we do have a generic way to calculate the loglikelihood
 loglikelihood(m::AbstractModel,modeldata::AbstractArray) = loglikelihood(noisemodel(m),measurements(m),modeldata)
 
-# ###Calculation of the gradient from finite differences
-# function gradient!(m::MCModel,s::MCSample,sol::Matrix{Float64})
+###Calculation of the gradient from finite differences
+function gradient(m::AbstractModel,s::AbstractSample{GradientOrder},i::Int,evaldata::AbstractArray)
+    #pre-allocate the array for finite difference results
+    fds  = similar(evaldata,size(evaldata)...,nparas(s))
+end
 
-#   #pre-allocate the array for finite difference results
-#   fd  = Array(Float64,size(sol,1),size(sol,2),length(s.values))
-#   np = Array(Float64,length(s.values))
+#gradlogprior!(m::ODEModel,s::Sample{}) = (s.gradlogprior = map((p,v)->((logpdf(p,v+m.gradientepsilon)-logpdf(p,v))/m.gradientepsilon),m.parameters.priors,s.values))
+
+###Calculate the loglikelihood function
+
+###Calculate the gradient of the loglikelihood
+#gradienthelper(m::ODEModel,data::Matrix{Float64},sol::Matrix{Float64},grad::Array{Float64,3}) = vec(sum((grad.*(data-sol)./m.variance),(1,2))) #.* does automatic broadcast(), summing result along first 2 dimensions
+#gradloglikelihood(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,m.measurements,sol,grad)
+
+###Calculate the metric tensor
+#tensorvalue(m::ODEModel,grad::Array{Float64,3},i::Int,j::Int) = sum(grad[:,:,i].*grad[:,:,j]./m.variance)
+
+###Generate pseudodata for the approximate metric tensor calculations
+pseudodata(m::ODEModel,d::AbstractArray) = applynoise!(m.noise,d)
+#tangentvector(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,pseudodata(m,sol),sol,grad)
+
+###Calculate the gradient of the loglikelihood
+#gradienthelper(m::ODEModel,data::Matrix{Float64},sol::Matrix{Float64},grad::Array{Float64,3}) = vec(sum((grad.*(data-sol)./m.variance),(1,2))) #.* does automatic broadcast(), summing result along first 2 dimensions
+#gradloglikelihood(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,m.measurements,sol,grad)
+
 
 #   #calculate finite differences
 #   for i = 1:length(s.values)
@@ -66,7 +85,6 @@ loglikelihood(m::AbstractModel,modeldata::AbstractArray) = loglikelihood(noisemo
 
 #   #return the finite differences solution
 #   fd
-# end
 
 # function tensor!(m::MCModel,t::TensorSample,sol::Matrix{Float64},grad::Array{Float64,3})
 #   np = length(t.values)

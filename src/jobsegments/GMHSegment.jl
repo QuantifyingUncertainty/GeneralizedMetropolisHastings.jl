@@ -7,18 +7,20 @@ end
 ### Factory function
 function _segment(p::MHRuntimePolicy,m::AbstractModel,s::AbstractSampler,nproposals::Integer)
     @assert traitvalue(p.runner) == :generalized
-    state = samplerstate(s,nproposals,p.sampletype,p.calculationtype)
+    state = samplerstate(s,nproposals,p.sampletype,p.calculationtype;auxiliary=true)
     GMHSegment(m,state)
 end
 
 ### Perform one iteration
-function iterate!(seg::GMHSegment,f::AbstractSample)
-    setfrom!(seg.samplerstate,f)
+function iterate!(seg::GMHSegment,indicator::AbstractSamplerState)
+    prepareauxiliary!(indicator,seg.samplerstate)
     propose!(seg.samplerstate)
     geometry!(seg.model,proposals(seg.samplerstate))
-    a = acceptanceratio!(seg.samplerstate)
-    a
+    acceptance!(seg.samplerstate)
 end
+
+### Update the indicatorstate with the sample of this auxiliary state
+prepare!(seg::GMHSegment,indicator::AbstractSamplerState,i::Int) = prepareindicator!(indicator,seg.samplerstate,i)
 
 ### Get the samples
 getsamples(seg::GMHSegment,sampleindex) = copy(proposals(seg.samplerstate),sampleindex)

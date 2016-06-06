@@ -75,6 +75,9 @@ bc4 = similar(b1) ; copy!(bc4,1,bc2,1) ; copy!(bc4,[2,3],bc3,[2,1])
 @test bc4 == b1
 @test numsamples(copy(b1,[])) == 0
 
+offset!(bc1,[1.0,2.0])
+@test bc1.values == (b1.values + [1.0 1.0 1.0;2.0 2.0 2.0])
+
 ###############################################################################################################################################################
 g1 = samples(:gradient,2,3,Float64,Float64)
 g2 = samples(:gradient,2,1,Float32,Float32)

@@ -1,6 +1,7 @@
 srand(0)
 
 functionalitytests = [
+    "distributions",
     "modelplots",
     "springmasstest1",
     "springmasstest2",

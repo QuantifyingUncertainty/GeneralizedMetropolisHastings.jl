@@ -44,14 +44,20 @@ function _segment2collected(segments_::MHRemoteSegments,insegmentindex::Vector)
 end
 
 #start the jobs on each process
-function iterate!(segments_::MHRemoteSegments,from::AbstractSample)
+function iterate!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState)
     a = Array{RemoteRef}(segments_.numsegments)
     @sync begin
         for j=1:segments_.numsegments
-            a[j] = remotecall(segments_.remote[j].where,iterate!,segments_.remote[j],from)
+            a[j] = remotecall(segments_.remote[j].where,iterate!,segments_.remote[j],indicatorstate)
         end
     end #@sync means wait for all processes to finish
     map(fetch,a)
+end
+
+function prepare!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState,j::Int)
+    p,s = segments_.prop2collected[j]
+    r = segments_.remote[s]
+    remotecall_fetch(r.where,prepare!,r,indicatorstate,p,updatefrom)
 end
 
 function retrievesamples!(segments_::MHRemoteSegments,sampleindex_::AbstractVector)

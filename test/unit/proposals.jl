@@ -5,32 +5,47 @@ println("======================")
 @test NormalDensity <: SymmetricDensity
 
 ###Test construction
+n1 = distribution(:normal,ones(2),0.1*eye(2))
 d1 = density(:normal,ones(2),0.1*eye(2))
 @test isa(d1,NormalDensity)
 @test issymmetric(d1)
-@test mean(d1.distribution) == ones(2)
-@test cov(d1.distribution) == 0.1*eye(2)
+@test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
 
 ###Test conditioning of the distribution
+n1 = recenter(n1,2*ones(2))
 condition!(d1,2*ones(2))
-@test mean(d1.distribution) == 2*ones(2)
-@test cov(d1.distribution) == 0.1*eye(2)
+@test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
 
-condition!(d1,3*ones(2),0.2*eye(2))
-@test mean(d1.distribution) == 3*ones(2)
-@test cov(d1.distribution) == 0.2*eye(2)
+n1 = rescale(n1,1/2)
+scale!(d1,1/2)
+@test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
 
-@test_throws MethodError condition!(d1,ones(2),d1)
+n1 = update(n1,3*ones(2),3*eye(2))
+update!(d1,3*ones(2),3*eye(2))
+@test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
 
 ###Test proposing and calculatinng the logprobability
 for i in [1,3]
     s1 = samples(:base,2,i,Float64,Float64)
     z1 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
-    @test (srand(i+23) ; propose!(d1,s1) ; s1.values) == (srand(i+23) ; rand!(d1.distribution,z1))
+    @test (srand(i+23) ; propose!(d1,s1.values)) == (srand(i+23) ; rand!(n1,z1))
     p1 = Distributions.logpdf(d1.distribution,s1.values) ; isa(p1,Number)?collect(p1):p1
     @test_approx_eq logprobability(d1,s1.values) p1
 end
 
+###Test the normal distribution with zero mean
+n2 = distribution(:normal,0.1*eye(2))
+d2 = density(:normal,0.1*eye(2))
+@test isa(d2,NormalDensity)
+@test issymmetric(d2)
+@test mean(d2.distribution) == mean(n2) && cov(d2.distribution) == cov(n2)
+@test_throws MethodError condition!(d2,zeros(2))
+n2 = rescale(n2,2.0)
+scale!(d2,2.0)
+@test mean(d2.distribution) == mean(n2) && cov(d2.distribution) == cov(n2)
+n2 = update(n2,eye(2))
+update!(d2,eye(2))
+@test mean(d2.distribution) == mean(n2) && cov(d2.distribution) == cov(n2)
 
 #################################################################################
 
@@ -41,58 +56,80 @@ println("=========================")
 @test LogNormalDensity <: ASymmetricDensity
 
 ###Test construction
-d2 = density(:lognormal,exp(ones(2)),0.1*eye(2))
+l1 = distribution(:lognormal,ones(2),0.1*eye(2))
+d2 = density(:lognormal,ones(2),0.1*eye(2))
 @test isa(d2,LogNormalDensity)
 @test !issymmetric(d2)
-@test_approx_eq Distributions.median(d2.distribution) exp(ones(2))
-@test_approx_eq Distributions.location(d2.distribution) ones(2)
-@test_approx_eq Distributions.scale(d2.distribution) 0.1*eye(2)
+@test Distributions.location(d2.distribution) == Distributions.location(l1)
+@test Distributions.scale(d2.distribution) == Distributions.scale(l1)
 
 ###Test conditioning of the distribution
-condition!(d2,exp(2*ones(2)))
-@test_approx_eq Distributions.median(d2.distribution) exp(2*ones(2))
-@test_approx_eq Distributions.location(d2.distribution) 2*ones(2)
-@test_approx_eq Distributions.scale(d2.distribution) 0.1*eye(2)
+l1 = recenter(l1,2*ones(2))
+condition!(d2,2*ones(2))
+@test Distributions.location(d2.distribution) == Distributions.location(l1)
+@test Distributions.scale(d2.distribution) == Distributions.scale(l1)
 
-condition!(d2,exp(ones(2)),0.01*eye(2))
-@test_approx_eq Distributions.location(d2.distribution) ones(2)
-@test_approx_eq Distributions.scale(d2.distribution) 0.01*eye(2)
+l1 = rescale(l1,1/2)
+scale!(d2,1/2)
+@test Distributions.location(d2.distribution) == Distributions.location(l1)
+@test Distributions.scale(d2.distribution) == Distributions.scale(l1)
+
+l1 = update(l1,3*ones(2),3*eye(2))
+update!(d2,3*ones(2),3*eye(2))
+@test Distributions.location(d2.distribution) == Distributions.location(l1)
+@test Distributions.scale(d2.distribution) == Distributions.scale(l1)
 
 ###Test proposing and calculatinng the logprobability
 for i in [1,3]
     s2 = samples(:base,2,i,Float64,Float64)
     z2 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
-    @test (srand(i+23) ; propose!(d2,s2) ; s2.values) == (srand(i+23) ; rand!(d2.distribution,z2))
+    @test (srand(i+23) ; propose!(d2,s2.values)) == (srand(i+23) ; rand!(d2.distribution,z2))
     p2 = Distributions.logpdf(d2.distribution,s2.values) ; isa(p2,Number)?collect(p2):p2
     @test_approx_eq logprobability(d2,s2.values) p2
 end
 
-println("============================")
-println("Tests of DistributionWrapper")
-println("============================")
+println("====================================")
+println("Tests of CompoundDistributionWrapper")
+println("====================================")
 
-###Test construction
-d3 = density(Distributions.Uniform(0.0,10.0);symmetric = true)
-d4 = density(Distributions.LogNormal(1.0,0.1);symmetric = false)
-d5 = density(Distributions.Geometric(0.3))
-@test isa(d3,DistributionWrapper)
-@test isa(d4,DistributionWrapper)
-@test isa(d5,DistributionWrapper)
-@test issymmetric(d3)
-@test !issymmetric(d4)
-@test !issymmetric(d5)
+for p in [(:uniform,()),
+          (:laplace,()),
+          (:triangular,()),
+          (:bactrian,(:normal,0.95)),
+          (:bactrian,(:laplace,0.90))]
+    println(p)
+    dis1 = distributions(p[1],[1.0,2.0],[1.0,0.5],p[2]...)
+    den1 = density(p[1],[1.0,2.0],[1.0,0.5],p[2]...)
+    @test issymmetric(den1)
+    for k=1:length(dis1)
+        @test mean(dis1[k]) == mean(den1.distributions[k]) && scale(dis1[k]) == scale(den1.distributions[k])
+    end
+    condition!(den1,2*ones(2))
+    for k=1:length(dis1)
+        dis1[k] = recenter(dis1[k],2.0)
+        @test mean(dis1[k]) == mean(den1.distributions[k]) && scale(dis1[k]) == scale(den1.distributions[k])
+    end
+    scale!(den1,2.0)
+    for k=1:length(dis1)
+        dis1[k] = rescale(dis1[k],2.0)
+        @test mean(dis1[k]) == mean(den1.distributions[k]) && scale(dis1[k]) == scale(den1.distributions[k])
+    end
+    update!(den1,3*ones(2),3.0*ones(2))
+    for k=1:length(dis1)
+        dis1[k] = update(dis1[k],3.0,3.0)
+        @test mean(dis1[k]) == mean(den1.distributions[k]) && scale(dis1[k]) == scale(den1.distributions[k])
+    end
+    for i in [1,3]
+        s3 = samples(:base,2,i,Float64,Float64)
+        z3 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
+        p3 = zeros(i)
+        @test (srand(i+23) ; propose!(den1,s3.values)) == (srand(i+23) ; for k=1:i for j=1:length(dis1) z3[j,k] = rand(dis1[j]) end end ; z3)
+        for k=1:i for j=1:length(dis1) p3[k] += Distributions.logpdf(dis1[j],s3.values[j,k]) end end
+        @test_approx_eq logprobability(den1,s3.values) p3
+    end
+end
 
-###Test proposing
-srand(467) ; s3 = propose!(d3,samples(:base,1,1,Float64,Float64)) ; s4 = propose!(d4,samples(:base,1,2,Float64,Float64)) ; s5 = propose!(d5,samples(:base,1,3,Float64,Float64))
-srand(467) ; r3 = rand!(d3.distribution,zeros(1)) ; r4 = rand!(d4.distribution,zeros(1,2)) ; r5 = rand!(d5.distribution,zeros(1,3))
-@test s3.values == r3
-@test s4.values == r4
-@test s5.values == r5
 
-###Test calculating the logpdf
-@test logprobability(d3,s3.values) == Distributions.logpdf!(zeros(1),d3.distribution,s3.values)
-@test logprobability(d4,s4.values) == Distributions.logpdf!(zeros(2),d4.distribution,s4.values)
-@test logprobability(d5,s5.values) == Distributions.logpdf!(zeros(3),d5.distribution,s5.values)
 
 ###test the show functions
 println()
@@ -101,9 +138,6 @@ println("Test show() function")
 println("====================")
 show(d1)
 show(d2)
-show(d3)
-show(d4)
-show(d5)
 println("====================")
 println("End  show() function")
 println("====================")

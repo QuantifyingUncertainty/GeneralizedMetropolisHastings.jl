@@ -1,106 +1,98 @@
 ### Abstract parent types for Metropolis-Hastings samplers
-abstract MHSampler <: AbstractSampler
-abstract MHSamplerState <: AbstractSamplerState{BaseSample}
+abstract AbstractMetropolisHastingsSampler <: AbstractSampler
+abstract AbstractMetropolisHastingsSamplerState <: AbstractSamplerState{BaseSample}
 
 ################################################################################################################################
 
-### Type holding the parameters for a Normal-based Metrolopolis sampler
-immutable MHNormal{T<:AbstractFloat,M<:AbstractArray} <: MHSampler
+### Type holding the parameters for a scalable Metropolis-Hastings sampler (i.e., any proposal density with a scale parameter)
+immutable ScalableMetropolisHastingsSampler{T<:AbstractFloat,M<:AbstractArray} <: AbstractMetropolisHastingsSampler
+    density::Symbol
     initialscalefactor::T
-    covariance::M
-    MHNormal(s::T,c::AbstractArray{T}) = new(s,c)
+    scaleparameters::M
+    extraargs::Tuple
+    ScalableMetropolisHastingsSampler(d::Symbol,i::T,p::AbstractArray{T},args...) = new(d,i,p,args)
 end
 
-###External constructors
-@inline _sampler(::Type{Val{:mh}},::Type{Val{:normal}},scalefactor::AbstractFloat,m::AbstractArray) = MHNormal{typeof(scalefactor),typeof(m)}(scalefactor,m)
-@inline _sampler(::Type{Val{:mh}},::Type{Val{:normal}},scalefactor::AbstractFloat,d::Integer) = _sampler(Val{:mh},Val{:normal},scalefactor,ones(typeof(scalefactor),d))
+###Factory functions
+@inline _sampler(::Type{Val{:mh}},den::Symbol,i::AbstractFloat,m::AbstractArray,args...) = ScalableMetropolisHastingsSampler{typeof(i),typeof(m)}(den,i,m,args...)
+@inline _sampler(::Type{Val{:mh}},den::Symbol,i::AbstractFloat,d::Integer,args...) = _sampler(Val{:mh},den,i,ones(typeof(i),d),args...)
 
-@inline numparas(sampler::MHNormal) = size(sampler.covariance,1)
-@inline samplername(sampler::MHNormal) = "MHNormal"
+###Size functions
+@inline numparas(sampler::ScalableMetropolisHastingsSampler) = size(sampler.scaleparameters,1)
 
-################################################################################################################################
-
-###Type holding the parameters for a LogNormal-based Metropolis-Hastings sampler
-immutable MHLogNormal{T<:AbstractFloat,M<:AbstractArray} <: MHSampler
-    initialscalefactor::T
-    scale::M
-    MHLogNormal(s::T,c::AbstractArray{T}) = new(s,c)
-end
-
-###External constructors
-@inline _sampler(::Type{Val{:mh}},::Type{Val{:lognormal}},scalefactor::AbstractFloat,m::AbstractArray) = MHLogNormal{typeof(scalefactor),typeof(m)}(scalefactor,m)
-@inline _sampler(::Type{Val{:mh}},::Type{Val{:lognormal}},scalefactor::AbstractFloat,d::Integer) = _sampler(Val{:mh},Val{:lognormal},scalefactor,ones(typeof(scalefactor),d))
-
-@inline numparas(sampler::MHLogNormal) = size(sampler.scale,1)
-@inline samplername(sampler::MHLogNormal) = "MHLogNormal"
+###Name functions (used in println for generic AbstractSampler)
+@inline samplername(sampler::ScalableMetropolisHastingsSampler) = "Scalable Metropolis-Hastings"
 
 ################################################################################################################################
 
 ### Type holding the state of the Markov Chain for a Generalized Metropolis-Hastings sampler
-type MHSymmetricSamplerState{T<:AbstractFloat,D<:SymmetricDensity} <: MHSamplerState
+type MetropolisHastingsSamplerState{D<:AbstractProposalDensity} <: AbstractMetropolisHastingsSamplerState
     density::D
-    scalefactor::T
     from::BaseSample
     proposals::BaseSample
     acceptance::Vector
-    MHSymmetricSamplerState(density::D,scalefactor::T,from::BaseSample{T},proposals::BaseSample{T},ac::Vector{T}) = new(density,scalefactor,from,proposals,ac)
+    MetropolisHastingsSamplerState(d::D,f::BaseSample,p::BaseSample,a::Vector) = new(d,f,p,a)
 end
 
-type MHASymmetricSamplerState{T<:AbstractFloat,D<:ASymmetricDensity} <: MHSamplerState
-    density::D
-    scalefactor::T
-    from::BaseSample
-    proposals::BaseSample
-    acceptance::Vector
-    MHASymmetricSamplerState(density::D,scalefactor::T,from::BaseSample{T},proposals::BaseSample{T},ac::Vector{T}) = new(density,scalefactor,from,proposals,ac)
+###Factory functions
+@inline function _samplerstate{N<:Number,T<:AbstractFloat}(s::ScalableMetropolisHastingsSampler,nsamples::Integer,::Type{N},::Type{T},::Bool)
+    nparas = numparas(s)
+    f = _samples(Val{:base},nparas,1,N,T)
+    p = _samples(Val{:base},nparas,nsamples,N,T)
+    d = _density(Val{s.density},zeros(N,nparas),deepcopy(s.scaleparameters),deepcopy(s.extraargs)...)
+    s.initialscalefactor!=one(T)?scale!(d,s.initialscalefactor):nothing #rescale the distribution for a scale factor different from 1.0
+    MetropolisHastingsSamplerState{typeof(d)}(d,f,p,zeros(T,nsamples))
 end
 
-@inline samplerstatename(state::MHSymmetricSamplerState) = "MHSymmetricSamplerState"
-@inline samplerstatename(state::MHASymmetricSamplerState) = "MHASymmetricSamplerState"
+###Name functions (used in println for AbstractSamplerState)
+@inline samplerstatename{D<:SymmetricDensity}(state::MetropolisHastingsSamplerState{D}) = "Metropolis"
+@inline samplerstatename{D<:ASymmetricDensity}(state::MetropolisHastingsSamplerState{D}) = "Metropolis-Hastings"
 
-@inline _scale(scalefactor,densityparam::AbstractMatrix) = Base.scale(scalefactor,densityparam) #for covariance matrices of the proposal densities
-@inline _scale(scalefactor,densityparam::AbstractVector) = sqrt(Base.scale(scalefactor,densityparam)) #for variance vectors of the proposal densities
-
-@inline function _samplerstate{N<:Number}(sampler::MHNormal,from::BaseSample{N},proposals::BaseSample{N})
-    d = _density(Val{:normal},zeros(N,numparas(from)),_scale(sampler.initialscalefactor,sampler.covariance))
-    MHSymmetricSamplerState{N,typeof(d)}(d,sampler.initialscalefactor,from,proposals,zeros(N,numsamples(proposals)))
-end
-
-@inline function _samplerstate{N<:Number}(sampler::MHLogNormal,from::BaseSample{N},proposals::BaseSample{N})
-    d = _density(Val{:lognormal},zeros(N,numparas(from)),_scale(sampler.initialscalefactor,sampler.scale))
-    MHASymmetricSamplerState{N,typeof(d)}(d,sampler.initialscalefactor,from,proposals,zeros(N,numsamples(proposals)))
-end
-
-@inline function _samplerstate{N<:Number,T<:AbstractFloat}(sampler::MHSampler,nsamples::Integer,::Type{N},::Type{T})
-    from = _samples(Val{:base},numparas(sampler),1,N,T)
-    proposals = _samples(Val{:base},numparas(sampler),nsamples,N,T)
-    _samplerstate(sampler,from,proposals)
-end
-
-@inline function setfrom!(state::MHSamplerState,from::BaseSample)
-    copy!(state.from,from)
+###update the sampler state, called from SMHRunner
+@inline function prepare!(state::MetropolisHastingsSamplerState,updatefrom::Bool=false)
+    if updatefrom
+        #set the current point around which we are sampling
+        setfrom!(state,state.proposals)
+        #condition the density on the current point
+        condition!(state.density,state.from.values)
+    end
+    #return the state
     state
 end
 
-@inline function setfrom!(state::MHSamplerState,from::BaseSample,i::Integer)
-    copy!(state.from,1,from,i)
-    state
+###update the auxiliary samplerstate with information from the indicator samplerstate
+@inline function prepareauxiliary!(indicatorstate::MetropolisHastingsSamplerState,auxiliarystate::MetropolisHastingsSamplerState)
+    #set the auxiliary point as the from point in the auxiliarystate
+    setfrom!(auxiliarystate,indicatorstate.proposals)
+    #condition the density on the current point
+    condition!(auxiliarystate.density,auxiliarystate.from.values)
+    #return the auxiliary state
+    auxiliarystate
+end
+
+###when the "from" field does not need updating
+@inline prepareindicator!(indicatorstate::MetropolisHastingsSamplerState) = indicatorstate
+
+###when the "from" field has been updated
+@inline function prepareindicator!(indicatorstate::MetropolisHastingsSamplerState,auxiliarystate::MetropolisHastingsSamplerState,i::Int)
+    #set the current point around which we are sampling
+    setfrom!(indicatorstate,auxiliarystate.proposals,i)
+    #condition the density on the current point
+    condition!(indicatorstate.density,indicatorstate.from.values)
+    #return the indicator state
+    indicatorstate
 end
 
 ###propose new samples from the current point
-@inline function propose!(state::MHSamplerState)
-    #set the current from point to sample from
-    condition!(state.density,state.from.values)
-    #propose n values from this point
-    propose!(state.density,state.proposals)
+@inline function propose!(state::MetropolisHastingsSamplerState)
+    #propose n values from the current point
+    propose!(state.density,state.proposals.values)
     #return the proposals
     state
 end
 
-acceptanceratio(state::MHSamplerState) = state.acceptance
-
 ###for a symmetric proposal density, no adjustment of the acceptance rate is needed
-function acceptanceratio!(state::MHSymmetricSamplerState)
+function acceptance!{D<:SymmetricDensity}(state::MetropolisHastingsSamplerState{D})
     fl = state.from.loglikelihood[1] + state.from.logprior[1]
     for i=1:numsamples(state.proposals)
         @inbounds state.acceptance[i] = state.proposals.loglikelihood[i] + state.proposals.logprior[i] - fl
@@ -110,21 +102,19 @@ end
 
 ###for an asymmetric proposal density, an adjustment needs to be performed
 ###based on the difference between K(from,val)/K(val,from)
-function acceptanceratio!(state::MHASymmetricSamplerState)
-    #condition the proposal density on the current proposal center
-    condition!(state.density,state.from.values)
+function acceptance!{D<:ASymmetricDensity}(state::MetropolisHastingsSamplerState{D})
     #calculate the log-probability for each of the proposed points K(from,val)
     logprobability!(state.acceptance,state.density,state.proposals.values)
     #now calculate the inverse probability K(val,from)
-    t = similar(state.acceptance,1)
+    temp1 = similar(state.acceptance,1)
     fl = state.from.loglikelihood[1] + state.from.logprior[1]
     for i = 1:numsamples(state.proposals)
         #condition the proposal density on each proposed point
         @inbounds condition!(state.density,state.proposals.values[:,i])
         #calculate the logprobability K(val,from)
-        logprobability!(t,state.density,state.from.values)
+        logprobability!(temp1,state.density,state.from.values)
         #adjust the result accordingly
-        @inbounds state.acceptance[i] += (state.proposals.loglikelihood[i] + state.proposals.logprior[i] - t[1] - fl)
+        @inbounds state.acceptance[i] += (state.proposals.loglikelihood[i] + state.proposals.logprior[i] - temp1[1] - fl)
     end
     #restore the previous state of the proposal density
     condition!(state.density,state.from.values)
@@ -132,6 +122,7 @@ function acceptanceratio!(state::MHASymmetricSamplerState)
     state.acceptance
 end
 
-@inline _tune!(sampler::MHNormal,state::MHSymmetricSamplerState) = (condition!(state.density,state.from.values,_scale(state.scalefactor,sampler.covariance)) ; state)
-@inline _tune!(sampler::MHLogNormal,state::MHASymmetricSamplerState) = (condition!(state.density,state.from.values,_scale(state.scalefactor,sampler.scale)) ; state)
-@inline tune!(sampler::MHSampler,state::MHSamplerState,scalefactor::AbstractFloat) = (state.scalefactor *= scalefactor ; _tune!(sampler,state))
+@inline function tune!(state::MetropolisHastingsSamplerState,scalefactor::AbstractFloat)
+    scale!(state.density,scalefactor)
+    state
+end

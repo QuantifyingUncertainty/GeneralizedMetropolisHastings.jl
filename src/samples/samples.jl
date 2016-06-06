@@ -77,6 +77,16 @@ copy(src::AbstractSample,i::Integer) = _copy!(similar(src,1),1,src,i)
 copy(src::AbstractSample,srcindex::AbstractVector) = _copy!(similar(src,length(srcindex)),1:length(srcindex),src,srcindex)
 copy(src::AbstractSample,srcindex::AbstractVector,to::Symbol) = _copy!(similar(src,length(srcindex),to),1:length(srcindex),src,srcindex)
 
+function offset!(s::AbstractSample,v::Vector)
+    nparas = numparas(s)
+    for j=1:numsamples(s)
+        @simd for i=1:nparas
+            @inbounds s.values[i,j] += v[i]
+        end
+    end
+    s
+end
+
 function =={S<:AbstractSample}(s1::S,s2::S)
     for f in fieldnames(s1)
         isequal(getfield(s1,f),getfield(s2,f))?continue:return false

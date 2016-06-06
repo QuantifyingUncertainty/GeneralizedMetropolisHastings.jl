@@ -17,8 +17,8 @@ immutable ODEModel{T<:AbstractFloat,P<:AbstractParameter,D<:AbstractData,N<:Abst
     abstol::T
     reltol::T
 
-    #temp location to store model data
-    modeldata::Array
+    #temp location to store evaluation results
+    evalresults::Array
 
     ODEModel(name::AbstractString,parameters::Vector{P},gradientepsilon::T,measurements::D,noisemodel::N,
              ode::Function,initial::Vector{T},numstates::Int,observed::Vector{Int},unobserved::Vector{Int},abstol::T,reltol::T) =
@@ -38,29 +38,14 @@ end
 ###Evaluate the model for the given parameter values
 function evaluate!(m::ODEModel,vals::AbstractVector)
     o(t,y,ydot) = m.ode(t,y,ydot,vals)
-    copy!(m.modeldata,sub(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed))
-    m.modeldata
+    copy!(m.evalresults,sub(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed))
+    m.evalresults
 end
 
 ###Utility functions used in generic implementations in AbstractModel
 @inline dataindex(m::ODEModel) = dataindex(m.measurements)
 @inline measurements(m::ODEModel) = datavalues(m.measurements)
 @inline noisemodel(m::ODEModel) = m.noisemodel
-
-#gradlogprior!(m::ODEModel,s::Sample{}) = (s.gradlogprior = map((p,v)->((logpdf(p,v+m.gradientepsilon)-logpdf(p,v))/m.gradientepsilon),m.parameters.priors,s.values))
-
-###Calculate the loglikelihood function
-
-###Calculate the gradient of the loglikelihood
-#gradienthelper(m::ODEModel,data::Matrix{Float64},sol::Matrix{Float64},grad::Array{Float64,3}) = vec(sum((grad.*(data-sol)./m.variance),(1,2))) #.* does automatic broadcast(), summing result along first 2 dimensions
-#gradloglikelihood(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,m.measurements,sol,grad)
-
-###Calculate the metric tensor
-#tensorvalue(m::ODEModel,grad::Array{Float64,3},i::Int,j::Int) = sum(grad[:,:,i].*grad[:,:,j]./m.variance)
-
-###Generate pseudodata for the approximate metric tensor calculations
-pseudodata(m::ODEModel,d::AbstractArray) = applynoise!(m.noise,d)
-#tangentvector(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,pseudodata(m,sol),sol,grad)
 
 ###Base functionality
 function show(io::IO,m::ODEModel)

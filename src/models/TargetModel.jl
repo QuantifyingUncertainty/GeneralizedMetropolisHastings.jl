@@ -11,11 +11,11 @@ immutable TargetModel{T<:Number,P<:AbstractParameter,D<:AbstractData,N<:Abstract
     args::Tuple #additional arguments for the target function
 
     ###temp location to store model data
-    modifydata::Bool
-    modeldata::AbstractArray
+    mutates::Bool
+    evalresults::AbstractArray
 
     TargetModel(name::AbstractString,parameters::Vector{P},measurements::D,noisemodel::N,
-                modify::Bool,modeldata::AbstractArray{T},target::Function,args...) = new(name,parameters,measurements,noisemodel,target,args,modify,modeldata)
+                modify::Bool,evalresults::AbstractArray{T},target::Function,args...) = new(name,parameters,measurements,noisemodel,target,args,modify,evalresults)
 end
 
 function TargetModel(name::AbstractString,parameters::Vector,measurements::AbstractData,noisemodel::AbstractNoiseModel,modify::Bool,target::Function,args...)
@@ -35,11 +35,11 @@ function _model(::Type{Val{:target}},parameters::Vector,measurements::AbstractDa
     TargetModel(name,parameters,measurements,noisemodel,false,target,args...)
 end
 
-@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.modeldata,m.args...,vals)
-@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = copy!(m.modeldata,m.target(m.args...,vals))
+@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.evalresults,m.args...,vals)
+@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = copy!(m.evalresults,m.target(m.args...,vals))
 
 ###Evaluate the model for the given parameter values
-evaluate!(m::TargetModel,vals::AbstractVector) = (_evaluate(Val{m.modifydata},m,vals) ; m.modeldata)
+evaluate!(m::TargetModel,vals::AbstractVector) = (_evaluate(Val{m.modifydata},m,vals) ; m.evalresults)
 
 ###Utility functions used in generic implementations in AbstractModel
 @inline dataindex(m::TargetModel) = dataindex(m.measurements)

@@ -5,10 +5,12 @@ unittests = [
     "parameters",
     "data",
     "samples",
+    "distributions",
     "proposals",
     "samplers",
     "indicators",
     "models",
+    "testutil"
     "tuners",
     "chains",
     "jobsegments",
