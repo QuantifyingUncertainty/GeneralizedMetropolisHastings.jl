@@ -11,7 +11,7 @@ function sincos!{T<:AbstractFloat}(r::Matrix{T},t::Vector{T},paras::Vector{T})
     r
 end
 
-sincos(t::Vector{T},paras::Vector{T}) = sincos!(zeros(T,length(t),2),t,paras)
+sincos{T<:AbstractFloat}(t::Vector{T},paras::Vector{T}) = sincos!(zeros(T,length(t),2),t,paras)
 
 @inline function _model(s::Symbol,f::Function,n::AbstractString,t::AbstractVector,pv::AbstractVector,variance::AbstractVector,paraminit...)
     p = parameters([:a,:b],paraminit...)
