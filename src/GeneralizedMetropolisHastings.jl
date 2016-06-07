@@ -5,7 +5,6 @@ import Compat
 import PDMats
 import Distributions
 import Sundials
-import ForwardDiff
 
 import Base: ==, size, length, eltype, show, display, time, similar, copy!, copy
 import Base: mean, var, rand, rand!, scale!
