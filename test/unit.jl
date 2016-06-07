@@ -10,7 +10,7 @@ unittests = [
     "samplers",
     "indicators",
     "models",
-    "testutil"
+    "testutil",
     "tuners",
     "chains",
     "jobsegments",
