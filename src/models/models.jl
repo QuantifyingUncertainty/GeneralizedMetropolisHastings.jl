@@ -66,7 +66,7 @@ end
 #tensorvalue(m::ODEModel,grad::Array{Float64,3},i::Int,j::Int) = sum(grad[:,:,i].*grad[:,:,j]./m.variance)
 
 ###Generate pseudodata for the approximate metric tensor calculations
-pseudodata(m::ODEModel,d::AbstractArray) = applynoise!(m.noise,d)
+#pseudodata(m::ODEModel,d::AbstractArray) = applynoise!(m.noise,d)
 #tangentvector(m::ODEModel,sol::Matrix{Float64},grad::Array{Float64,3}) = gradienthelper(m,pseudodata(m,sol),sol,grad)
 
 ###Calculate the gradient of the loglikelihood
