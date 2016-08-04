@@ -42,6 +42,7 @@ export
     samples,numsamples,loglikelihood,logprior,logposterior,
     print_gmh_module_loaded
 
+include("util/util.jl")
 include("policies/traits.jl")
 include("policies/policies.jl")
 include("policies/MHRuntimePolicy.jl")
@@ -66,6 +67,7 @@ include("samplers/SmMALA.jl")
 include("indicators/indicators.jl")
 include("indicators/IndicatorStationary.jl")
 include("models/models.jl")
+include("models/geometry.jl")
 include("models/TargetModel.jl")
 include("models/ODEModel.jl")
 include("tuners/tunefunctions.jl")
@@ -83,9 +85,6 @@ include("runners/runners.jl")
 include("runners/MHRunner.jl")
 include("runners/SMHRunner.jl")
 include("runners/GMHRunner.jl")
-include("testutil/util.jl")
-include("testutil/sincos.jl")
-include("testutil/springmass.jl")
 
 function print_gmh_module_loaded()
   println("$module_name(current_module()) module loaded successfully")

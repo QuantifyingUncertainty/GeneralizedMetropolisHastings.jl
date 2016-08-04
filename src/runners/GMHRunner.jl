@@ -31,11 +31,12 @@ end
 function burnin!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSampler,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                  tuner_::AbstractTuner,tunerstate_::AbstractTunerState,indicator_::AbstractIndicatorMatrix,chain_::AbstractChain)
     storeduring = _storeduring(:burnin,runner_.policy)
-    initialize!(runner_,model_,from(indicatorstate_),chain_,storeduring)
+    initialize!(runner_,model_,indicatorstate_,chain_,storeduring)
     for i=1:runner_.numburnin
         iterate!(runner_,model_,indicatorstate_,segments_,indicator_,chain_,storeduring)
         accepted!(tunerstate_,indicator_)
         needstuning(tuner_,i)?tune!(runner_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_):nothing
+        indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
 end
 
@@ -45,15 +46,15 @@ function main!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSample
     for i=1:runner_.numiterations
         iterate!(runner_,model_,indicatorstate_,segments_,indicator_,chain_,storeduring)
         needstuning(tuner_,i)?println("Iteration $i/$(runner_.numiterations)"):nothing
+        indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
 end
 
 function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                   indicator_::AbstractIndicatorMatrix,chain_::AbstractChain,storeduring::Bool)
-    prepare!(runner_,indicatorstate_,segments_,indicator_)
     auxiliary!(runner_,model_,indicatorstate_)
-    segmentacceptances = iterate!(segments_,proposals(indicatorstate_))
-    transitionprobability!(indicator_,acceptanceratio!(indicatorstate_),segmentacceptances)
+    segmentacceptances = iterate!(segments_,indicatorstate_)
+    transitionprobability!(indicator_,acceptance!(indicatorstate_),segmentacceptances)
     try
         sampleindicator!(indicator_)
     catch e
@@ -64,11 +65,11 @@ function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::Abst
     storeduring?store!(runner_,indicatorstate_,segments_,indicator_,chain_):nothing
 end
 
-function prepare!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
+function preparenext!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
                   segments_::AbstractRemoteSegments,indicator_::AbstractIndicatorMatrix)
     indicatorend = indicatorsamples(indicator_)[end]
     if indicatorend != numproposals(indicator_) + 1
-        prepare!(segments_,indicatorstate_,indicatorend)
+        indicatorstate_ = prepare!(segments_,indicatorstate_,indicatorend)
     else
         prepareindicator!(indicatorstate_)
     end
@@ -106,8 +107,8 @@ function tune!(runner_::AbstractRunner,sampler_::AbstractSampler,indicatorstate_
                segments_::AbstractRemoteSegments,tuner_::AbstractTuner,tunerstate_::AbstractTunerState)
     tvals = tune(tuner_,tunerstate_)
     showstep(tuner_,tunerstate_)
-    tune!(sampler_,indicatorstate_,tvals...)
-    tune!(segments_,sampler_,tvals...)
+    tune!(indicatorstate_,tvals...)
+    tune!(segments_,tvals...)
     nextindex!(tunerstate_)
 end
 

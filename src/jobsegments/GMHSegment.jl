@@ -7,7 +7,7 @@ end
 ### Factory function
 function _segment(p::MHRuntimePolicy,m::AbstractModel,s::AbstractSampler,nproposals::Integer)
     @assert traitvalue(p.runner) == :generalized
-    state = samplerstate(s,nproposals,p.sampletype,p.calculationtype;auxiliary=true)
+    state = samplerstate(s,nproposals,p.sampletype,p.calculationtype,true)
     GMHSegment(m,state)
 end
 
@@ -26,7 +26,7 @@ prepare!(seg::GMHSegment,indicator::AbstractSamplerState,i::Int) = prepareindica
 getsamples(seg::GMHSegment,sampleindex) = copy(proposals(seg.samplerstate),sampleindex)
 
 ### Tune the samplerstate
-tune!(seg::GMHSegment,s::AbstractSampler,tvals...) = tune!(s,seg.samplerstate,tvals...)
+tune!(seg::GMHSegment,tvals...) = tune!(seg.samplerstate,tvals...)
 
 ###
 function show(io::IO,s::GMHSegment)

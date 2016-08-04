@@ -35,7 +35,7 @@ prepareindicator!(indicator::AbstractSamplerState) = throw(MethodError(preparein
 prepareindicator!(indicator::AbstractSamplerState,auxiliary::AbstractSamplerState,i::Int) = throw(MethodError(prepareindicator!, (indicator,auxiliary,i)))
 
 propose!(state::AbstractSamplerState) = throw(MethodError(propose!, (sampler,state)))
-acceptance!(state::AbstractSamplerState) = throw(MethodError(acceptanceratio!, (state)))
+acceptance!(state::AbstractSamplerState) = throw(MethodError(acceptance!, (state)))
 tune!(state::AbstractSamplerState,args...) = nothing
 
 ###Generic show function for any sampler

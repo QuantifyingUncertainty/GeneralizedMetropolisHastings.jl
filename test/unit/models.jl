@@ -1,95 +1,89 @@
-###Test ODEModel using a spring/mass dynamic system
-t1 = 0:0.1:10.0
-i1 = [-1.0,1.0]
-l1 = [80.0,8.0]
-p1 = [100.0,10.0]
-u1 = [120.0,12.0]
-v1 = [1e-2,9e-2]
+###Define functions to be used in testing below
 
-m1 = springmassmodel(t1,i1,p1,v1,l1,u1)
-r1 = evaluate!(m1,p1)
+###Test functions for TargetModel
+function targetsin!(r::Vector,t::AbstractVector,paras::Vector)
+    for i=1:length(t)
+        r[i] = sin(paras[1]*t[i])
+    end
+    r
+end
 
-@test numparas(m1) == 2
+targetsin(t::AbstractVector,paras::Vector) = targetsin!(zeros(eltype(t),length(t)),t,paras)
 
-###Test the evaluate function for ODEModel
-@test_approx_eq_eps evaluate!(m1,p1) datavalues(m1.measurements) 1.0
-@test_approx_eq_eps evaluate!(m1,p1) springmassdata(t1,i1,[110.0,11.0]) 0.001
-@test_approx_eq_eps evaluate!(m1,[110.0,11.0]) springmassdata(t1,i1,[110.0,11.0]) 0.001
+###Test function for ODEModel
+function odesin(t,y,ydot,paras)
+    ydot[1] = paras[1]*cos(paras[1]*t)
+end
 
-###Test the loglikelihood function
-@test_approx_eq loglikelihood(m1,r1) loglikelihood(m1.noisemodel,datavalues(m1.measurements),r1)
+#########################################################################################################
 
-###Test the geometry function for base samples
-s0 = samples(:base,2,1,Float64,Float64)
-s0.values[1] = 100.0
-s0.values[2] = 10.0
-s1 = samples(:base,2,21,Float64,Float64)
-s1.values[1,:] = 100.0
-s1.values[2,:] = collect(9.5:0.05:10.5)
-geometry!(m1,s0)
-geometry!(m1,s1)
+### Test model creation and evaluation functions
 
-####################################################################################################
+timepoints1 = linspace(0.0,10.0,100)
+parameters1 = parameters([:a],[1.0],[5.0],[3.0])
+measurements1 = data(:function,timepoints1,targetsin,timepoints1,[3.0])
+measurements2 = data(:function,timepoints1,targetsin,timepoints1,[2.5])
+measurements3 = data(:function,timepoints1,targetsin,timepoints1,[2.0])
+noisemodel1 = noise(:gaussian,[0.01])
+initial1 = [0.0]
 
-t2 = linspace(0.0,10.0,200)
-d2 = [1.0,1.0]
-p2 = [0.5,2.0/3.0]
-v2 = [1e-2,1e-2]
+model1 = model(:target,parameters1,measurements1,noisemodel1,targetsin;name="Test")
+model2 = model(:target!,parameters1,measurements1,noisemodel1,targetsin!;name="Test!")
+model3 = model(:ode,parameters1,measurements1,noisemodel1,odesin,initial1,1,[1];name="Test")
 
-m2 = sincosmodel(t2,p2,v2,d2)
-r2 = evaluate!(m2,p2)
+@test_approx_eq_eps evaluate!(model1,[3.0]) measurements(model1) 1e-4
+@test_approx_eq_eps evaluate!(model2,[3.0]) measurements(model2) 1e-4
+@test_approx_eq_eps evaluate!(model3,[3.0]) measurements(model3) 1e-4
 
-@test numparas(m2) == 2
+#########################################################################################################
 
-###Test the evaluate function for TargetModel
-@test_approx_eq_eps evaluate!(m2,p2) datavalues(m2.measurements) 0.5
-@test_approx_eq_eps evaluate!(m2,p2) sincos(t2,p2) 0.001
+### Test the common initialize! function
+s0 = samples(:base,1,1,Float64,Float64)
+@test initialize!(trait(:initialize,:default),model1,s0).values == [3.0]
+@test (srand(345) ; initialize!(trait(:initialize,:prior),model1,s0).values) == (srand(345) ; [rand(parameters1[1].prior)])
 
-@test_approx_eq loglikelihood(m2,r2) loglikelihood(m2.noisemodel,datavalues(m2.measurements),r2)
+### Test the common interface functions
+type TestModel <: AbstractModel
+    parameters::Vector
+end
 
-###Test the geometry function for base samples
-s2 = samples(:base,2,21,Float64,Float64)
-s2.values[1,:] = collect(0.49:0.001:0.51)
-s2.values[2,:] = collect(2/3-0.01:0.001:2/3+0.0101)
-geometry!(m2,s2)
+@test numparas(TestModel(parameters1)) == 1
+@test parameters(TestModel(parameters1)) == parameters1
 
-####################################################################################################
+@test_throws MethodError evaluate!(TestModel(parameters1),[1.0])
+@test_throws MethodError dataindex(TestModel(parameters1))
+@test_throws MethodError measurements(TestModel(parameters1))
+@test_throws MethodError noisemodel(TestModel(parameters1))
 
-t3 = linspace(0.0,10.0,200)
-d3 = [1.0,1.0]
-p3 = [0.5,2.0/3.0]
-v3 = [1e-2,1e-2]
+########################################################################################################
 
-m3 = sincosmodel!(t3,p3,v3,d3)
-r3 = evaluate!(m3,p3)
+### Test the geometry calculations
+r1 = copy(evaluate!(model1,[3.0]))
+r2 = copy(evaluate!(model2,[2.5]))
+r3 = copy(evaluate!(model3,[2.0]))
 
-@test numparas(m3) == 2
+@test_approx_eq loglikelihood(model1,r1) loglikelihood(noisemodel1,datavalues(measurements1),r1)
+@test_approx_eq loglikelihood(model2,r2) loglikelihood(noisemodel1,datavalues(measurements1),r2)
+@test_approx_eq loglikelihood(model3,r3) loglikelihood(noisemodel1,datavalues(measurements1),r3)
 
-###Test the evaluate function for TargetModel
-@test_approx_eq_eps evaluate!(m3,p3) datavalues(m3.measurements) 0.5
-@test_approx_eq_eps evaluate!(m3,p3) sincos(t3,p3) 0.001
-
-@test_approx_eq loglikelihood(m3,r3) loglikelihood(m3.noisemodel,datavalues(m3.measurements),r3)
-
-###Test the geometry function for base samples
-s3 = samples(:base,2,21,Float64,Float64)
-s3.values[1,:] = collect(0.49:0.001:0.51)
-s3.values[2,:] = collect(2/3-0.01:0.001:2/3+0.0101)
-geometry!(m3,s3)
-
-######################################################################################################
-
-type UnitTestModelType <: AbstractModel end
-
-@test_throws MethodError evaluate!(UnitTestModelType,zeros(3))
+### Test the geometry function for zero-order samples
+for m in [model1,model2,model3]
+    s = samples(:base,1,3,Float64,Float64)
+    copy!(s.values,[3.0,2.0,0.0])
+    geometry!(m,s)
+    ll = [loglikelihood(m,evaluate!(m,[3.0])) loglikelihood(m,evaluate!(m,[2.0])) -Inf]
+    @test_approx_eq s.logprior logprior(parameters1,s.values,Float64)
+    @test_approx_eq s.loglikelihood ll
+end
 
 ###test the show functions
 println()
 println("====================")
 println("Test show() function")
 println("====================")
-show(m1)
-show(m2)
+show(model1)
+show(model2)
+show(model3)
 println("====================")
 println("End  show() function")
 println("====================")

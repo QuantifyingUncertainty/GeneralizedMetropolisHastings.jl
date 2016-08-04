@@ -2,7 +2,7 @@
 abstract AbstractParameter
 
 parameters(s::Symbol,args...;keyargs...) = _parameters(Val{s},args...;keyargs...)
-_parameters(t::Type{Val{:dummy}}) = error("dummy _parameters function")
+_parameters(::Type{Val{:nothing}},args...;keyargs...) = nothing #define at least one _parameters function as hook
 
 ###Named MCMC parameter which has a default value but no prior
 immutable ParameterDefault{N<:Number} <: AbstractParameter

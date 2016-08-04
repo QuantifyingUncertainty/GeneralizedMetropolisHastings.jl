@@ -1,3 +1,15 @@
+#scaling for 0.0 should be 1.0
+@test GeneralizedMetropolisHastings.tuneerf(0.0,3.0) == 1.0
+@test GeneralizedMetropolisHastings.tunelogistic(0.0,7.0) == 1.0
+
+#smalest scale factor should be around sqrt(2)/2
+@test_approx_eq_eps GeneralizedMetropolisHastings.tuneerf(-0.5,3.0) sqrt(2)/2 10-4
+@test_approx_eq_eps GeneralizedMetropolisHastings.tunelogistic(-0.5,7.0) sqrt(2)/2 10-4
+
+#largest scale factor should be around sqrt(2)
+@test_approx_eq_eps GeneralizedMetropolisHastings.tuneerf(0.5,3.0) sqrt(2) 10-4
+@test_approx_eq_eps GeneralizedMetropolisHastings.tunelogistic(0.5,7.0) sqrt(2) 10-4
+
 t1 = tuner(:monitor,10)
 t2 = tuner(:scale,4,0.7,:logistic)
 t3 = tuner(:scale,4,0.5,:erf)

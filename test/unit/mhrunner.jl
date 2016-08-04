@@ -19,35 +19,45 @@ type TestMHRunner <: AbstractMHRunner
     policy::MHRuntimePolicy
 end
 
-sprops1 = 1
-gprops1 = 2
-nburnin1 = 2
-niter1 = 4
-sampler1 = sampler(:mh,:normal,0.5,[1.0 0.0;0.0 0.1])
-samplerstate1 = samplerstate(sampler1,sprops1,Float64,Float64)
-samplerstate2 = samplerstate(sampler1,gprops1,Float64,Float64)
-tuner1 = tuner(:monitor,1)
-tuner2 = tuner(:scale,2,0.5,:logistic)
+#create samplerstates
+mhsamplerstate1 = samplerstate(rsampler1,smhnprops1,Float64,Float64)
+mhsamplerstate2 = samplerstate(rsampler1,gmhnprops1,Float64,Float64)
 
 #create all required objects
-mhrunner1 = TestMHRunner(nburnin1,niter1,mhpolicy1)
-mhrunner2 = TestMHRunner(nburnin1,niter1,mhpolicy2)
-mhrunner3 = TestMHRunner(nburnin1,niter1,mhpolicy3)
-indicator1,tunerstate1,chain1 = GeneralizedMetropolisHastings.createcommon(mhrunner1,tuner1,nparas1,sprops1,sprops1)
-indicator2,tunerstate2,chain2 = GeneralizedMetropolisHastings.createcommon(mhrunner2,tuner2,nparas1,gprops1,gprops1)
+mhrunner1 = TestMHRunner(rnburnin1,rniter1,mhpolicy1)
+mhrunner2 = TestMHRunner(rnburnin1,rniter1,mhpolicy2)
+mhrunner3 = TestMHRunner(rnburnin1,rniter1,mhpolicy3)
+mhindicator1,mhtunerstate1,mhchain1 = GeneralizedMetropolisHastings.createcommon(mhrunner1,rtuner1,rnparas1,smhnprops1,smhnprops1)
+mhindicator2,mhtunerstate2,mhchain2 = GeneralizedMetropolisHastings.createcommon(mhrunner2,rtuner2,rnparas1,gmhnprops1,gmhnprops1)
 
-@test numproposals(indicator1) == sprops1 && numsamples(indicator1) == sprops1
-@test numproposals(indicator2) == gprops1 && numsamples(indicator2) == gprops1
-@test numtunesteps(tunerstate1) == 2
-@test numtunesteps(tunerstate2) == 1
-@test numparas(chain1) == nparas1 && numsamples(chain1) == niter1
-@test numparas(chain2) == nparas1 && numsamples(chain2) == (nburnin1 + niter1)*gprops1 + 1
+@test numproposals(mhindicator1) == smhnprops1 && numsamples(mhindicator1) == smhnprops1
+@test numproposals(mhindicator2) == gmhnprops1 && numsamples(mhindicator2) == gmhnprops1
+@test indicatorsamples(mhindicator1) == [0,0]
+@test indicatorsamples(mhindicator2) == [0,0,0]
+@test numtunesteps(mhtunerstate1) == 2
+@test numtunesteps(mhtunerstate2) == 1
+@test numparas(mhchain1) == rnparas1 && numsamples(mhchain1) == rniter1
+@test numparas(mhchain2) == rnparas1 && numsamples(mhchain2) == (rnburnin1 + rniter1)*gmhnprops1 + 1
 
-#initialize the from field
-initialize!(mhrunner1,model1,from(samplerstate1),chain1,true)
-loglikelihood1 = [loglikelihood(model1,evaluate!(model1,defaults1))]
-testfrom(samplerstate1,defaults1,loglikelihood1)
+#test the initialize function
+#prepare some prior values
+srand(rinitseed1) ; rpriorvals1 = initvalues(trait(:initialize,:prior),rparas1,mhpolicy1.sampletype)
+srand(rinitseed1+1) ; rpriorvals2 = initvalues(trait(:initialize,:prior),rparas1,mhpolicy1.sampletype)
+#copy (for testing) the first values of the chaing
+mcv1 = [mhchain1.values[1]]
+mcll1 = mhchain1.loglikelihood[1]
 
-initialize!(mhrunner1,model1,from(samplerstate2),chain2,true)
-loglikelihood2 = [loglikelihood(model1,evaluate!(model1,defaults1))]
-testfrom(samplerstate2,defaults1,loglikelihood2)
+#initialilze but without storing the first value in the chain
+srand(rinitseed1) ; initialize!(mhrunner1,rmodel1,mhsamplerstate1,mhchain1,false)
+mhll1 = [loglikelihood(rmodel1,evaluate!(rmodel1,rpriorvals1))]
+testproposals(mhsamplerstate1,rpriorvals1,mhll1) #the value is firt generated in the proposals
+testfrom(mhsamplerstate1,rpriorvals1,mhll1) #then copied to the from field
+@test_approx_eq mean(mhsamplerstate1.density.distribution) rpriorvals1 #and the normal distribution of the mh sampler should also have been conditioned
+teststore(mhchain1,mcv1,mcll1,1,0,0) #finally, the value has not been stored inside the chain
+
+srand(rinitseed1+1) ; initialize!(mhrunner1,rmodel1,mhsamplerstate1,mhchain1,true)
+mhll2 = [loglikelihood(rmodel1,evaluate!(rmodel1,rpriorvals2))]
+testproposals(mhsamplerstate1,rpriorvals2,mhll2) #same tests as above
+testfrom(mhsamplerstate1,rpriorvals2,mhll2)
+@test_approx_eq mean(mhsamplerstate1.density.distribution) rpriorvals2 #and the normal distribution of the mh sampler should also have been conditioned
+teststore(mhchain1,mhsamplerstate1.from.values,mhsamplerstate1.from.loglikelihood[1],1,0,1) #this time, the value should have been copied to the chain

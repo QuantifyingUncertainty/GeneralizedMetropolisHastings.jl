@@ -1,13 +1,7 @@
 srand(0)
 
 functionalitytests = [
-    "distributions",
-    "modelplots",
-    "springmasstest1",
-    "springmasstest2",
-    "springmasstest3",
-    "sincostest1",
-    "sincostest2"
+    "sintest1"
   ]
 
 println("============================")

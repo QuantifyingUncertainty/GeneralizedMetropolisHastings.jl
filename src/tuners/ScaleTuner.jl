@@ -41,7 +41,7 @@ end
 
 function tune(tuner::ScaleTuner,state::ScaleTunerState)
     r = state.accepted[state.index]/state.proposed[state.index]
-    s = max(1/2,tuner.score(r-tuner.targetrate,tuner.scoreargs...))
+    s = tuner.score(r-tuner.targetrate,tuner.scoreargs...)
     state.scalefactor[state.index] = convert(eltype(state.scalefactor),s)
 end
 
@@ -65,5 +65,6 @@ function showstep(t::ScaleTuner,state::ScaleTunerState)
         println("  accepted/proposed = $a/$p")
         println("  acceptance rate = $(round(a/p,3))")
         println("  scalefactor = $(round(state.scalefactor[state.index],3))")
+        println("  cummulative scaling = $(round((r = one(eltype(state.scalefactor)) ; for i=1:state.index r*=state.scalefactor[i] end ; r),3))")
     end
 end

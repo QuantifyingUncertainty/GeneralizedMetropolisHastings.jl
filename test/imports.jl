@@ -27,10 +27,9 @@ import Base.Test: @test,@test_approx_eq,@test_approx_eq_eps,@test_throws
     density,condition!,scale!,update!,propose!,logprobability,logprobability!,issymmetric, #from densities.jl
     sampler,samplerstate,setfrom!,propose!,acceptance!,acceptance,tune!,from,proposals,prepare!,prepareindicator!,prepareauxiliary!, #from samplers
     tuner,tunerstate,rate,accepted,proposed,total,index,numtunesteps,current,tune,nextindex!,period,verbose,needstuning,accepted!,showstep, #from tuners.jl
-    model,geometry!,evaluate!,loglikelihood,measurements,#from models.jl
+    model,geometry!,evaluate!,loglikelihood,measurements,noisemodel,#from models.jl
     chain,store!,accepted!,logposterior, #from chains.jl
     indicator,numproposals,transitionprobability!,sampleindicator!,indicatorsamples,accepted, #from indicators.jl
     segment,numproposals,iterate!,getsamples, #from jobsegments.jl
-    remotesegments,numtotalproposals,iterate!,retrievesamples!,
-    runner,run!,initialize!,prepare!,auxiliary!,
-    sincos,sincos!,springmassode,springmassdata,springmassnoisy
+    remotesegments,numsegments,numproposalspersegment,numtotalproposals,iterate!,retrievesamples!,
+    runner,run!,initialize!,preparenext!,auxiliary!

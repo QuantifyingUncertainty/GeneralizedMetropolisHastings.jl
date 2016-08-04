@@ -19,7 +19,9 @@ function _remotesegments(policy_::MHRuntimePolicy,model_::AbstractModel,sampler_
     MHRemoteSegments(r,nproposalspersegment,njobsegments)
 end
 
-function _prop2segment(segments_::MHRemoteSegments,sampleindex_::AbstractVector)
+_prop2seg(segments_::MHRemoteSegments,j::Int) = ind2sub((segments_.numproposalspersegment,segments_.numsegments),j)
+
+function _insegmentindex(segments_::MHRemoteSegments,sampleindex_::AbstractVector)
     boolindex_ = [fill(false,segments_.numproposalspersegment) for k=1:segments_.numsegments]
     ntp = numtotalproposals(segments_)
     for i=1:length(sampleindex_)
@@ -32,7 +34,7 @@ function _prop2segment(segments_::MHRemoteSegments,sampleindex_::AbstractVector)
     map(find,boolindex_)
 end
 
-function _segment2collected(segments_::MHRemoteSegments,insegmentindex::Vector)
+function _insegmentindex2collected!(segments_::MHRemoteSegments,insegmentindex::Array{Array{Int,1},1})
     empty!(segments_.prop2collected)
     d = (segments_.numproposalspersegment,segments_.numsegments)
     for i=1:segments_.numsegments
@@ -54,15 +56,16 @@ function iterate!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerSta
     map(fetch,a)
 end
 
+#call prepare in order to copy over the new indicator state
 function prepare!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState,j::Int)
-    p,s = segments_.prop2collected[j]
+    p,s = _prop2seg(segments_,j)
     r = segments_.remote[s]
-    remotecall_fetch(r.where,prepare!,r,indicatorstate,p,updatefrom)
+    remotecall_fetch(r.where,prepare!,r,indicatorstate,p)
 end
 
 function retrievesamples!(segments_::MHRemoteSegments,sampleindex_::AbstractVector)
-    insegmentindex = _prop2segment(segments_,sampleindex_)
-    segments_.prop2collected = _segment2collected(segments_,insegmentindex)
+    insegmentindex = _insegmentindex(segments_,sampleindex_)
+    segments_.prop2collected = _insegmentindex2collected!(segments_,insegmentindex)
     @sync begin
         map!((r,i)->(~isempty(i)?remotecall_fetch(r.where,getsamples,r,i):samples(:base,0,0,Float64,Float64)),segments_.collectedsamples,segments_.remote,insegmentindex)
     end
@@ -71,7 +74,7 @@ end
 
 function getsamples(segments_::MHRemoteSegments,j::Int)
     if !haskey(segments_.prop2collected,j)
-        p,s = ind2sub((segments_.numproposalspersegment,segments_.numsegments),j)
+        p,s = _prop2seg(segments_,j)
         r = segments_.remote[s]
         return remotecall_fetch(r.where,getsamples,r,p)
     else
@@ -85,11 +88,11 @@ function store!(segments_::MHRemoteSegments,chain_::AbstractChain,j::Int)
     store!(chain_,segments_.collectedsamples[s],p)
 end
 
-function tune!(segments_::MHRemoteSegments,sampler_::AbstractSampler,tvals...)
+function tune!(segments_::MHRemoteSegments,tvals...)
     @sync begin
         for i=1:segments_.numsegments
             r = segments_.remote[i]
-            remotecall_wait(r.where,tune!,r,sampler_,tvals...)
+            remotecall_wait(r.where,tune!,r,tvals...)
         end
     end
 end

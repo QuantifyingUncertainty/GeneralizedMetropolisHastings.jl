@@ -1,12 +1,24 @@
 println("Number of processes running: ",nprocs())
 
-srand(897)
-defaults1 = [110.0,8.0]
-init1 = [-1.0,1.0]
-paras1 = [100.0,10.0]
-noise1 = [1e-2,9e-2]
-model1 = springmassmodel(linspace(0.0,10.0,100),init1,paras1,noise1,defaults1)
-nparas1 = numparas(model1)
+#Define some quantities and a very simple TargetModel for all tests below
+rinitseed1 = 879
+rnburnin1 = 2
+rniter1 = 4
+smhnprops1 = 1 #number of test proposals for standard mh
+gmhnprops1 = 2 #number of test proposals for generalized mh
+rtime1 = linspace(0.0,10.0,100)
+rlower1 = [2.5]
+rupper1 = [3.5]
+rdefault1 = [3.0]
+rcov1 = [0.01]
+rparas1 = parameters([:a],rlower1,rupper1,rdefault1)
+rdata1 = data(:array,rtime1,sin(3*rtime1))
+rnoise1 = noise(:gaussian,rcov1)
+rmodel1 = model(:target,rparas1,rdata1,rnoise1,(t,p)->sin(p[1]*t);name="RunnersTestModel")
+rnparas1 = numparas(rmodel1)
+rsampler1 = sampler(:mh,:normal,0.1,eye(1))
+rtuner1 = tuner(:monitor,1)
+rtuner2 = tuner(:scale,2,0.5,:logistic)
 
 function testfrom(state,vals,ll)
     @test state.from.values == vals
@@ -40,14 +52,17 @@ function setindicator(indicator,probs,samples)
     copy!(indicator.samples,samples)
 end
 
-function setsegment(segment,from,ll1,prop,ll2)
-    r = segment.remote[1]
+function setsegment(rsegs,from,ll1,prop,ll2,j)
+    l = length(prop)
+    p,s = GeneralizedMetropolisHastings._prop2seg(rsegs,j)
+    r = rsegs.remote[s]
     @sync begin
         @spawnat r.where copy!(fetch(r).samplerstate.from.values,from)
         @spawnat r.where copy!(fetch(r).samplerstate.from.loglikelihood,ll1)
-        @spawnat r.where copy!(fetch(r).samplerstate.proposals.values,1,prop,1,length(prop))
-        @spawnat r.where copy!(fetch(r).samplerstate.proposals.loglikelihood,1,ll2,1,1)
+        @spawnat r.where copy!(fetch(r).samplerstate.proposals.values,l*(p-1)+1,prop,1,l)
+        @spawnat r.where copy!(fetch(r).samplerstate.proposals.loglikelihood,p,ll2,1,1)
     end
+    rsegs.prop2collected[j] = (p,s)
 end
 
 function testtransitionprobability(states,indicator)

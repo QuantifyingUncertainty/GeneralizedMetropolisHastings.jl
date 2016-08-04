@@ -1,4 +1,4 @@
-immutable TargetModel{T<:Number,P<:AbstractParameter,D<:AbstractData,N<:AbstractNoiseModel} <: AbstractModel
+immutable TargetModel{P<:AbstractParameter,D<:AbstractData,N<:AbstractNoiseModel} <: AbstractModel
 
     #Generic model specs
     name::AbstractString
@@ -11,19 +11,18 @@ immutable TargetModel{T<:Number,P<:AbstractParameter,D<:AbstractData,N<:Abstract
     args::Tuple #additional arguments for the target function
 
     ###temp location to store model data
-    mutates::Bool
-    evalresults::AbstractArray
+    inplacetarget::Bool
+    evalresults::Array
 
     TargetModel(name::AbstractString,parameters::Vector{P},measurements::D,noisemodel::N,
-                modify::Bool,evalresults::AbstractArray{T},target::Function,args...) = new(name,parameters,measurements,noisemodel,target,args,modify,evalresults)
+                inplacetarget::Bool,evalresults::Array,target::Function,args...) = new(name,parameters,measurements,noisemodel,target,args,inplacetarget,evalresults)
 end
 
-function TargetModel(name::AbstractString,parameters::Vector,measurements::AbstractData,noisemodel::AbstractNoiseModel,modify::Bool,target::Function,args...)
-    T = eltype(measurements)
+function TargetModel(name::AbstractString,parameters::Vector,measurements::AbstractData,noisemodel::AbstractNoiseModel,inplacetarget::Bool,target::Function,args...)
     P = eltype(parameters)
     D = typeof(measurements)
     N = typeof(noisemodel)
-    TargetModel{T,P,D,N}(name,parameters,measurements,noisemodel,modify,similar(datavalues(measurements)),target,args...)
+    TargetModel{P,D,N}(name,parameters,measurements,noisemodel,inplacetarget,similar(datavalues(measurements)),target,args...)
 end
 
 ###Factory functions
@@ -35,11 +34,11 @@ function _model(::Type{Val{:target}},parameters::Vector,measurements::AbstractDa
     TargetModel(name,parameters,measurements,noisemodel,false,target,args...)
 end
 
-@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.evalresults,m.args...,vals)
-@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = copy!(m.evalresults,m.target(m.args...,vals))
+@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.evalresults,dataindex(m),m.args...,vals)
+@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = copy!(m.evalresults,m.target(dataindex(m),m.args...,vals))
 
 ###Evaluate the model for the given parameter values
-evaluate!(m::TargetModel,vals::AbstractVector) = (_evaluate(Val{m.modifydata},m,vals) ; m.evalresults)
+evaluate!(m::TargetModel,vals::AbstractVector) = (_evaluate(Val{m.inplacetarget},m,vals) ; m.evalresults)
 
 ###Utility functions used in generic implementations in AbstractModel
 @inline dataindex(m::TargetModel) = dataindex(m.measurements)

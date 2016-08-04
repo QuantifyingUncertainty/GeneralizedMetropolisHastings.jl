@@ -1,8 +1,7 @@
-immutable ODEModel{T<:AbstractFloat,P<:AbstractParameter,D<:AbstractData,N<:AbstractNoiseModel} <: AbstractModel
+immutable ODEModel{P<:AbstractParameter,D<:AbstractData,N<:AbstractNoiseModel} <: AbstractModel
     #Generic model specs
     name::AbstractString
     parameters::Vector
-    gradientepsilon::T
 
     #Data + noise
     measurements::D
@@ -10,36 +9,31 @@ immutable ODEModel{T<:AbstractFloat,P<:AbstractParameter,D<:AbstractData,N<:Abst
 
     #ODE specific
     ode::Function
-    initial::Vector{T}
+    initial::Vector
     numstates::Int
     observed::Vector{Int}
     unobserved::Vector{Int}
-    abstol::T
-    reltol::T
+    abstol::Real
+    reltol::Real
 
-    #temp location to store evaluation results
-    evalresults::Array
-
-    ODEModel(name::AbstractString,parameters::Vector{P},gradientepsilon::T,measurements::D,noisemodel::N,
-             ode::Function,initial::Vector{T},numstates::Int,observed::Vector{Int},unobserved::Vector{Int},abstol::T,reltol::T) =
-        new(name,parameters,gradientepsilon,measurements,noisemodel,ode,initial,numstates,observed,unobserved,abstol,reltol,similar(datavalues(measurements)))
+    ODEModel(name::AbstractString,parameters::Vector{P},measurements::D,noisemodel::N,
+             ode::Function,initial::Vector,numstates::Int,observed::Vector{Int},unobserved::Vector{Int},abstol::Real,reltol::Real) =
+        new(name,parameters,measurements,noisemodel,ode,initial,numstates,observed,unobserved,abstol,reltol)
 end
 
 ###Factory function with default values for tolerance
 function _model(::Type{Val{:ode}},parameters::Vector,data::AbstractData,noise::AbstractNoiseModel,
-       ode::Function,initial::Vector,numstates::Int,observed::Vector{Int};name ="ODE",abstol =1e-6,reltol =1e-6,gradientepsilon =1e-4)
-    T = eltype(data)
+       ode::Function,initial::Vector,numstates::Int,observed::Vector{Int};name ="ODE",abstol =1e-6,reltol =1e-6)
     P = eltype(parameters)
     D = typeof(data)
     N = typeof(noise)
-    ODEModel{T,P,D,N}(name,parameters,convert(T,gradientepsilon),data,noise,ode,initial,numstates,observed,setdiff(1:numstates,observed),convert(T,abstol),convert(T,reltol))
+    ODEModel{P,D,N}(name,parameters,data,noise,ode,initial,numstates,observed,setdiff(1:numstates,observed),abstol,reltol)
 end
 
 ###Evaluate the model for the given parameter values
 function evaluate!(m::ODEModel,vals::AbstractVector)
     o(t,y,ydot) = m.ode(t,y,ydot,vals)
-    copy!(m.evalresults,sub(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed))
-    m.evalresults
+    sub(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed)
 end
 
 ###Utility functions used in generic implementations in AbstractModel
@@ -60,7 +54,6 @@ function show(io::IO,m::ODEModel)
     if ~isempty(m.unobserved)
         println(io,"unobserved: ",m.unobserved)
     end
-    println(io,"gradientepsilon: ",m.gradientepsilon)
     println(io,"abstol: ",m.abstol)
     println(io,"reltol: ",m.reltol)
     nothing
