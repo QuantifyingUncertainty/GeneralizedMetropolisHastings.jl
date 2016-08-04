@@ -3,7 +3,9 @@ Code base for the Generalized Metropolis-Hastings (GMH) algorithm for MCMC [(Cal
 
 For instructions on how to set up and run MCMC experiments using GMH in Amazon Web Services, in JuliaBox or on your local machine, see: http://quantifyinguncertainty.github.io
 
-Use the code with the models provided in [GMHModels.jl](https://github.com/QuantifyingUncertainty/GMHModels.jl) and the example scripts and notebooks provided in [GMHExamples.jl](https://github.com/QuantifyingUncertainty/GMH-Examples.jl)
+Some elementary examples of how to use the code are provided in [GMHExamples.jl](https://github.com/QuantifyingUncertainty/GMHExamples.jl).
+
+A biological model for use with the code is provided in [GMHPhotoReceptor.jl](https://github.com/QuantifyingUncertainty/GMHPhotoReceptor.jl)
 
 From inside Julia, you can easily install the package using the following command:
 
