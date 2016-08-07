@@ -13,10 +13,15 @@ end
 
 ### Perform one iteration
 function iterate!(seg::GMHSegment,indicator::AbstractSamplerState)
-    prepareauxiliary!(indicator,seg.samplerstate)
-    propose!(seg.samplerstate)
-    geometry!(seg.model,proposals(seg.samplerstate))
-    acceptance!(seg.samplerstate)
+    try
+        prepareauxiliary!(indicator,seg.samplerstate)
+        propose!(seg.samplerstate)
+        geometry!(seg.model,proposals(seg.samplerstate))
+        return acceptance!(seg.samplerstate)
+    catch e
+        show(e)
+    end
+    return zeros(acceptance(seg.samplerstate)) #in case of error in this segment
 end
 
 ### Update the indicatorstate with the sample of this auxiliary state
