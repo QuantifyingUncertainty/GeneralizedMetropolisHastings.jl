@@ -34,7 +34,7 @@ fsampler2 = sampler(:adaptive,0.1,fnparas)
 
 ###Create different tuners for the samplers
 ftuner1 = tuner(:scale,10,0.5,:erf)
-ftuner2 = tuner(:monitor,1)
+ftuner2 = tuner(:monitor,10)
 
 ###Create a Generalized Metropolis-Hastings runner
 p = policy(:mh,nproposals)

@@ -4,14 +4,8 @@ gv2 = [3.0]
 gll2 = [-50.0]
 gv3 = [5.0]
 gll3 = [-10.0]
-nprocesses = [1,2,3]
 
-for n in nprocesses
     try
-        if nprocs() != n
-            addprocs(n-nprocs())
-            include(joinpath(Pkg.dir("GeneralizedMetropolisHastings"),"test","imports.jl"))
-        end
 
         println("++++++++++++++++++++++++++++++++")
         println("Testing GMHRunner with $(nprocs()) processes")
@@ -111,9 +105,7 @@ for n in nprocesses
         rmprocs(workers())
         throw(e)
     end
-end
 
-rmprocs(workers())
 gmhpolicy = policy(:mh,gmhnprops1)
 gmhrunner = runner(gmhpolicy,rniter1,gmhnprops1;numburnin = rnburnin1)
 println("====================")
