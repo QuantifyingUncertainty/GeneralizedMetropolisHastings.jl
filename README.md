@@ -7,17 +7,17 @@ Some elementary examples of how to use the code are provided in [GMHExamples.jl]
 
 A biological model for use with the code is provided in [GMHPhotoReceptor.jl](https://github.com/QuantifyingUncertainty/GMHPhotoReceptor.jl)
 
-From inside Julia, you can easily install the package using the following command:
+In the Julia REPL, add the package via the package manager:
 
 ```
-julia> Pkg.clone("git://github.com/QuantifyingUncertainty/GeneralizedMetropolisHastings.jl")
+julia> Pkg.add("GeneralizedMetropolisHastings")
 ```
 
 This will install the package into your Julia package directory. 
 
 The **src** directory contains all the source code for the package.
 	
-The **test** directory contains tests of the package. You can run the tests from the Julia command line by executing:
+The **test** directory contains tests of the package. You can run the tests in the Julia REPL by executing:
 
 ```
 julia> Pkg.test("GeneralizedMetropolisHastings")
