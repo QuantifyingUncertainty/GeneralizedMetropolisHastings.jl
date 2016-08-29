@@ -1,4 +1,4 @@
-julia 0.4.6
+julia 0.4.5
 Compat 0.7.6
 IJulia 1.1.7
 PyPlot 2.1.1
