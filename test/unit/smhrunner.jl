@@ -2,7 +2,7 @@
 smhpolicy1 = policy(:mh,1)
 smhpolicy2 = policy(:mh,1,store=:all)
 smhrunner1 = runner(smhpolicy1,rniter1;numburnin = rnburnin1)
-smhrunner2 = runner(smhpolicy2,rniter1;numburnin = rnburnin1)
+smhrunner2 = runner(smhpolicy2,rniter1,1;numburnin = rnburnin1)
 smhindicator1,smhtunerstate1,smhchain1 = GeneralizedMetropolisHastings.createcommon(smhrunner1,rtuner1,rnparas1,smhnprops1,smhnprops1)
 smhindicator2,smhtunerstate2,smhchain2 = GeneralizedMetropolisHastings.createcommon(smhrunner1,rtuner2,rnparas1,smhnprops1,smhnprops1)
 smhsamplerstate1 = samplerstate(rsampler1,smhnprops1,Float64,Float64)
