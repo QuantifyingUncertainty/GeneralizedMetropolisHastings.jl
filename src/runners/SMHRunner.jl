@@ -11,7 +11,7 @@ immutable SMHRunner <: AbstractMHRunner
 end
 
 ###Factory functions
-_runner(::Type{Val{:standard}},policy::MHRuntimePolicy,niterations::Int;numburnin =0) = SMHRunner(numburnin,niterations,policy)
+_runner(::Type{Val{:standard}},policy::MHRuntimePolicy,niterations::Int,nproposals::Int=1;numburnin =0) = SMHRunner(numburnin,niterations,policy)
 
 function run!(runner_::SMHRunner,model_::AbstractModel,sampler_::AbstractSampler,tuner_::AbstractTuner)
     samplerstate_ = samplerstate(sampler_,1,runner_.policy.sampletype,runner_.policy.calculationtype)
