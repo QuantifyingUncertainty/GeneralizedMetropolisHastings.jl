@@ -1,7 +1,7 @@
 immutable NoiseModelGaussian{T<:AbstractFloat,V<:AbstractVector} <: AbstractNoiseModel
     variance::V
-    distributions::Vector{Distributions.Normal}
-    NoiseModelGaussian(v::AbstractVector{T},d::Vector{Distributions.Normal}) = new(v,d)
+    distributions::Vector{Distributions.Normal{T}}
+    NoiseModelGaussian(v::AbstractVector{T},d::Vector{Distributions.Normal{T}}) = new(v,d)
 end
 
 @inline _noise(::Type{Val{:gaussian}},v::AbstractVector) = NoiseModelGaussian{eltype(v),typeof(v)}(v,map(Distributions.Normal,zeros(v),sqrt(v)))

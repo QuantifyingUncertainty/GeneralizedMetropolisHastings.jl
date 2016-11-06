@@ -104,11 +104,11 @@ for p in [(:normal,1.0),
     @test (srand(324) ; Distributions.rand!(b1,zeros(2))) == (srand(324) ; Distributions.rand!(b1.mixture,zeros(2)))
 end
 
-for p in [(:normal,Distributions.Normal),
-          (:lognormal,Distributions.LogNormal),
-          (:uniform,Distributions.Uniform),
-          (:laplace,Distributions.Laplace),
-          (:triangular,Distributions.SymTriangularDist)]
+for p in [(:normal,Distributions.Normal{Float64}),
+          (:lognormal,Distributions.LogNormal{Float64}),
+          (:uniform,Distributions.Uniform{Float64}),
+          (:laplace,Distributions.Laplace{Float64}),
+          (:triangular,Distributions.SymTriangularDist{Float64})]
     d = distributions(p[1],[0.0,1.0],[1.0,2.0])
     @test eltype(d) == p[2]
 end
@@ -116,7 +116,8 @@ end
 #a test to ensure that all multivariate distributions copy their matrix arguments upon creation
 #so that creating two from the same matrix does not introduce side-effects when recentering or rescaling
 for p in [(:normal,ones(2),eye(2),2ones(2),mean,2ones(2),ones(2),cov,0.01*eye(2),eye(2)),
-          (:lognormal,ones(2),eye(2),2ones(2),Distributions.location,log(2ones(2)),zeros(2),Distributions.scale,0.01*eye(2),eye(2))]
+          (:lognormal,ones(2),eye(2),2ones(2),Distributions.location,log(2ones(2)),zeros(2),Distributions.scale,0.01*eye(2),eye(2)),
+          (:normal,ones(Float32,2),eye(Float32,2),2ones(Float32,2),mean,2ones(Float32,2),ones(Float32,2),cov,0.01f0*eye(Float32,2),eye(Float32,2))]
     println("Testing multivariate ",p[1]," copying behaviour")
     d1 = distribution(p[1],p[2],p[3])
     d2 = distribution(p[1],p[2],p[3])

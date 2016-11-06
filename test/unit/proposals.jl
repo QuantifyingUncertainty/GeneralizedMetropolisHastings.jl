@@ -5,8 +5,8 @@ println("======================")
 @test NormalDensity <: SymmetricDensity
 
 ###Test construction
-n1 = distribution(:normal,ones(2),0.1*eye(2))
-d1 = density(:normal,ones(2),0.1*eye(2))
+n1 = distribution(:normal,ones(Float64,2),0.1*eye(Float64,2))
+d1 = density(:normal,ones(Float64,2),0.1*eye(Float64,2))
 @test isa(d1,NormalDensity)
 @test issymmetric(d1)
 @test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
@@ -28,7 +28,7 @@ update!(d1,3*ones(2),3*eye(2))
 for i in [1,3]
     s1 = samples(:base,2,i,Float64,Float64)
     z1 = zeros(Float64,GeneralizedMetropolisHastings._valuestuple(2,i))
-    @test (srand(i+23) ; propose!(d1,s1.values)) == (srand(i+23) ; rand!(n1,z1))
+    @test (srand(i+23) ; propose!(d1,s1.values)) == (srand(i+23) ; z1 = rand!(n1,z1))
     p1 = Distributions.logpdf(d1.distribution,s1.values) ; isa(p1,Number)?collect(p1):p1
     @test_approx_eq logprobability(d1,s1.values) p1
 end
@@ -46,6 +46,11 @@ scale!(d2,2.0)
 n2 = update(n2,eye(2))
 update!(d2,eye(2))
 @test mean(d2.distribution) == mean(n2) && cov(d2.distribution) == cov(n2)
+
+###Test that propose! currently throws a MethodError for Float32
+d3 = density(:normal,eye(Float32,2))
+@test eltype(mean(d3.distribution)) == Float32
+@test_throws MethodError propose!(d3,zeros(Float32,2))
 
 #################################################################################
 

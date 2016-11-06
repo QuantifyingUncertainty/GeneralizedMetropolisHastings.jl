@@ -31,7 +31,7 @@ a3 = transitionprobability!(i3,u3,v3)
 @test_approx_eq a3 exp(v3c-maximum(v3c))./sum(exp(v3c-maximum(v3c)))
 
 @test (srand(567) ; sampleindicator!(i1)) == (srand(567) ; vcat([2],[rand(Distributions.Categorical(a1)) for i=1:numsamples(i1)]))
-@test_throws MethodError (srand(567) ; sampleindicator!(i2)) == (srand(567) ; vcat([5],[rand(Distributions.Categorical(a2)) for i=1:numsamples(i2)])) #Categorical distribution currenlty does not work with Float32
+@test (srand(567) ; sampleindicator!(i2)) == (srand(567) ; vcat([5],[rand(Distributions.Categorical(a2)) for i=1:numsamples(i2)]))
 @test (srand(567) ; sampleindicator!(i3)) == (srand(567) ; vcat([11],[rand(Distributions.Categorical(a3)) for i=1:numsamples(i3)]))
 
 @test accepted(i1) == sum(i1.samples[2:end].!=i1.samples[1:end-1])

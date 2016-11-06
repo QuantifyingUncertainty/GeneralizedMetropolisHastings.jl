@@ -3,9 +3,9 @@ srand(0) #to make the tests repeatable
 unittests = [
     "policies",
     "parameters",
+    "distributions",
     "data",
     "samples",
-    "distributions",
     "proposals",
     "samplers",
     "indicators",
