@@ -11,11 +11,43 @@ prepare!(seg::AbstractJobSegment,indicatorstate::AbstractSamplerState,i::Int) = 
 tune!(seg::AbstractJobSegment,tvals...) = throw(MethodError(tune!, (seg,tvals...)))
 getsamples(seg::AbstractJobSegment,sampleindex) = throw(MethodError(getsamples, (seg,sampleindex)))
 
-### Interface which maps from RemoteRefs to AbstractJobSegments
-iterate!(remote::RemoteRef,indicatorstate::AbstractSamplerState) = iterate!(fetch(remote),indicatorstate)
-prepare!(remote::RemoteRef,indicatorstate::AbstractSamplerState,i::Int) = prepare!(fetch(remote),indicatorstate,i)
-tune!(remote::RemoteRef,tvals...) = tune!(fetch(remote),tvals...)
-getsamples(remote::RemoteRef,sampleindex) = getsamples(fetch(remote),sampleindex)
+### Interface which maps from Future remote references to AbstractJobSegments
+function iterate!(remote::Future,indicatorstate::AbstractSamplerState)
+    r = fetch(remote)
+    if ~isa(r,RemoteException)
+        iterate!(r,indicatorstate)
+    else
+        throw(r)
+    end
+end
+
+function prepare!(remote::Future,indicatorstate::AbstractSamplerState,i::Int)
+    r = fetch(remote)
+    if ~isa(r,RemoteException)
+        prepare!(fetch(remote),indicatorstate,i)
+    else
+        throw(r)
+    end
+end
+
+function tune!(remote::Future,tvals...)
+    r = fetch(remote)
+    if ~isa(r,RemoteException)
+        tune!(fetch(remote),tvals...)
+    else
+        throw(r)
+    end
+end
+
+function getsamples(remote::Future,sampleindex)
+    r = fetch(remote)
+    if ~isa(r,RemoteException)
+        getsamples(fetch(remote),sampleindex)
+    else
+        throw(r)
+    end
+end
+
 
 
 

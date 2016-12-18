@@ -51,7 +51,7 @@ end
 
 rand(b::Bactrian) = rand(b.mixture)
 rand!(b::Bactrian,x::AbstractArray) = rand!(b.mixture,x)
-pdf(b::Bactrian,x) = pdf(b.mixture,x)
+pdf(b::Bactrian,x::Real) = pdf(b.mixture,x)
 
 mean(b::Bactrian) = mean(b.mixture)
 var(b::Bactrian) = var(b.mixture)

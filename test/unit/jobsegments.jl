@@ -69,24 +69,6 @@ for i=1:length(nproposals)
     @test GeneralizedMetropolisHastings._numproposalspersegment(nproposals[i],nsegments[i]) == npropsperseg[i]
 end
 
-
-function gettestprocessnumbers(p::Int)
-    if p == 1
-        return [1,1,1]
-    end
-    if p == 2
-        w = workers()[1]
-        return [w,w,w]
-    end
-    if p == 3
-        w1 = workers()[1]
-        w2 = workers()[2]
-        return [w1,w2,w1]
-    end
-    return workers()[1:3] #if there are many workers
-end
-
-
 rprops1 = 4
 rpolicy1 = policy(:mh,nprops1,jobsegments=:test)
 rsegments1 = remotesegments(rpolicy1,m1,s1,rprops1)
@@ -94,7 +76,7 @@ rsegments1 = remotesegments(rpolicy1,m1,s1,rprops1)
 @test numproposalspersegment(rsegments1) == 2
 @test numtotalproposals(rsegments1) == 6
 @test GeneralizedMetropolisHastings._numjobsegments(rpolicy1,rprops1) == 3
-@test collect(GeneralizedMetropolisHastings._processnumbers(rpolicy1,3)) == gettestprocessnumbers(nprocs())
+@test collect(GeneralizedMetropolisHastings._processnumbers(rpolicy1,3)) == GMHRunnersTest.gettestprocessnumbers(nprocs())
 @test GeneralizedMetropolisHastings._insegmentindex(rsegments1,[1,4,5,6]) == Array{Int,1}[[1],[2],[1,2]] #create the in-segment index for overall proposal index
 @test GeneralizedMetropolisHastings._insegmentindex(rsegments1,[1,4,5,6,1,3,4,5,5]) == Array{Int,1}[[1],[1,2],[1,2]] #repetitions are filtered out
 @test rsegments1.prop2collected == Dict{Int,Tuple{Int,Int}}()

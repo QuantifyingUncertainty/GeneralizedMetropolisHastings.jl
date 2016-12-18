@@ -13,20 +13,14 @@ mhpolicy3 = policy(:mh,1,store=:burnin,initialize=:default)
 @test GeneralizedMetropolisHastings._storeduring(:main,mhpolicy2) == true
 @test GeneralizedMetropolisHastings._storeduring(:main,mhpolicy3) == false
 
-type TestMHRunner <: AbstractMHRunner
-    numburnin::Int
-    numiterations::Int
-    policy::MHRuntimePolicy
-end
-
 #create samplerstates
 mhsamplerstate1 = samplerstate(rsampler1,smhnprops1,Float64,Float64)
 mhsamplerstate2 = samplerstate(rsampler1,gmhnprops1,Float64,Float64)
 
 #create all required objects
-mhrunner1 = TestMHRunner(rnburnin1,rniter1,mhpolicy1)
-mhrunner2 = TestMHRunner(rnburnin1,rniter1,mhpolicy2)
-mhrunner3 = TestMHRunner(rnburnin1,rniter1,mhpolicy3)
+mhrunner1 = GMHRunnersTest.TestMHRunner(rnburnin1,rniter1,mhpolicy1)
+mhrunner2 = GMHRunnersTest.TestMHRunner(rnburnin1,rniter1,mhpolicy2)
+mhrunner3 = GMHRunnersTest.TestMHRunner(rnburnin1,rniter1,mhpolicy3)
 mhindicator1,mhtunerstate1,mhchain1 = GeneralizedMetropolisHastings.createcommon(mhrunner1,rtuner1,rnparas1,smhnprops1,smhnprops1)
 mhindicator2,mhtunerstate2,mhchain2 = GeneralizedMetropolisHastings.createcommon(mhrunner2,rtuner2,rnparas1,gmhnprops1,gmhnprops1)
 
@@ -50,14 +44,14 @@ mcll1 = mhchain1.loglikelihood[1]
 #initialilze but without storing the first value in the chain
 srand(rinitseed1) ; initialize!(mhrunner1,rmodel1,mhsamplerstate1,mhchain1,false)
 mhll1 = [loglikelihood(rmodel1,evaluate!(rmodel1,rpriorvals1))]
-testproposals(mhsamplerstate1,rpriorvals1,mhll1) #the value is firt generated in the proposals
-testfrom(mhsamplerstate1,rpriorvals1,mhll1) #then copied to the from field
+GMHRunnersTest.testproposals(mhsamplerstate1,rpriorvals1,mhll1) #the value is firt generated in the proposals
+GMHRunnersTest.testfrom(mhsamplerstate1,rpriorvals1,mhll1) #then copied to the from field
 @test_approx_eq mean(mhsamplerstate1.density.distribution) rpriorvals1 #and the normal distribution of the mh sampler should also have been conditioned
-teststore(mhchain1,mcv1,mcll1,1,0,0) #finally, the value has not been stored inside the chain
+GMHRunnersTest.teststore(mhchain1,mcv1,mcll1,1,0,0) #finally, the value has not been stored inside the chain
 
 srand(rinitseed1+1) ; initialize!(mhrunner1,rmodel1,mhsamplerstate1,mhchain1,true)
 mhll2 = [loglikelihood(rmodel1,evaluate!(rmodel1,rpriorvals2))]
-testproposals(mhsamplerstate1,rpriorvals2,mhll2) #same tests as above
-testfrom(mhsamplerstate1,rpriorvals2,mhll2)
+GMHRunnersTest.testproposals(mhsamplerstate1,rpriorvals2,mhll2) #same tests as above
+GMHRunnersTest.testfrom(mhsamplerstate1,rpriorvals2,mhll2)
 @test_approx_eq mean(mhsamplerstate1.density.distribution) rpriorvals2 #and the normal distribution of the mh sampler should also have been conditioned
-teststore(mhchain1,mhsamplerstate1.from.values,mhsamplerstate1.from.loglikelihood[1],1,0,1) #this time, the value should have been copied to the chain
+GMHRunnersTest.teststore(mhchain1,mhsamplerstate1.from.values,mhsamplerstate1.from.loglikelihood[1],1,0,1) #this time, the value should have been copied to the chain

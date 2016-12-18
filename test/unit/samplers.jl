@@ -148,7 +148,7 @@ end
 #test showing that the covariance is indeed the correct sample covariance
 @test ru1.iteration == niterations
 @test_approx_eq ru1.runningmean mean(rv,2)
-@test_approx_eq ru1.runningcov cov(rv,vardim=2)
+@test_approx_eq ru1.runningcov cov(rv')'
 
 as1 = sampler(:adaptive,0.1,2)
 atind = samplerstate(as1,1,Float64,Float64)

@@ -18,22 +18,22 @@ sv1 = [1.0]
 sll1 = [-100.0]
 sv2 = [3.0]
 sll2 = [-50.0]
-setfrom(smhsamplerstate1,sv1,sll1) ; setproposals(smhsamplerstate1,sv2,sll2) ; setindicator(smhindicator1,[1.0,0.0],[2,1])
+GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[1.0,0.0],[2,1])
 preparenext!(smhrunner1,smhsamplerstate1,smhindicator1)
-testfrom(smhsamplerstate1,sv2,sll2) #in this condition, value should have been copied
+GMHRunnersTest.testfrom(smhsamplerstate1,sv2,sll2) #in this condition, value should have been copied
 @test_approx_eq mean(smhsamplerstate1.density.distribution) sv2 #and the normal distribution of the mh sampler should also have been conditioned
-setfrom(smhsamplerstate1,sv1,sll1) ; setproposals(smhsamplerstate1,sv2,sll2) ; setindicator(smhindicator1,[0.0,1.0],[2,2])
+GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[0.0,1.0],[2,2])
 preparenext!(smhrunner1,smhsamplerstate1,smhindicator1)
-testfrom(smhsamplerstate1,sv1,sll1) #in this condition, value should have stayed the same
+GMHRunnersTest.testfrom(smhsamplerstate1,sv1,sll1) #in this condition, value should have stayed the same
 @test_approx_eq mean(smhsamplerstate1.density.distribution) sv2 #and the normal distribution should have been left unchanged from previous test
 
 #test storing a value into the chain
-setfrom(smhsamplerstate1,sv1,sll1) ; setproposals(smhsamplerstate1,sv2,sll2) ; setindicator(smhindicator1,[1.0,0.0],[2,1])
+GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[1.0,0.0],[2,1])
 store!(smhrunner1,smhsamplerstate1,smhindicator1,smhchain1)
-teststore(smhchain1,sv2,sll2[1],1,1,1)
-setfrom(smhsamplerstate1,sv1,sll1) ; setproposals(smhsamplerstate1,sv2,sll2) ; setindicator(smhindicator1,[0.0,1.0],[2,2])
+GMHRunnersTest.teststore(smhchain1,sv2,sll2[1],1,1,1)
+GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[0.0,1.0],[2,2])
 store!(smhrunner1,smhsamplerstate1,smhindicator1,smhchain1)
-teststore(smhchain1,sv1,sll1[1],2,1,2)
+GMHRunnersTest.teststore(smhchain1,sv1,sll1[1],2,1,2)
 @test smhchain1.values == [sv2[1] sv1[1] 0.0 0.0] #test the exact values
 
 #iterate once
@@ -56,8 +56,8 @@ store!(smhrunner1,smhsamplerstate1,smhindicator1,smhchain1)
 srand(rinitseed1) ; initialize!(smhrunner1,rmodel1,smhsamplerstate2,smhchain2,false)
 iterate!(smhrunner2,rmodel1,smhsamplerstate2,smhindicator2,smhchain2,true)
 #compare the values from both steps
-testfrom(smhsamplerstate2,smhsamplerstate1.from.values,smhsamplerstate1.from.loglikelihood)
-testproposals(smhsamplerstate2,smhsamplerstate1.proposals.values,smhsamplerstate1.proposals.loglikelihood)
+GMHRunnersTest.testfrom(smhsamplerstate2,smhsamplerstate1.from.values,smhsamplerstate1.from.loglikelihood)
+GMHRunnersTest.testproposals(smhsamplerstate2,smhsamplerstate1.proposals.values,smhsamplerstate1.proposals.loglikelihood)
 
 
 #test the tuning function

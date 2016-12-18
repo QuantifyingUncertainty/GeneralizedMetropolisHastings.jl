@@ -33,7 +33,7 @@ end
 ###Evaluate the model for the given parameter values
 function evaluate!(m::ODEModel,vals::AbstractVector)
     o(t,y,ydot) = m.ode(t,y,ydot,vals)
-    sub(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed)
+    view(Sundials.cvode(o,m.initial,dataindex(m.measurements);reltol=m.reltol,abstol=m.abstol),:,m.observed)
 end
 
 ###Utility functions used in generic implementations in AbstractModel

@@ -10,7 +10,6 @@ unittests = [
     "samplers",
     "indicators",
     "models",
-    "testutil",
     "tuners",
     "chains",
     "jobsegments",
@@ -22,6 +21,8 @@ unittests = [
 println("===================")
 println("Running unit tests:")
 println("===================")
+
+include("unit/testutil.jl")
 
 for t in unittests
     tfile = t*".jl"

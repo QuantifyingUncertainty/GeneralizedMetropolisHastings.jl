@@ -1,11 +1,11 @@
 type MHRemoteSegments <: AbstractRemoteSegments
-    remote::Vector{RemoteRef}
+    remote::Vector{Future}
     numproposalspersegment::Int
     numsegments::Int
 
     prop2collected::Dict{Int,Tuple{Int,Int}}
     collectedsamples::Vector{AbstractSample}
-    MHRemoteSegments(r::Vector{RemoteRef},npps::Int,ns::Int) = new(r,npps,ns,Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
+    MHRemoteSegments(r::Vector{Future},npps::Int,ns::Int) = new(r,npps,ns,Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
 end
 
 @inline _numjobsegments(policy_::MHRuntimePolicy,nproposals::Int) = min(nproposals,_numjobsegments(traittype(policy_.jobsegments)))
@@ -15,7 +15,7 @@ function _remotesegments(policy_::MHRuntimePolicy,model_::AbstractModel,sampler_
     njobsegments = _numjobsegments(policy_,nproposals)
     nproposalspersegment = _numproposalspersegment(nproposals,njobsegments)
     procnumbers = collect(_processnumbers(policy_,njobsegments))
-    r = RemoteRef[remotecall(i,segment,policy_,model_,sampler_,nproposalspersegment) for i in procnumbers]
+    r = Future[remotecall(segment,i,policy_,model_,sampler_,nproposalspersegment) for i in procnumbers]
     MHRemoteSegments(r,nproposalspersegment,njobsegments)
 end
 
@@ -47,10 +47,10 @@ end
 
 #start the jobs on each process
 function iterate!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState)
-    a = Array{RemoteRef}(segments_.numsegments)
+    a = Array{Future}(segments_.numsegments)
     @sync begin
         for j=1:segments_.numsegments
-            a[j] = remotecall(segments_.remote[j].where,iterate!,segments_.remote[j],indicatorstate)
+            a[j] = remotecall(iterate!,segments_.remote[j].where,segments_.remote[j],indicatorstate)
         end
     end #@sync means wait for all processes to finish
     map(fetch,a)
@@ -60,14 +60,14 @@ end
 function prepare!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState,j::Int)
     p,s = _prop2seg(segments_,j)
     r = segments_.remote[s]
-    remotecall_fetch(r.where,prepare!,r,indicatorstate,p)
+    remotecall_fetch(prepare!,r.where,r,indicatorstate,p)
 end
 
 function retrievesamples!(segments_::MHRemoteSegments,sampleindex_::AbstractVector)
     insegmentindex = _insegmentindex(segments_,sampleindex_)
     segments_.prop2collected = _insegmentindex2collected!(segments_,insegmentindex)
     @sync begin
-        map!((r,i)->(~isempty(i)?remotecall_fetch(r.where,getsamples,r,i):samples(:base,0,0,Float64,Float64)),segments_.collectedsamples,segments_.remote,insegmentindex)
+        map!((r,i)->(~isempty(i)?remotecall_fetch(getsamples,r.where,r,i):samples(:base,0,0,Float64,Float64)),segments_.collectedsamples,segments_.remote,insegmentindex)
     end
     segments_.collectedsamples
 end
@@ -76,7 +76,7 @@ function getsamples(segments_::MHRemoteSegments,j::Int)
     if !haskey(segments_.prop2collected,j)
         p,s = _prop2seg(segments_,j)
         r = segments_.remote[s]
-        return remotecall_fetch(r.where,getsamples,r,p)
+        return remotecall_fetch(getsamples,r.where,r,p)
     else
         p,s = segments_.prop2collected[j]
         return copy(segments_.collectedsamples[s],p)
@@ -92,7 +92,7 @@ function tune!(segments_::MHRemoteSegments,tvals...)
     @sync begin
         for i=1:segments_.numsegments
             r = segments_.remote[i]
-            remotecall_wait(r.where,tune!,r,tvals...)
+            remotecall_wait(tune!,r.where,r,tvals...)
         end
     end
 end
