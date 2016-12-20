@@ -4,8 +4,8 @@ println("======================")
 
 @test NormalDensity <: SymmetricDensity
 
-###Test construction
-for T in [Float64,Float32]
+TESTTYPES = VERSION<v"0.5.0"?[Float64]:[Float64,Float32]
+for T in TESTTYPES
     println("Testing NormalDensity with ",T)
     n1 = distribution(:normal,ones(T,2),0.1*eye(T,2))
     d1 = density(:normal,ones(T,2),0.1*eye(T,2))

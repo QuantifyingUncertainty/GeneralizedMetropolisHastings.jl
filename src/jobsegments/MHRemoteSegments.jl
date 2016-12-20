@@ -1,11 +1,11 @@
 type MHRemoteSegments <: AbstractRemoteSegments
-    remote::Vector{Future}
+    @compat remote::Vector{Future}
     numproposalspersegment::Int
     numsegments::Int
 
     prop2collected::Dict{Int,Tuple{Int,Int}}
     collectedsamples::Vector{AbstractSample}
-    MHRemoteSegments(r::Vector{Future},npps::Int,ns::Int) = new(r,npps,ns,Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
+    @compat MHRemoteSegments(r::Vector{Future},npps::Int,ns::Int) = new(r,npps,ns,Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
 end
 
 @inline _numjobsegments(policy_::MHRuntimePolicy,nproposals::Int) = min(nproposals,_numjobsegments(traittype(policy_.jobsegments)))
@@ -15,7 +15,7 @@ function _remotesegments(policy_::MHRuntimePolicy,model_::AbstractModel,sampler_
     njobsegments = _numjobsegments(policy_,nproposals)
     nproposalspersegment = _numproposalspersegment(nproposals,njobsegments)
     procnumbers = collect(_processnumbers(policy_,njobsegments))
-    r = Future[remotecall(segment,i,policy_,model_,sampler_,nproposalspersegment) for i in procnumbers]
+    @compat r = Future[remotecall(segment,i,policy_,model_,sampler_,nproposalspersegment) for i in procnumbers]
     MHRemoteSegments(r,nproposalspersegment,njobsegments)
 end
 
@@ -47,7 +47,7 @@ end
 
 #start the jobs on each process
 function iterate!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerState)
-    a = Array{Future}(segments_.numsegments)
+    @compat a = Array{Future}(segments_.numsegments)
     @sync begin
         for j=1:segments_.numsegments
             a[j] = remotecall(iterate!,segments_.remote[j].where,segments_.remote[j],indicatorstate)
