@@ -21,6 +21,8 @@ end
 
 function initialize!(runner_::AbstractMHRunner,model_::AbstractModel,state_::AbstractSamplerState,chain_::AbstractChain,store::Bool)
     initialcounter = 0
+    #the values is first generated in the proposals sample
+    #then in prepare! function below, copied to the from sample
     sample_ = proposals(state_)
     #initialize the proposals field with values generated from the defaults or from the priors
     while ~isfinite((initialize!(runner_.policy.initialize,model_,sample_) ; geometry!(model_,sample_)).logprior[1])
@@ -28,7 +30,9 @@ function initialize!(runner_::AbstractMHRunner,model_::AbstractModel,state_::Abs
             error("Problems generating initial proposal, giving up. Please check the parameter priors.")
         end
     end
-    #prepare the distribution for the first proposal (this should result in the proposals field to be copied to the from field, plus other sampler-dependent setup)
+    #prepare the distribution for the first proposal
+    #this should result in the proposals field to be copied to the from field
+    #plus other sampler-dependent setup
     prepare!(state_,true)
     store?store!(chain_,sample_,1):nothing
     state_

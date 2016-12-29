@@ -37,7 +37,7 @@ mhindicator2,mhtunerstate2,mhchain2 = GeneralizedMetropolisHastings.createcommon
 #prepare some prior values
 srand(rinitseed1) ; rpriorvals1 = initvalues(trait(:initialize,:prior),rparas1,mhpolicy1.sampletype)
 srand(rinitseed1+1) ; rpriorvals2 = initvalues(trait(:initialize,:prior),rparas1,mhpolicy1.sampletype)
-#copy (for testing) the first values of the chaing
+#copy (for testing) the first values of the chain
 mcv1 = [mhchain1.values[1]]
 mcll1 = mhchain1.loglikelihood[1]
 

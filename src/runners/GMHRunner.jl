@@ -21,8 +21,8 @@ function run!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSampler
     show(segments_)
     indicator_,tunerstate_,chain_ = createcommon(runner_,tuner_,numparas(model_),numtotalproposals(segments_),runner_.numindicatorsamples)
     tic()
-    burnin!(runner_,model_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_,indicator_,chain_)
-    main!(runner_,model_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_,indicator_,chain_)
+    indicatorstate_ = burnin!(runner_,model_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_,indicator_,chain_)
+    indicatorstate_ = main!(runner_,model_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_,indicator_,chain_)
     chain_.runtime = toq()
     chain_
 end
@@ -30,6 +30,11 @@ end
 
 function burnin!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSampler,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                  tuner_::AbstractTuner,tunerstate_::AbstractTunerState,indicator_::AbstractIndicatorMatrix,chain_::AbstractChain)
+    println("==============")
+    println("Burnin started")
+    println("==============")
+    showsamplerstatevars(indicatorstate_,"indicator state")
+    println("==================================")
     storeduring = _storeduring(:burnin,runner_.policy)
     initialize!(runner_,model_,indicatorstate_,chain_,storeduring)
     for i=1:runner_.numburnin
@@ -38,30 +43,42 @@ function burnin!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSamp
         needstuning(tuner_,i)?tune!(runner_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_):nothing
         indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
+    println("================")
+    println("Burnin completed")
+    println("================")
+    showsamplerstatevars(indicatorstate_,"indicator state")
+    println("==================================")
+    indicatorstate_
 end
 
 function main!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSampler,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                tuner_::AbstractTuner,tunerstate_::AbstractTunerState,indicator_::AbstractIndicatorMatrix,chain_::AbstractChain)
+    println("================")
+    println("Main run started")
+    println("================")
+    showsamplerstatevars(indicatorstate_,"indicator state")
+    println("==================================")
     storeduring = _storeduring(:main,runner_.policy)
     for i=1:runner_.numiterations
         iterate!(runner_,model_,indicatorstate_,segments_,indicator_,chain_,storeduring)
         needstuning(tuner_,i)?println("Iteration $i/$(runner_.numiterations)"):nothing
         indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
+    println("==================")
+    println("Main run completed")
+    println("==================")
+    showsamplerstatevars(indicatorstate_,"indicator state")
+    println("==================================")
+    indicatorstate_
 end
 
 function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::AbstractSamplerState,segments_::AbstractRemoteSegments,
                   indicator_::AbstractIndicatorMatrix,chain_::AbstractChain,storeduring::Bool)
     auxiliary!(runner_,model_,indicatorstate_)
+    indicatoracceptance = acceptance!(indicatorstate_)
     segmentacceptances = iterate!(segments_,indicatorstate_)
-    transitionprobability!(indicator_,acceptance!(indicatorstate_),segmentacceptances)
-    try
-        sampleindicator!(indicator_)
-    catch e
-        dump(indicatorstate_)
-        dump(segments_)
-        throw(e)
-    end
+    transitionprobability!(indicator_,indicatoracceptance,segmentacceptances)
+    sampleindicator!(indicator_)
     storeduring?store!(runner_,indicatorstate_,segments_,indicator_,chain_):nothing
 end
 
@@ -71,7 +88,7 @@ function preparenext!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
     if indicatorend != numproposals(indicator_) + 1
         indicatorstate_ = prepare!(segments_,indicatorstate_,indicatorend)
     else
-        prepareindicator!(indicatorstate_)
+        indicatorstate_ = prepareindicator!(indicatorstate_)
     end
     indicatorstate_
 end

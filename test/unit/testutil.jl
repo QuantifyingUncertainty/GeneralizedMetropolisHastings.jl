@@ -3,20 +3,14 @@ module GMHRunnersTest
 import GeneralizedMetropolisHastings: _prop2seg,AbstractMHRunner,MHRuntimePolicy
 import Base.Test: @test,@test_approx_eq
 
-function gettestprocessnumbers(p::Int)
+function gettwoprocessnumbers(p::Int)
     if p == 1
-        return [1,1,1]
-    end
-    if p == 2
+        return [1,1]
+    elseif p == 2
         w = workers()[1]
-        return [w,w,w]
+        return [w,w]
     end
-    if p == 3
-        w1 = workers()[1]
-        w2 = workers()[2]
-        return [w1,w2,w1]
-    end
-    return workers()[1:3] #if there are many workers
+    return workers()[1:2] #if there are many workers
 end
 
 function testfrom(state,vals,ll)

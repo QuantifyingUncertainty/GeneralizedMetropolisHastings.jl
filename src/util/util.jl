@@ -14,6 +14,21 @@ function objectsizetostr(a::Any)
 
 end
 
+function showsamplerstatevars(toshow::Dict,lstr=nothing)
+    println("Sampler state variables",lstr==nothing?":":string(" for ",lstr,":"))
+    for k in keys(toshow)
+        print(" [\"",k,"\"]: ")
+        show(toshow[k])
+    end
+    println()
+end
 
+function showsamplerstatevars(toshow::AbstractArray,lstr=nothing)
+    println("Array of sampler state variables",lstr==nothing?":":string(" for ",lstr,":"))
+    for i=1:length(toshow)
+        showsamplerstatevars(toshow[i],string("[",i,"]"))
+    end
+    println()
+end
 
-
+showsamplerstatevars(toshow,lstr=nothing) = showsamplerstatevars(getsamplerstatevars(toshow),lstr)

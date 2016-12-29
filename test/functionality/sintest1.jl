@@ -4,33 +4,34 @@
 
 #MCMC iterations and burnin iterations
 niterations = 100
-nburnin = 10
+nburnin = 100
+ntunerperiod = 10
 
 #Generalized MH with multiple proposals per iteration
-nproposals = 50
+nproposals = 30
 
 #Time points to simulate the sine-cosine model
 timepoints = linspace(0.0,10.0,100)
 
 ###Model parameter values (coefficients of sine and cosine)
-alower = 2.5
+alower = 2.0
 areal = 3.0
-aupper = 3.5
+aupper = 4.0
 
 ###The variance of the normal noise on the data
 fcov = [0.01]
 
-###Create a sine-cosine with measurement data and uniform priors on the parameters
+###Create a sine with measurement data and uniform prior on the parameter
 fparas = parameters([:a],[alower],[aupper],[areal])
-fdata = data(:array,timepoints,sin(3.0*timepoints))
+fdata = data(:array,timepoints,sin(3timepoints))
 fnoise = noise(:gaussian,fcov)
-fmodel = model(:target,fparas,fdata,fnoise,(t,p)->sin(p[1]*t);name="SineTestModel")
+fmodel = model(:target,fparas,fdata,fnoise,(p,t)->sin(p[1]*t),timepoints;name="SineTestModel")
 show(fmodel)
 
 ###Create different samplers
 fnparas = numparas(fmodel)
 fsampler1 = sampler(:mh,:normal,0.1,eye(1))
-fsampler2 = sampler(:adaptive,0.1,fnparas)
+fsampler2 = sampler(:adaptive,0.01,fnparas)
 
 ###Create different tuners for the samplers
 ftuner1 = tuner(:scale,10,0.5,:erf)

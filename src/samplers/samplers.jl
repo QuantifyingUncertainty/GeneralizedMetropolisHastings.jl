@@ -18,6 +18,7 @@ samplerstate{N<:Number,T<:AbstractFloat}(s::AbstractSampler,nsamples::Integer,::
 ### Common access functions defined for all samplers
 @inline numparas(s::AbstractSamplerState) = numparas(s.proposals)
 @inline numsamples(s::AbstractSamplerState) = numsamples(s.proposals)
+@inline density(s::AbstractSamplerState) = s.density
 @inline from(s::AbstractSamplerState) = s.from
 @inline proposals(s::AbstractSamplerState) = s.proposals
 @inline acceptance(s::AbstractSamplerState) = s.acceptance
@@ -34,9 +35,10 @@ prepareauxiliary!(indicator::AbstractSamplerState,auxiliary::AbstractSamplerStat
 prepareindicator!(indicator::AbstractSamplerState) = throw(MethodError(prepareindicator!, (indicatorstate,)))
 prepareindicator!(indicator::AbstractSamplerState,auxiliary::AbstractSamplerState,i::Int) = throw(MethodError(prepareindicator!, (indicator,auxiliary,i)))
 
-propose!(state::AbstractSamplerState) = throw(MethodError(propose!, (sampler,state)))
+propose!(state::AbstractSamplerState) = throw(MethodError(propose!, (state)))
 acceptance!(state::AbstractSamplerState) = throw(MethodError(acceptance!, (state)))
 tune!(state::AbstractSamplerState,args...) = nothing
+getsamplerstatevars(state::AbstractSamplerState) = throw(MethodError(getstate, (state)))
 
 ###Generic show function for any sampler
 function show(io::IO,s::AbstractSampler)
@@ -51,4 +53,3 @@ function show(io::IO,s::AbstractSamplerState)
     println(io,"  $(fieldnames(s))")
     nothing
 end
-

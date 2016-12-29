@@ -28,6 +28,9 @@ getsamples(seg::GMHSegment,sampleindex) = copy(proposals(seg.samplerstate),sampl
 ### Tune the samplerstate
 tune!(seg::GMHSegment,tvals...) = tune!(seg.samplerstate,tvals...)
 
+### Get the state variables of the encapsulated samplerstate
+getsamplerstatevars(seg::GMHSegment) = getsamplerstatevars(seg.samplerstate)
+
 ###
 function show(io::IO,s::GMHSegment)
     println(io,"GMHSegment with: ")

@@ -3,7 +3,7 @@ for args in [(:mhrunner,MHRunnerType,[:standard,:generalized]),
             (:initialize,InitializeFrom,[:default,:prior]),
             (:propose,ProposeFrom,[:indicator,:auxiliary]),
             (:indicator,IndicatorType,[:stationary,:cyclical]),
-            (:jobsegments,JobSegments,[:procs,:workers,:test]),
+            (:jobsegments,JobSegments,[:procs,:workers,:none,:one,:two]),
             (:chain,ChainType,[:standard,:gradient]),
             (:store,StoreDuring,[:burnin,:main,:all])]
     for j in args[3]
@@ -23,7 +23,7 @@ end
 @test traitvalue(GeneralizedMetropolisHastings._num2runner(2)) == :generalized
 @test_throws AssertionError GeneralizedMetropolisHastings._num2runner(0)
 
-@test traitvalue(GeneralizedMetropolisHastings._num2segments(1,:test)) == :none
+@test traitvalue(GeneralizedMetropolisHastings._num2segments(1,:workers)) == :none
 @test traitvalue(GeneralizedMetropolisHastings._num2segments(2,:workers)) == :workers
 @test_throws AssertionError GeneralizedMetropolisHastings._num2segments(0,:none)
 

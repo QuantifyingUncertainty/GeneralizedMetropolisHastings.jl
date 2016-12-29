@@ -22,6 +22,7 @@ for args in [((:mh,:normal,0.1,eye(2)),4,"Scalable Metropolis-Hastings","Metropo
     @test acceptance(t) == zeros(args[2])
     @test GeneralizedMetropolisHastings.samplername(s) == args[3]
     @test GeneralizedMetropolisHastings.samplerstatename(t) == args[4]
+    @test getsamplerstatevars(t)["density"] == density(t)
     setfrom!(t,fr1)
     @test from(t).values == fv1
     setfrom!(t,fr2,1)
@@ -32,8 +33,8 @@ end
 
 function testprepare(t,f1,f2,x1,x2,s)
     @test t.from.values == x1
-    @test_approx_eq f1(t.density.distribution) x2
-    @test_approx_eq f2(t.density.distribution) s
+    @test_approx_eq f1(density(t).distribution) x2
+    @test_approx_eq f2(density(t).distribution) s
 end
 
 function testsym(t,a)
@@ -44,9 +45,9 @@ end
 function testasym(t,a)
     f = t.from.loglikelihood[1] + t.from.logprior[1]
     for i=1:length(a)
-        d21 = deepcopy(t.density.distribution)
+        d21 = deepcopy(density(t).distribution)
         d21 = recenter(d21,t.proposals.values[:,i])
-        k12 = Distributions.logpdf(t.density.distribution,t.proposals.values[:,i])
+        k12 = Distributions.logpdf(density(t).distribution,t.proposals.values[:,i])
         k21 = Distributions.logpdf(d21,t.from.values)
         @test_approx_eq a[i] (t.proposals.loglikelihood[i] +t.proposals.logprior[i] -f + k12 - k21)
     end
@@ -55,9 +56,9 @@ end
 function testsmmala(t,a)
     f = t.from.loglikelihood[1] + t.from.logprior[1]
     for i=1:length(a)
-        d21 = deepcopy(t.density.distribution)
+        d21 = deepcopy(density(t).distribution)
         d21 = update(d21,GeneralizedMetropolisHastings._meancov(t,i)...)
-        k12 = Distributions.logpdf(t.density.distribution,t.proposals.values[:,i])
+        k12 = Distributions.logpdf(density(t).distribution,t.proposals.values[:,i])
         k21 = Distributions.logpdf(d21,t.from.values)
         @test_approx_eq a[i] (t.proposals.loglikelihood[i] +t.proposals.logprior[i] -f + k12 - k21)
     end
@@ -110,12 +111,16 @@ for p in [(:normal,mean,cov,identity,testsym),
     p[5](taux,a2)
     tune!(tind,2.0)
     tune!(taux,0.5)
-    @test_approx_eq p[3](tind.density.distribution) 0.04*eye(2)
-    @test_approx_eq p[3](taux.density.distribution) 0.0025*eye(2)
+    @test_approx_eq p[3](density(tind).distribution) 0.04*eye(2)
+    @test_approx_eq p[3](density(taux).distribution) 0.0025*eye(2)
+    @test getsamplerstatevars(tind)["density"] == density(tind)
+    @test getsamplerstatevars(taux)["density"] == density(taux)
     println("Test show() function for ",p[1])
     show(s)
     show(tind)
     show(taux)
+    showsamplerstatevars(getsamplerstatevars(tind))
+    showsamplerstatevars(getsamplerstatevars(taux))
     println("======================================")
 end
 
@@ -164,10 +169,10 @@ copy!(atind.from.values,v)
 copy!(ataux.from.values,v)
 GeneralizedMetropolisHastings.updaterunning!(atind)
 GeneralizedMetropolisHastings.updaterunning!(ataux)
-@test mean(atind.density.distribution) == zeros(2)
-@test_approx_eq cov(atind.density.distribution) get(atind.runningstate).densitycov
-@test mean(ataux.density.distribution) == zeros(2)
-@test_approx_eq cov(ataux.density.distribution) 0.01*eye(2)
+@test mean(density(atind).distribution) == zeros(2)
+@test_approx_eq cov(density(atind).distribution) get(atind.runningstate).densitycov
+@test mean(density(ataux).distribution) == zeros(2)
+@test_approx_eq cov(density(ataux).distribution) 0.01*eye(2)
 
 copy!(atind.proposals.values,2.5v)
 copy!(ataux.proposals.values,3,3.5v,1,2)
@@ -187,8 +192,8 @@ prepareindicator!(atind,ataux,2)
 @test get(atind.runningstate).iteration == 5
 testprepare(atind,mean,cov,3.5v,zeros(2),get(atind.runningstate).densitycov)
 #test the propose! function
-dind = distribution(:normal,atind.from.values,cov(atind.density.distribution))
-daux = distribution(:normal,ataux.from.values,cov(ataux.density.distribution))
+dind = distribution(:normal,atind.from.values,cov(density(atind).distribution))
+daux = distribution(:normal,ataux.from.values,cov(density(ataux).distribution))
 srand(46732) ; propose!(atind)
 srand(46732) ; r1 = rand!(dind,similar(atind.proposals.values))
 srand(46733) ; propose!(ataux)
@@ -213,10 +218,18 @@ testsym(ataux,a2)
 tune!(atind,2.0)
 tune!(ataux,0.5)
 @test get(atind.runningstate).scale == 0.2
+assvatind = getsamplerstatevars(atind)
+assvataux = getsamplerstatevars(ataux)
+@test assvatind["density"] == density(atind)
+@test !isnull(assvatind["runningstate"])
+@test assvataux["density"] == density(ataux)
+@test isnull(assvataux["runningstate"])
 println("Test show() function for ",:adaptive)
 show(as1)
 show(atind)
 show(ataux)
+showsamplerstatevars(assvatind)
+showsamplerstatevars(assvataux)
 println("======================================")
 
 ########################
@@ -277,12 +290,12 @@ for p in [(false,"Simplified mMALA",:standard,:full),
 
     GeneralizedMetropolisHastings.update!(d,GeneralizedMetropolisHastings._meancov(Val{p[3]},from1,grad1,ten1,0.1)...)
     GeneralizedMetropolisHastings._updatedensity!(smind)
-    @test_approx_eq mean(smind.density.distribution) mean(d.distribution)
-    @test_approx_eq cov(smind.density.distribution) cov(d.distribution)
+    @test_approx_eq mean(density(smind).distribution) mean(d.distribution)
+    @test_approx_eq cov(density(smind).distribution) cov(d.distribution)
     GeneralizedMetropolisHastings.update!(d,GeneralizedMetropolisHastings._meancov(Val{p[3]},2from1,0.5grad1,1.5ten1,0.1)...)
     GeneralizedMetropolisHastings._updatedensity!(smaux,2)
-    @test_approx_eq mean(smaux.density.distribution) mean(d.distribution)
-    @test_approx_eq cov(smaux.density.distribution) cov(d.distribution)
+    @test_approx_eq mean(density(smaux).distribution) mean(d.distribution)
+    @test_approx_eq cov(density(smaux).distribution) cov(d.distribution)
 
     #test the prepare! functions
     prepare!(smind)
@@ -323,16 +336,18 @@ for p in [(false,"Simplified mMALA",:standard,:full),
     @test length(a2) == 3
     testsmmala(smind,a1)
     testsmmala(smaux,a2)
+    assvsmind = getsamplerstatevars(smind)
+    assvsmaux = getsamplerstatevars(smaux)
+    @test assvsmind["density"] == density(smind)
+    @test assvsmind["scale"] == smind.scale
+    @test assvsmaux["density"] == density(smaux)
+    @test assvsmaux["scale"] == smaux.scale
 
     println("Test show() function for smmala $(p[3]) $(p[4])")
     show(sm)
     show(smind)
     show(smaux)
+    showsamplerstatevars(assvsmind)
+    showsamplerstatevars(assvsmaux)
     println("======================================")
 end
-
-
-
-
-
-

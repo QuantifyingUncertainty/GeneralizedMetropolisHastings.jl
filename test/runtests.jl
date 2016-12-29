@@ -36,13 +36,14 @@ addprocs(2)
 println()
 println("================================================")
 println("++++++++++++++++++++++++++++++++++++++++++++++++")
-println("Running the parallel code tests with ",nprocs()," processes")
+println("Running the multiprocess code tests with ",nprocs()," processes")
 println("++++++++++++++++++++++++++++++++++++++++++++++++")
 println("================================================")
 println()
 
-include("imports.jl")
-@everywhere include("unit/testutil.jl")
+for i=1:nworkers()
+    remotecall_wait(include,workers()[i],"test/unit/testutil.jl")
+end
 
 partests = [
     "unit/jobsegments",
@@ -50,6 +51,7 @@ partests = [
     "unit/mhrunner",
     "unit/smhrunner",
     "unit/gmhrunner",
+    "unit/multiprocess",
     "functionality/sintest1"]
 
 for t in partests
@@ -68,5 +70,4 @@ end
 if nprocs() > 1
     rmprocs(workers())
 end
-
-
+sleep(1.0)

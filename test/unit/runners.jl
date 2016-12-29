@@ -10,11 +10,10 @@ rupper1 = [3.5]
 rdefault1 = [3.0]
 rcov1 = [0.01]
 rparas1 = parameters([:a],rlower1,rupper1,rdefault1)
-rdata1 = data(:array,rtime1,sin(3*rtime1))
+rdata1 = data(:array,rtime1,sin(3rtime1))
 rnoise1 = noise(:gaussian,rcov1)
-rmodel1 = model(:target,rparas1,rdata1,rnoise1,(t,p)->sin(p[1]*t);name="RunnersTestModel")
+rmodel1 = model(:target,rparas1,rdata1,rnoise1,(p,t)->sin(p[1]*t),rtime1;name="RunnersTestModel")
 rnparas1 = numparas(rmodel1)
 rsampler1 = sampler(:mh,:normal,0.1,eye(1))
 rtuner1 = tuner(:monitor,1)
 rtuner2 = tuner(:scale,2,0.5,:logistic)
-

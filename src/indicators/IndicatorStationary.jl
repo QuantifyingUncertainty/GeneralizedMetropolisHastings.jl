@@ -8,13 +8,9 @@ _indicator{T<:AbstractFloat}(::Type{Val{:stationary}},nproposals::Int,nsamples::
 
 numproposals(indicator::IndicatorStationary) = length(indicator.stationary) - 1
 
-function transitionprobability!{T<:AbstractFloat}(indicator::IndicatorStationary{T},indicatoracceptance::AbstractVector{T},auxiliaryacceptances::AbstractVector)
-    icounter = 0
-    for k=1:length(auxiliaryacceptances)
-        acceptanceratio = auxiliaryacceptances[k]
-        @simd for i=1:length(acceptanceratio)
-            @inbounds indicator.stationary[icounter+=1] = acceptanceratio[i] + indicatoracceptance[1]
-        end
+function transitionprobability!{T<:AbstractFloat}(indicator::IndicatorStationary{T},indicatoracceptance::AbstractVector{T},auxiliaryacceptances::AbstractVector{T})
+    @simd for i=1:length(auxiliaryacceptances)
+        @inbounds indicator.stationary[i] = auxiliaryacceptances[i] + indicatoracceptance[1]
     end
     indicator.stationary[end] = zero(T)
     _calculatetransition(indicator)

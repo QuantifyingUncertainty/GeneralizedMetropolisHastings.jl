@@ -1,14 +1,14 @@
 ###Define functions to be used in testing below
 
 ###Test functions for TargetModel
-function targetsin!(r::Vector,t::AbstractVector,paras::Vector)
+function targetsin!(r::Vector,paras::Vector,t::AbstractVector)
     for i=1:length(t)
         r[i] = sin(paras[1]*t[i])
     end
     r
 end
 
-targetsin(t::AbstractVector,paras::Vector) = targetsin!(zeros(eltype(t),length(t)),t,paras)
+targetsin(paras::Vector,t::AbstractVector) = targetsin!(zeros(eltype(t),length(t)),paras,t)
 
 ###Test function for ODEModel
 function odesin(t,y,ydot,paras)
@@ -21,14 +21,14 @@ end
 
 timepoints1 = linspace(0.0,10.0,100)
 parameters1 = parameters([:a],[1.0],[5.0],[3.0])
-measurements1 = data(:function,timepoints1,targetsin,timepoints1,[3.0])
-measurements2 = data(:function,timepoints1,targetsin,timepoints1,[2.5])
-measurements3 = data(:function,timepoints1,targetsin,timepoints1,[2.0])
+measurements1 = data(:function,timepoints1,targetsin,[3.0],timepoints1)
+measurements2 = data(:function,timepoints1,targetsin,[2.5],timepoints1)
+measurements3 = data(:function,timepoints1,targetsin,[2.0],timepoints1)
 noisemodel1 = noise(:gaussian,[0.01])
 initial1 = [0.0]
 
-model1 = model(:target,parameters1,measurements1,noisemodel1,targetsin;name="Test")
-model2 = model(:target!,parameters1,measurements1,noisemodel1,targetsin!;name="Test!")
+model1 = model(:target,parameters1,measurements1,noisemodel1,targetsin,timepoints1;name="Test")
+model2 = model(:target!,parameters1,measurements1,noisemodel1,targetsin!,timepoints1;name="Test!")
 model3 = model(:ode,parameters1,measurements1,noisemodel1,odesin,initial1,1,[1];name="Test")
 
 @test_approx_eq_eps evaluate!(model1,[3.0]) measurements(model1) 1e-4
@@ -88,20 +88,3 @@ println("====================")
 println("End  show() function")
 println("====================")
 println()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -158,6 +158,10 @@ function acceptance!(state::SmMALASamplerState)
     state.acceptance
 end
 
+function getsamplerstatevars(state::SmMALASamplerState)
+    Dict("density"=>state.density,"scale"=>state.scale)
+end
+
 #############LOCAL FUNCTIONS##########################
 
 ### Helper function for trust region calculations of mean and covariance
@@ -188,4 +192,3 @@ end
 
 @inline _updatedensity!(s::SmMALASamplerState) = update!(s.density,_meancov(s)...)
 @inline _updatedensity!(s::SmMALASamplerState,i::Int) = update!(s.density,_meancov(s,i)...)
-

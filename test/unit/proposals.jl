@@ -7,10 +7,10 @@ println("======================")
 TESTTYPES = VERSION<v"0.5.0"?[Float64]:[Float64,Float32]
 for T in TESTTYPES
     println("Testing NormalDensity with ",T)
-    n1 = distribution(:normal,ones(T,2),0.1*eye(T,2))
-    d1 = density(:normal,ones(T,2),0.1*eye(T,2))
+    n1 = distribution(:normal,ones(T,2),T(0.1)*eye(T,2))
+    d1 = density(:normal,ones(T,2),T(0.1)*eye(T,2))
     @test isa(d1,NormalDensity)
-    @test issymmetric(d1)
+    @test GeneralizedMetropolisHastings.issymmetric(d1)
     @test mean(d1.distribution) == mean(n1) && cov(d1.distribution) == cov(n1)
 
     ###Test conditioning of the distribution
@@ -36,10 +36,10 @@ for T in TESTTYPES
     end
 
     ###Test the normal distribution with zero mean
-    n2 = distribution(:normal,0.1*eye(T,2))
-    d2 = density(:normal,0.1*eye(T,2))
+    n2 = distribution(:normal,T(0.1)*eye(T,2))
+    d2 = density(:normal,T(0.1)*eye(T,2))
     @test isa(d2,NormalDensity)
-    @test issymmetric(d2)
+    @test GeneralizedMetropolisHastings.issymmetric(d2)
     @test mean(d2.distribution) == mean(n2) && cov(d2.distribution) == cov(n2)
     @test_throws MethodError condition!(d2,zeros(T,2))
     n2 = rescale(n2,T(2.0))
@@ -62,7 +62,7 @@ println("=========================")
 l1 = distribution(:lognormal,ones(2),0.1*eye(2))
 d2 = density(:lognormal,ones(2),0.1*eye(2))
 @test isa(d2,LogNormalDensity)
-@test !issymmetric(d2)
+@test !GeneralizedMetropolisHastings.issymmetric(d2)
 @test Distributions.location(d2.distribution) == Distributions.location(l1)
 @test Distributions.scale(d2.distribution) == Distributions.scale(l1)
 
@@ -103,7 +103,7 @@ for p in [(:uniform,()),
     println(p)
     dis1 = distributions(p[1],[1.0,2.0],[1.0,0.5],p[2]...)
     den1 = density(p[1],[1.0,2.0],[1.0,0.5],p[2]...)
-    @test issymmetric(den1)
+    @test GeneralizedMetropolisHastings.issymmetric(den1)
     for k=1:length(dis1)
         @test mean(dis1[k]) == mean(den1.distributions[k]) && scale(dis1[k]) == scale(den1.distributions[k])
     end

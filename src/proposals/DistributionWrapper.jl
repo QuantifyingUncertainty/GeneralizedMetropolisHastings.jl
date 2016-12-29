@@ -82,8 +82,9 @@ update!(d::CompoundDistributionWrapper,x::AbstractVector,s::AbstractVector) = (m
 
 ###Base.show for DistributionWrappers
 function show(io::IO,d::DistributionWrapper)
-    println(io,"$(densityname(d)) with distribution:")
-    show(io,d.distribution)
-    println(io)
+    println(io,"$(densityname(d)) with fields:")
+    for f in fieldnames(d)
+        println("  ",f,": ",getfield(d,f))
+    end
     nothing
 end

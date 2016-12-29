@@ -8,10 +8,14 @@ numtotalproposals(s::AbstractRemoteSegments) = s.numsegments*s.numproposalsperse
 
 @inline _numjobsegments(::Type{Val{:procs}}) = nprocs()
 @inline _numjobsegments(::Type{Val{:workers}}) = nworkers()
-@inline _numjobsegments(::Type{Val{:test}}) = 3
+@inline _numjobsegments(::Type{Val{:none}}) = 0
+@inline _numjobsegments(::Type{Val{:one}}) = 1
+@inline _numjobsegments(::Type{Val{:two}}) = 2
 
 @inline _processnumbers(::Type{Val{:procs}}) = procs()
 @inline _processnumbers(::Type{Val{:workers}}) = workers()
-@inline _processnumbers(::Type{Val{:test}}) = workers()
+@inline _processnumbers(::Type{Val{:none}}) = []
+@inline _processnumbers(::Type{Val{:one}}) = workers()
+@inline _processnumbers(::Type{Val{:two}}) = workers()
 
 @inline _numproposalspersegment(nproposals::Int,njobsegments::Int) = ceil(Int,nproposals/njobsegments)

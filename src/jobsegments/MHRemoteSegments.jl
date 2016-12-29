@@ -1,11 +1,12 @@
-type MHRemoteSegments <: AbstractRemoteSegments
+type MHRemoteSegments{T<:AbstractFloat} <: AbstractRemoteSegments
     @compat remote::Vector{Future}
     numproposalspersegment::Int
     numsegments::Int
 
+    acceptances::Vector
     prop2collected::Dict{Int,Tuple{Int,Int}}
     collectedsamples::Vector{AbstractSample}
-    @compat MHRemoteSegments(r::Vector{Future},npps::Int,ns::Int) = new(r,npps,ns,Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
+    @compat MHRemoteSegments(r::Vector{Future},npps::Int,ns::Int,::Type{T}) = new(r,npps,ns,zeros(T,npps*ns),Dict{Int,Tuple{Int,Int}}(),Vector{AbstractSample}(ns))
 end
 
 @inline _numjobsegments(policy_::MHRuntimePolicy,nproposals::Int) = min(nproposals,_numjobsegments(traittype(policy_.jobsegments)))
@@ -14,9 +15,8 @@ end
 function _remotesegments(policy_::MHRuntimePolicy,model_::AbstractModel,sampler_::AbstractSampler,nproposals::Int)
     njobsegments = _numjobsegments(policy_,nproposals)
     nproposalspersegment = _numproposalspersegment(nproposals,njobsegments)
-    procnumbers = collect(_processnumbers(policy_,njobsegments))
-    @compat r = Future[remotecall(segment,i,policy_,model_,sampler_,nproposalspersegment) for i in procnumbers]
-    MHRemoteSegments(r,nproposalspersegment,njobsegments)
+    @compat r = Future[remotecall(segment,i,policy_,model_,sampler_,nproposalspersegment) for i in _processnumbers(policy_,njobsegments)]
+    MHRemoteSegments{policy_.calculationtype}(r,nproposalspersegment,njobsegments,policy_.calculationtype)
 end
 
 _prop2seg(segments_::MHRemoteSegments,j::Int) = ind2sub((segments_.numproposalspersegment,segments_.numsegments),j)
@@ -53,7 +53,12 @@ function iterate!(segments_::MHRemoteSegments,indicatorstate::AbstractSamplerSta
             a[j] = remotecall(iterate!,segments_.remote[j].where,segments_.remote[j],indicatorstate)
         end
     end #@sync means wait for all processes to finish
-    map(fetch,a)
+    iCounter = 1
+    for j=1:segments_.numsegments
+        copy!(segments_.acceptances,iCounter,fetch(a[j]),1,segments_.numproposalspersegment)
+        iCounter += segments_.numproposalspersegment
+    end
+    segments_.acceptances
 end
 
 #call prepare in order to copy over the new indicator state
@@ -83,6 +88,10 @@ function getsamples(segments_::MHRemoteSegments,j::Int)
     end
 end
 
+function getsamplerstatevars(segments_::MHRemoteSegments)
+    map((r)->remotecall_fetch(getsamplerstatevars,r.where,r),segments_.remote)
+end
+
 function store!(segments_::MHRemoteSegments,chain_::AbstractChain,j::Int)
     p,s = segments_.prop2collected[j]
     store!(chain_,segments_.collectedsamples[s],p)
@@ -99,7 +108,6 @@ end
 
 function show(io::IO,r::MHRemoteSegments)
     println(io,"RemoteSegments with $(r.numsegments) segment",r.numsegments==1?"":"s"," and $(r.numproposalspersegment) proposal",r.numproposalspersegment==1?"":"s"," per segment.")
-    println(io,"Additional fields: :remote, :collectedsamples, :prop2collected")
+    println(io,"Additional fields: :remote, :acceptances, :collectedsamples, :prop2collected")
     nothing
 end
-

@@ -22,7 +22,7 @@ end
 
 immutable JobSegments <: AbstractPolicyTrait
     trait::Symbol
-    JobSegments(s::Symbol) = (@assert in(s,[:procs,:workers,:test,:none]) ; new(s))
+    JobSegments(s::Symbol) = (@assert in(s,[:procs,:workers,:none,:one,:two]) ; new(s))
 end
 
 immutable ChainType <: AbstractPolicyTrait

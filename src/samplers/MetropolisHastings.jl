@@ -126,3 +126,7 @@ end
     scale!(state.density,scalefactor)
     state
 end
+
+@inline function getsamplerstatevars(state::MetropolisHastingsSamplerState)
+    Dict("density"=>density(state))
+end

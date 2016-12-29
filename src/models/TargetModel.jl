@@ -11,18 +11,18 @@ immutable TargetModel{P<:AbstractParameter,D<:AbstractData,N<:AbstractNoiseModel
     args::Tuple #additional arguments for the target function
 
     ###temp location to store model data
-    inplacetarget::Bool
+    inplacetarget::DataType
     evalresults::Array
 
-    TargetModel(name::AbstractString,parameters::Vector{P},measurements::D,noisemodel::N,
-                inplacetarget::Bool,evalresults::Array,target::Function,args...) = new(name,parameters,measurements,noisemodel,target,args,inplacetarget,evalresults)
+    TargetModel(name::AbstractString,parameters::Vector{P},measurements::D,noisemodel::N,inplacetarget::Bool,target::Function,args...) =
+        new(name,parameters,measurements,noisemodel,target,args,Val{inplacetarget},inplacetarget?similar(datavalues(measurements)):[])
 end
 
 function TargetModel(name::AbstractString,parameters::Vector,measurements::AbstractData,noisemodel::AbstractNoiseModel,inplacetarget::Bool,target::Function,args...)
     P = eltype(parameters)
     D = typeof(measurements)
     N = typeof(noisemodel)
-    TargetModel{P,D,N}(name,parameters,measurements,noisemodel,inplacetarget,similar(datavalues(measurements)),target,args...)
+    TargetModel{P,D,N}(name,parameters,measurements,noisemodel,inplacetarget,target,args...)
 end
 
 ###Factory functions
@@ -34,11 +34,11 @@ function _model(::Type{Val{:target}},parameters::Vector,measurements::AbstractDa
     TargetModel(name,parameters,measurements,noisemodel,false,target,args...)
 end
 
-@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.evalresults,dataindex(m),m.args...,vals)
-@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = copy!(m.evalresults,m.target(dataindex(m),m.args...,vals))
+@inline _evaluate(::Type{Val{true}},m::TargetModel,vals::AbstractVector) = m.target(m.evalresults,vals,m.args...)
+@inline _evaluate(::Type{Val{false}},m::TargetModel,vals::AbstractVector) = m.target(vals,m.args...)
 
 ###Evaluate the model for the given parameter values
-evaluate!(m::TargetModel,vals::AbstractVector) = (_evaluate(Val{m.inplacetarget},m,vals) ; m.evalresults)
+evaluate!(m::TargetModel,vals::AbstractVector) = _evaluate(m.inplacetarget,m,vals)
 
 ###Utility functions used in generic implementations in AbstractModel
 @inline dataindex(m::TargetModel) = dataindex(m.measurements)

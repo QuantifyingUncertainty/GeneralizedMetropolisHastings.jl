@@ -12,7 +12,7 @@ println("Testing GMHRunner with $(nprocs()) processes")
 println("++++++++++++++++++++++++++++++++")
 
 #create all required objects
-gmhpolicies = [policy(:mh,gmhnprops1),policy(:mh,gmhnprops1,store=:all,jobsegments=:test)]
+gmhpolicies = [policy(:mh,gmhnprops1),policy(:mh,gmhnprops1,store=:all,jobsegments=:two)]
 gmhrunners = [runner(p,rniter1,gmhnprops1;numburnin = rnburnin1) for p in gmhpolicies]
 gmhchainsamples = [8,13]
 

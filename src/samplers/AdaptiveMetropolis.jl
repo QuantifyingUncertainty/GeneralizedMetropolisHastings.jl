@@ -70,7 +70,7 @@ end
     f = s*s
     copy!(d,c)
     @simd for i=1:size(d,1)
-        @inbounds d[i,i] += f
+        @inbounds d[i,i] += f #sic, this comes from Ben's code - check with him
     end
     d
 end
@@ -86,6 +86,17 @@ end
     _updatedensitycov!(r.densitycov,r.runningcov,r.scale)
     r
 end
+
+function show(io::IO,r::NormalRunningState)
+    println(io,"NormalRunningState with fields:")
+    println(io,"  iteration: ",r.iteration)
+    println(io,"  runningmean: ",r.runningmean)
+    println(io,"  runningcov: ",r.runningcov)
+    println(io,"  scale: ",r.scale)
+    nothing
+end
+
+################################################################################
 
 ### Type holding the state of the Markov Chain for an Adaptive Metropolis Sampler (with a normal density)
 type AdaptiveNormalSamplerState{T<:AbstractFloat} <: AbstractAdaptiveSamplerState
@@ -176,4 +187,6 @@ end
     state
 end
 
-
+function getsamplerstatevars(state::AdaptiveNormalSamplerState)
+    Dict("density"=>state.density,"runningstate"=>state.runningstate)
+end
