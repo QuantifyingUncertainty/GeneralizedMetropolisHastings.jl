@@ -1,4 +1,4 @@
-srand(0)
+testfolder = dirname(@__FILE__())
 
 performancetests = []
 
@@ -7,9 +7,8 @@ println("Running performance tests:")
 println("==========================")
 
 for t in performancetests
-  tfile = t*".jl"
+  tfile = joinpath(testfolder,"performance",string(t,".jl"))
   println("  * $(tfile) *")
-  include(string("performance/",tfile))
+  include(tfile)
+  println()
 end
-
-

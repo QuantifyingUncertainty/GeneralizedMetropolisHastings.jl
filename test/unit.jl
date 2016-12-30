@@ -1,4 +1,4 @@
-srand(0) #to make the tests repeatable
+testfolder = dirname(@__FILE__())
 
 unittests = [
     "policies",
@@ -22,14 +22,9 @@ println("===================")
 println("Running unit tests:")
 println("===================")
 
-include("unit/testutil.jl")
-
 for t in unittests
-    tfile = t*".jl"
+    tfile = joinpath(testfolder,"unit",string(t,".jl"))
     println("  * $(tfile) *")
-    include(string("unit/",tfile))
-    println()
+    include(tfile)
     println()
 end
-
-

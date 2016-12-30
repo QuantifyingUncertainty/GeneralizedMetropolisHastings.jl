@@ -3,6 +3,18 @@ if nprocs() > 1
     rmprocs(workers())
 end
 
+#get the correct paths and filenames on all systems
+testfolder = dirname(@__FILE__())
+importsfile = joinpath(testfolder,"imports.jl")
+utilfile = joinpath(testfolder,"testutil.jl")
+
+#import all functionality on the local process
+include(importsfile)
+include(utilfile)
+
+#make the run repeatable
+srand(0)
+
 println()
 println("===========================================")
 println("+++++++++++++++++++++++++++++++++++++++++++")
@@ -10,10 +22,6 @@ println("Running all tests with ",nprocs()," process")
 println("+++++++++++++++++++++++++++++++++++++++++++")
 println("===========================================")
 println()
-
-#import all functionality
-include("imports.jl")
-srand(0)
 
 #all test categories
 alltests = [
@@ -26,9 +34,10 @@ println("Running all tests:")
 println("==================")
 
 for t in alltests
-    tfile = t*".jl"
+    tfile = joinpath(testfolder,string(t,".jl"))
     println("  * $(tfile) *")
     include(tfile)
+    println()
 end
 
 #run the runner tests on additional processes
@@ -42,7 +51,8 @@ println("================================================")
 println()
 
 for i=1:nworkers()
-    remotecall_wait(include,workers()[i],"test/unit/testutil.jl")
+    remotecall_wait(include,workers()[i],importsfile)
+    remotecall_wait(include,workers()[i],utilfile)
 end
 
 partests = [
@@ -55,7 +65,7 @@ partests = [
     "functionality/sintest1"]
 
 for t in partests
-    tfile = t*".jl"
+    tfile = joinpath(testfolder,string(t,".jl"))
     println("  * $(tfile) *")
     try
         include(tfile)
@@ -65,6 +75,7 @@ for t in partests
         end
         throw(e)
     end
+    println()
 end
 
 if nprocs() > 1

@@ -1,4 +1,4 @@
-srand(0)
+testfolder = dirname(@__FILE__())
 
 functionalitytests = [
     "sintest1"
@@ -9,8 +9,8 @@ println("Running functionality tests:")
 println("============================")
 
 for t in functionalitytests
-  tfile = t*".jl"
+  tfile = joinpath(testfolder,"functionality",string(t,".jl"))
   println("  * $(tfile) *")
-  include(string("functionality/",tfile))
+  include(tfile)
+  println()
 end
-
