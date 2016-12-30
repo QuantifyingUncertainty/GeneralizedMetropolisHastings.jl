@@ -10,7 +10,7 @@ type MHRemoteSegments{T<:AbstractFloat} <: AbstractRemoteSegments
 end
 
 @inline _numjobsegments(policy_::MHRuntimePolicy,nproposals::Int) = min(nproposals,_numjobsegments(traittype(policy_.jobsegments)))
-@inline _processnumbers(policy_::MHRuntimePolicy,njobsegments::Int) = take(cycle(_processnumbers(traittype(policy_.jobsegments))),njobsegments)
+@inline _processnumbers(policy_::MHRuntimePolicy,njobsegments::Int) = collect(take(cycle(_processnumbers(traittype(policy_.jobsegments))),njobsegments))
 
 function _remotesegments(policy_::MHRuntimePolicy,model_::AbstractModel,sampler_::AbstractSampler,nproposals::Int)
     njobsegments = _numjobsegments(policy_,nproposals)
