@@ -5,6 +5,11 @@ immutable MHRunnerType <: AbstractPolicyTrait
     MHRunnerType(s::Symbol) = (@assert in(s,[:standard,:generalized]) ; new(s))
 end
 
+immutable ModelType <: AbstractPolicyTrait
+    trait::Symbol
+    ModelType(s::Symbol) = (@assert in(s,[:deterministic,:stochastic]) ; new(s))
+end
+
 immutable InitializeFrom <: AbstractPolicyTrait
     trait::Symbol
     InitializeFrom(s::Symbol) = (@assert in(s,[:default,:prior]) ; new(s))
@@ -36,6 +41,7 @@ immutable StoreDuring <: AbstractPolicyTrait
 end
 
 @inline _traitname(::Type{MHRunnerType}) = :mhrunner
+@inline _traitname(::Type{ModelType}) = :model
 @inline _traitname(::Type{InitializeFrom}) = :initialize
 @inline _traitname(::Type{ProposeFrom}) = :propose
 @inline _traitname(::Type{IndicatorType}) = :indicator
@@ -46,6 +52,7 @@ end
 
 trait(n::Symbol,t::Symbol) = _trait(Val{n},t)
 _trait(::Type{_traitnametype(MHRunnerType)},t::Symbol)  = MHRunnerType(t)
+_trait(::Type{_traitnametype(ModelType)},t::Symbol) = ModelType(t)
 _trait(::Type{_traitnametype(InitializeFrom)},t::Symbol) = InitializeFrom(t)
 _trait(::Type{_traitnametype(ProposeFrom)},t::Symbol) = ProposeFrom(t)
 _trait(::Type{_traitnametype(IndicatorType)},t::Symbol) = IndicatorType(t)

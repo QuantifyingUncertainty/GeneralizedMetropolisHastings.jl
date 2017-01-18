@@ -1,5 +1,6 @@
 ###Test the trait types
 for args in [(:mhrunner,MHRunnerType,[:standard,:generalized]),
+            (:model,ModelType,[:deterministic,:stochastic]),
             (:initialize,InitializeFrom,[:default,:prior]),
             (:propose,ProposeFrom,[:indicator,:auxiliary]),
             (:indicator,IndicatorType,[:stationary,:cyclical]),
@@ -28,11 +29,11 @@ end
 @test_throws AssertionError GeneralizedMetropolisHastings._num2segments(0,:none)
 
 p1 = policy(:mh,10)
-p2 = policy(:mh,1,initialize=:default,indicator=:cyclical,chain=:gradient,store=:all,sampletype=Int,calculationtype=Float32)
+p2 = policy(:mh,1,model=:stochastic,initialize=:default,indicator=:cyclical,chain=:gradient,store=:all,sampletype=Int,calculationtype=Float32)
 
-for args in [(p1,(:generalized,:prior,:auxiliary,:stationary,:workers,:standard,:main,Float64,Float64)),
-             (p2,(:standard,:default,:indicator,:cyclical,:none,:gradient,:all,Int,Float32))]
-    for (i,f) in enumerate([:runner,:initialize,:propose,:indicator,:jobsegments,:chain,:store])
+for args in [(p1,(:generalized,:deterministic,:prior,:auxiliary,:stationary,:workers,:standard,:main,Float64,Float64)),
+             (p2,(:standard,:stochastic,:default,:indicator,:cyclical,:none,:gradient,:all,Int,Float32))]
+    for (i,f) in enumerate([:runner,:model,:initialize,:propose,:indicator,:jobsegments,:chain,:store])
         @test traittype(getfield(args[1],f)) == Val{args[2][i]}
     end
     @test args[1].sampletype == args[2][end-1]

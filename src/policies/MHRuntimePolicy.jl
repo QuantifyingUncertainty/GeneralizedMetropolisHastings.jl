@@ -1,6 +1,7 @@
 #Generic runtime policy for Metropolis-Hastings runner
 immutable MHRuntimePolicy{N<:Number,T<:AbstractFloat} <: AbstractPolicy
     runner::MHRunnerType
+    model::ModelType
     initialize::InitializeFrom
     propose::ProposeFrom
     indicator::IndicatorType
@@ -9,7 +10,7 @@ immutable MHRuntimePolicy{N<:Number,T<:AbstractFloat} <: AbstractPolicy
     store::StoreDuring
     sampletype::Type{N}
     calculationtype::Type{T}
-    MHRuntimePolicy(t,i,p,d,j,c,s) = new(t,i,p,d,j,c,s,N,T)
+    MHRuntimePolicy(t,m,i,p,d,j,c,s) = new(t,m,i,p,d,j,c,s,N,T)
 end
 
 #Local function mapping number of proposals to the ProposeFrom type
@@ -17,14 +18,15 @@ _num2runner(n::Integer) =  (@assert n > 0 ; n>1?trait(:mhrunner,:generalized):tr
 _num2propose(n::Integer) = (@assert n > 0 ; n>1?trait(:propose,:auxiliary):trait(:propose,:indicator))
 _num2segments(n::Integer,s::Symbol) = (@assert n > 0 ; n>1?trait(:jobsegments,s):trait(:jobsegments,:none))
 
-_policy(::Type{Val{:mh}},nprops::Int;initialize = :prior,indicator = :stationary,jobsegments = :workers,
+_policy(::Type{Val{:mh}},nprops::Int;model = :deterministic,initialize = :prior,indicator = :stationary,jobsegments = :workers,
         chain = :standard,store = :main,sampletype =Float64,calculationtype =Float64) =
-    MHRuntimePolicy{sampletype,calculationtype}(_num2runner(nprops),trait(:initialize,initialize),_num2propose(nprops),trait(:indicator,indicator),
-                                                _num2segments(nprops,jobsegments),trait(:chain,chain),trait(:store,store))
+    MHRuntimePolicy{sampletype,calculationtype}(_num2runner(nprops),trait(:model,model),trait(:initialize,initialize),_num2propose(nprops),
+                                                trait(:indicator,indicator),_num2segments(nprops,jobsegments),trait(:chain,chain),trait(:store,store))
 
 function show(io::IO,p::MHRuntimePolicy)
     println(io,"MHRuntimePolicy with traits:")
     println(io,"  runner = ",traitvalue(p.runner))
+    println(io,"  model = ",traitvalue(p.model))
     println(io,"  initialize = ",traitvalue(p.initialize))
     println(io,"  propose = ",traitvalue(p.propose))
     println(io,"  indicator = ",traitvalue(p.indicator))

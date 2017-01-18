@@ -41,7 +41,7 @@ function burnin!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSamp
         iterate!(runner_,model_,indicatorstate_,segments_,indicator_,chain_,storeduring)
         accepted!(tunerstate_,indicator_)
         needstuning(tuner_,i)?tune!(runner_,sampler_,indicatorstate_,segments_,tuner_,tunerstate_):nothing
-        indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
+        indicatorstate_ = preparenext!(runner_,model_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
     println("================")
     println("Burnin completed")
@@ -62,7 +62,7 @@ function main!(runner_::GMHRunner,model_::AbstractModel,sampler_::AbstractSample
     for i=1:runner_.numiterations
         iterate!(runner_,model_,indicatorstate_,segments_,indicator_,chain_,storeduring)
         needstuning(tuner_,i)?println("Iteration $i/$(runner_.numiterations)"):nothing
-        indicatorstate_ = preparenext!(runner_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
+        indicatorstate_ = preparenext!(runner_,model_,indicatorstate_,segments_,indicator_) #prepare for the next iteration
     end
     println("==================")
     println("Main run completed")
@@ -82,7 +82,7 @@ function iterate!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::Abst
     storeduring?store!(runner_,indicatorstate_,segments_,indicator_,chain_):nothing
 end
 
-function preparenext!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
+function preparenext!(runner_::GMHRunner,model_::AbstractModel,indicatorstate_::AbstractSamplerState,
                   segments_::AbstractRemoteSegments,indicator_::AbstractIndicatorMatrix)
     indicatorend = indicatorsamples(indicator_)[end]
     if indicatorend != numproposals(indicator_) + 1
@@ -90,6 +90,7 @@ function preparenext!(runner_::GMHRunner,indicatorstate_::AbstractSamplerState,
     else
         indicatorstate_ = prepareindicator!(indicatorstate_)
     end
+    traitvalue(runner_.policy.model)==:stochastic?geometry!(model_,from(indicatorstate_)):nothing
     indicatorstate_
 end
 

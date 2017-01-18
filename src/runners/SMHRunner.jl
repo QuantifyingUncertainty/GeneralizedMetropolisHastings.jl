@@ -31,7 +31,7 @@ function burnin!(runner_::SMHRunner,model_::AbstractModel,sampler_::AbstractSamp
         iterate!(runner_,model_,samplerstate_,indicator_,chain_,storeduring)
         accepted!(tunerstate_,indicator_)
         needstuning(tuner_,i)?tune!(runner_,samplerstate_,tuner_,tunerstate_):nothing
-        preparenext!(runner_,samplerstate_,indicator_) #prepare for the next iteration
+        preparenext!(runner_,model_,samplerstate_,indicator_) #prepare for the next iteration
     end
 end
 
@@ -41,7 +41,7 @@ function main!(runner_::SMHRunner,model_::AbstractModel,sampler_::AbstractSample
     for i=1:runner_.numiterations
         iterate!(runner_,model_,samplerstate_,indicator_,chain_,storeduring)
         needstuning(tuner_,i)?println("Iteration $i/$(runner_.numiterations)"):nothing
-        preparenext!(runner_,samplerstate_,indicator_)
+        preparenext!(runner_,model_,samplerstate_,indicator_)
     end
 end
 
@@ -65,7 +65,11 @@ function store!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,
     accepted!(chain_,indicator_)
 end
 
-preparenext!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,indicator_::AbstractIndicatorMatrix) = prepare!(samplerstate_,indicatorsamples(indicator_)[2]!=2)
+function preparenext!(runner_::SMHRunner,model_::AbstractModel,samplerstate_::AbstractSamplerState,indicator_::AbstractIndicatorMatrix)
+    prepare!(samplerstate_,indicatorsamples(indicator_)[2]!=2)
+    traitvalue(runner_.policy.model)==:stochastic?geometry!(model_,from(samplerstate_)):nothing
+    samplerstate_
+end
 
 function tune!(runner_::SMHRunner,samplerstate_::AbstractSamplerState,tuner_::AbstractTuner,tunerstate_::AbstractTunerState)
     tvals = tune(tuner_,tunerstate_)
@@ -83,4 +87,3 @@ function show(io::IO,r::SMHRunner)
     println(io)
     nothing
 end
-
