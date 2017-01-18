@@ -19,11 +19,11 @@ sll1 = [-100.0]
 sv2 = [3.0]
 sll2 = [-50.0]
 GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[1.0,0.0],[2,1])
-preparenext!(smhrunner1,smhsamplerstate1,smhindicator1)
+preparenext!(smhrunner1,rmodel1,smhsamplerstate1,smhindicator1)
 GMHRunnersTest.testfrom(smhsamplerstate1,sv2,sll2) #in this condition, value should have been copied
 @test_approx_eq mean(smhsamplerstate1.density.distribution) sv2 #and the normal distribution of the mh sampler should also have been conditioned
 GMHRunnersTest.setfrom(smhsamplerstate1,sv1,sll1) ; GMHRunnersTest.setproposals(smhsamplerstate1,sv2,sll2) ; GMHRunnersTest.setindicator(smhindicator1,[0.0,1.0],[2,2])
-preparenext!(smhrunner1,smhsamplerstate1,smhindicator1)
+preparenext!(smhrunner1,rmodel1,smhsamplerstate1,smhindicator1)
 GMHRunnersTest.testfrom(smhsamplerstate1,sv1,sll1) #in this condition, value should have stayed the same
 @test_approx_eq mean(smhsamplerstate1.density.distribution) sv2 #and the normal distribution should have been left unchanged from previous test
 

@@ -143,8 +143,8 @@ function testoneiteration(indloc,indrem,segloc,segrem,indicatorloc,indicatorrem,
     show(segrem.prop2collected)
     println()
     ###Prepare for next
-    accepted!(tl,indicatorloc) ; indlocnew = preparenext!(r,indloc,segrem,indicatorloc)
-    accepted!(tr,indicatorrem) ; indremnew = preparenext!(r,indrem,segrem,indicatorrem)
+    accepted!(tl,indicatorloc) ; indlocnew = preparenext!(r,model1,indloc,segrem,indicatorloc)
+    accepted!(tr,indicatorrem) ; indremnew = preparenext!(r,model1,indrem,segrem,indicatorrem)
     @test from(indlocnew) == from(indremnew)
     @test proposals(indlocnew) == proposals(indremnew)
     println("Indicator state from new: ",from(indremnew).values)
