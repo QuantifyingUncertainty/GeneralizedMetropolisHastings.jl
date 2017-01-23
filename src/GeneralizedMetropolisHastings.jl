@@ -5,7 +5,7 @@ import Distributions
 import Sundials
 
 import Base: ==, size, length, eltype, show, display, time, similar, copy!, copy
-import Base: mean, var, rand, rand!, scale!
+import Base: mean, median, std, quantile, var, rand, rand!, scale!
 
 import Distributions: pdf,logpdf!,logpdf,location,location!,scale
 

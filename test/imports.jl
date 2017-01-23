@@ -30,7 +30,7 @@ import Base.Test: @test,@test_approx_eq,@test_approx_eq_eps,@test_throws
     prepare!,prepareindicator!,prepareauxiliary!,getsamplerstatevars,#from samplers.jl
     tuner,tunerstate,rate,accepted,proposed,total,index,numtunesteps,current,tune,nextindex!,period,verbose,needstuning,accepted!,showstep, #from tuners.jl
     model,geometry!,evaluate!,loglikelihood,measurements,noisemodel,#from models.jl
-    chain,store!,accepted!,logposterior, #from chains.jl
+    chain,store!,accepted!,logposterior,numaccepted,numproposed, #from chains.jl
     indicator,numproposals,transitionprobability!,sampleindicator!,indicatorsamples,accepted, #from indicators.jl
     segment,numproposals,iterate!,getsamples, #from jobsegments.jl
     remotesegments,numsegments,numproposalspersegment,numtotalproposals,iterate!,retrievesamples!,

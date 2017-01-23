@@ -1,6 +1,8 @@
 module GMHRunnersTest
 
-import GeneralizedMetropolisHastings: _prop2seg,AbstractMHRunner,MHRuntimePolicy
+import GeneralizedMetropolisHastings:
+    _prop2seg,AbstractMHRunner,MHRuntimePolicy,numaccepted,numproposed
+    
 import Base.Test: @test,@test_approx_eq
 
 function gettwoprocessnumbers(p::Int)
@@ -26,8 +28,8 @@ end
 function teststore(chain,vals,ll,i,a,p)
     @test chain.values[:,i] == vals
     @test chain.loglikelihood[i] == ll
-    @test chain.accepted == a
-    @test chain.proposed == p
+    @test numaccepted(chain) == a
+    @test numproposed(chain) == p
 end
 
 function setfrom(state,vals,loglikelihood)
@@ -87,8 +89,8 @@ function dumpiterate1(samplerstates,indicator)
 end
 
 function runiterateandstore1!(runner,model,samplerstates,indicator,chain)
-    prevacc = chain.accepted
-    prevprop = chain.proposed
+    prevacc = numaccepted(chain)
+    prevprop = numproposed(chain)
     iterateandstore!(runner,model,samplerstates,indicator,chain)
     teststore(samplerstates[1],samplerstates,indicator,chain,prevacc,prevprop)
     testupdatefrom(samplerstates1[1],samplerstates1,indicator1)
@@ -109,8 +111,8 @@ function dumpiterate2(indicatorstate,samplerstates,indicator)
 end
 
 function runiterateandstore2!(runner,model,indicatorstate,samplerstates,indicator,chain)
-    prevacc = chain.accepted
-    prevprop = chain.proposed
+    prevacc = numaccepted(chain)
+    prevprop = numproposed(chain)
     iterateandstore!(runner,model,indicatorstate,samplerstates,indicator,chain)
     teststore(indicatorstate,samplerstates,indicator,chain,prevacc,prevprop)
     testupdatefrom(indicatorstate,samplerstates,indicator)

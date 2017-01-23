@@ -5,8 +5,8 @@ type ChainStandard{N<:Number,T<:AbstractFloat,V<:AbstractVector,A<:AbstractArray
     values::A
     loglikelihood::V
     numburnin::Int
-    accepted::Int
-    proposed::Int
+    numaccepted::Int
+    numproposed::Int
     runtime::Real
     ChainStandard(v::AbstractArray{N},ll::AbstractVector{T},b::Int,a::Int,p::Int,r::Real) = new(v,ll,b,a,p,r)
 end
@@ -20,10 +20,10 @@ end
 function store!(c::ChainStandard,s::AbstractSample,j::Int)
     nparas = numparas(s)
     @assert numparas(c) == nparas && j <= numsamples(s)
-    if c.proposed < numsamples(c)
-        c.proposed += 1
-        copy!(c.values,(c.proposed-1)*nparas+1,s.values,(j-1)*nparas+1,nparas)
-        c.loglikelihood[c.proposed] = s.loglikelihood[j]
+    if c.numproposed < length(c.loglikelihood)
+        c.numproposed += 1
+        copy!(c.values,(c.numproposed-1)*nparas+1,s.values,(j-1)*nparas+1,nparas)
+        c.loglikelihood[c.numproposed] = s.loglikelihood[j]
     else
         warn("Chain is full. Additional results cannot be stored")
     end
@@ -31,7 +31,7 @@ end
 
 function show(io::IO,c::ChainStandard)
   println("ChainStandard with numparas = $(numparas(c)) and numsamples = $(numsamples(c))")
-  println("Samples proposed = $(c.proposed), samples accepted = $(c.accepted), acceptance rate = $(c.accepted/c.proposed)")
+  println("Samples proposed = $(c.numproposed), samples accepted = $(c.numaccepted), acceptance rate = $(c.numaccepted/c.numproposed)")
   println("Total runtime = $(c.runtime)")
   println("Additional fields: :values, :loglikelihood")
 end
