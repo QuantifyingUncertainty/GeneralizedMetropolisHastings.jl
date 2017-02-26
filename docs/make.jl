@@ -25,6 +25,8 @@ makedocs(
 deploydocs(
     repo = "github.com/QuantifyingUncertainty/GeneralizedMetropolisHastings.jl.git",
     target = "build",
+    osname = "linux",
+    julia  = "0.5",
     deps = nothing,
     make = nothing,
 )
