@@ -32,7 +32,7 @@ Calderhead B. (2014), *A general construction for parallelizing Metropolis-Hasti
 [docs-stable-url]: https://quantifyinguncertainty.github.io/GeneralizedMetropolisHastings.jl/stable
 
 [travis-img]: https://travis-ci.org/quantifyinguncertainty/GeneralizedMetropolisHastings.jl.svg?branch=master
-[travis-url]: https://travis-ci.org/quantifyinguncertainty/GeneralizedMetropolisHastings.jl
+[travis-url]: https://travis-ci.org/QuantifyingUncertainty/GeneralizedMetropolisHastings.jl
 
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/egdu3hrptf3mnfc6/branch/master?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/MichaelHatherly/GeneralizedMetropolisHastings-jl-bqgcw/branch/master
