@@ -45,7 +45,7 @@ end
 function show(io::IO,m::ODEModel)
     println(io,"ODEModel ",m.name)
     print(io,"parameters: ") ; show(io,m.parameters)
-    print(io,"measurements: ") ; show(io,m.measurements)
+    print(io,"measurements: ") ; println(io,m.measurements)
     print(io,"noisemodel: ") ; show(io,m.noisemodel)
     println(io,"ode: ",m.ode)
     println(io,"initial: ",m.initial)

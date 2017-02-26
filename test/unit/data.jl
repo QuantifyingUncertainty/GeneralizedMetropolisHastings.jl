@@ -2,7 +2,7 @@
 d0 = data(:array,0.0f0:0.1f0:1.0f0,zeros(Float32,11))
 @test numvalues(d0) == 11
 @test numvars(d0) == 1
-@test generate!(d0) == zeros(Float32,11)
+@test generate!(d0).values == zeros(Float32,11)
 @test dataindex(d0) == collect(0.0f0:0.1f0:1.0f0)
 @test datavalues(d0) == zeros(Float32,11)
 @test eltype(d0) == Float32
@@ -11,33 +11,34 @@ d0 = data(:array,0.0f0:0.1f0:1.0f0,zeros(Float32,11))
 t1 = 0.0:0.1:1.0
 
 ###data generating functions
-f1(t::AbstractVector,a::AbstractFloat) = hcat(sin(a*t),cos(a*t))
-f2!(r::AbstractArray,μ::Float64,Σ::Float64) = (d = Distributions.Normal(μ,Σ) ; rand!(d,r) ; r)
+f1(t,a) = hcat(sin(a*t),cos(a*t))
+f1!(r,t,a) = (for i=1:length(t) r[i,:] = [sin(a*t[i]),cos(a*t[i])] end ; r)
+f2!(r,μ::Float64,Σ::Float64) = (d = Distributions.Normal(μ,Σ) ; rand!(d,r) ; r)
 
 ###data array
 a1 = hcat(sin(2*pi*t1),cos(2*pi*t1))
 
 ###create the Data objects
 d1 = data(:array,t1,a1)
-d2 = data(:function,t1,f1,t1,2*pi)
-d3 = data(:function!,t1,zeros(length(t1),3),f2!,1.0,0.1)
-d4 = data(:function!,t1,zeros(length(t1),3),rand!)
+d2 = data(:function,t1,f1,t1,2π)
+d2! = data(:function!,t1,zeros(length(t1),2),f1!,t1,2π)
+d3! = data(:function!,t1,zeros(length(t1),3),f2!,1.0,0.1)
+d4! = data(:function!,t1,zeros(length(t1),3),rand!)
 
-@test numvalues(d1) == numvalues(d2) == numvalues(d3) == numvalues(d4) == 11
-@test numvars(d1) == numvars(d2) == 2 && numvars(d3) == numvars(d4) == 3
-@test generate!(d1) == generate!(d2) == a1
-@test dataindex(d1) == dataindex(d2) == dataindex(d3) == dataindex(d4) == collect(t1)
-@test datavalues(d1) == datavalues(d2) == a1
-@test datavalues(d3) == datavalues(d4) == zeros(11,3)
-@test eltype(d1) == eltype(d2) == eltype(d3) == eltype(d4) == Float64
-@test (srand(5643) ; generate!(d3)) == (srand(5643) ; rand(Distributions.Normal(1.0,0.1),11,3)) == datavalues(d3)
-@test (srand(5643) ; generate!(d4)) == (srand(5643) ; rand(11,3)) == datavalues(d4)
+@test numvalues(d1) == numvalues(d2) == numvalues(d2!) == numvalues(d3!) == numvalues(d4!) == 11
+@test numvars(d1) == numvars(d2) == numvars(d2!) == 2 && numvars(d3!) == numvars(d4!) == 3
+@test datavalues(d1) == datavalues(d2) == datavalues(d2!) == a1
+@test datavalues(generate!(d1)) == datavalues(generate!(d2)) == datavalues(generate!(d2!)) == a1
+@test dataindex(d1) == dataindex(d2) == dataindex(d2!) == dataindex(d3!) == dataindex(d4!) == collect(t1)
+@test eltype(d1) == eltype(d2) == eltype(d2!) == eltype(d3!) == eltype(d4!) == Float64
+@test (srand(5643) ; datavalues(generate!(d3!))) == (srand(5643) ; rand(Distributions.Normal(1.0,0.1),11,3)) == datavalues(d3!)
+@test (srand(5643) ; datavalues(generate!(d4!))) == (srand(5643) ; rand(11,3)) == datavalues(d4!)
 
 ###test obtaining a new copy of the datavector
 e1 = datavalues(d1) ; e1[1] = 10.0
 e2 = datavalues(d2) ; e2[1] = 10.0
 @test e1 == e2 && e1 == datavalues(d1) && e2 == datavalues(d2)
-@test e1 == generate!(d1) && e2 == generate!(d2)
+@test e1 == datavalues(generate!(d1)) && e2 == datavalues(generate!(d2))
 
 ###noise model
 s1 = [0.1,0.2]

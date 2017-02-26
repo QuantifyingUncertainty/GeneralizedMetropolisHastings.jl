@@ -49,7 +49,7 @@ evaluate!(m::TargetModel,vals::AbstractVector) = _evaluate(m.inplacetarget,m,val
 function show(io::IO,m::TargetModel)
     println(io,"TargetModel ",m.name)
     print(io,"parameters: ") ; show(io,m.parameters)
-    print(io,"measurements: ") ; show(io,m.measurements)
+    print(io,"measurements: ") ; println(io,m.measurements)
     print(io,"noisemodel: ") ; show(io,m.noisemodel)
     println(io,"target: ",m.target)
     if ~isempty(m.args)

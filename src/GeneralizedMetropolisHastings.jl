@@ -30,7 +30,7 @@ export
     trait,traitvalue,traittype,
     policy,
     parameters,
-    data,dataindex,datavalues,
+    data,dataindex,datavalues,numvalues,numvars,
     distribution,distributions,
     density,
     noise,

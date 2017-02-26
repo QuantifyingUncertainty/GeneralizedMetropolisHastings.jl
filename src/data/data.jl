@@ -1,21 +1,66 @@
+"""
+Base type for objects wrapping measurement data.
+"""
 abstract AbstractData
 
-data(s::Symbol,args...) = _data(Val{s},args...)
-datatypename(d::AbstractData) = "AbstractData"
+"""
+    data(s::Symbol,args...)
+
+Create data objects.
+
+Currently implemented variants:
+---
+
+"""
+data(s::Symbol,args...) = data(Val{s},args...)
+
+"""
+    datatypename(d)
+Return the name of the data type (used by `show()`).
+"""
+function datatypename(d::AbstractData) end
+
+"""
+    numvalues(d)
+Return the number of data values.
+"""
+function numvalues(d::AbstractData) end
+
+"""
+    numvars(d)
+Return the number of variables.
+"""
+function numvars(d::AbstractData) end
+
+"""
+    eltype(d)
+Return the type of the data values.
+"""
+function eltype(d::AbstractData) end
+
+"""
+    generate!(d)
+Generate a set of data values. The function should return its argument d.
+"""
+function generate!(d::AbstractData) end
+
+"""
+    dataindex(d)
+Retrieve the data index.
+"""
+function dataindex(d::AbstractData) end
+
+"""
+    datavalues(d)
+Retrieve the data values.
+"""
+function datavalues(d::AbstractData) end
 
 function show(io::IO,d::AbstractData)
-    nvals = numvalues(d)
-    nvars = numvars(d)
-    println(io,datatypename(d)," with ",nvars," variable",nvars>1?"s":""," and ",nvals," value",nvals>1?"s":"")
-    for f in fieldnames(d)
-        fc = getfield(d,f)
-        if typeof(fc) <: Tuple && ~isempty(fc)
-            print(io," ",f,":")
-            show(io,fc)
-            println(io)
-        else
-            println(io," ",f,": ",typeof(getfield(d,f)))
-        end
-    end
+    nvals = (n = numvalues(d) ; n>1?string(n," values"):string(n," value"))
+    nvars = (n = numvars(d) ; n>1?string(n," variables"):string(n," variable"))
+    println(io,"$(datatypename(d)) with $(nvars) and $(nvals)")
+    println(io," index: ",dataindex(d))
+    println(io," values: ",datavalues(d))
     nothing
 end
