@@ -20,6 +20,7 @@ Some elementary examples of how to use the code are provided in repository [GMHE
 
 A biological model for use with the code is provided in repository [GMHPhotoReceptor.jl](https://github.com/QuantifyingUncertainty/GMHPhotoReceptor.jl)
 
+
 ###<a name="refs"/>References
 Calderhead B. (2014), *A general construction for parallelizing Metropolis-Hastings algorithms*, PNAS, Vol: 111, Pages: 17408-17413 [10.1073/pnas.1408184111](http://www.pnas.org/content/111/49/17408.abstract)
 
