@@ -1,6 +1,7 @@
 # GeneralizedMetropolisHastings
 
 *A parallel Monte-Carlo Markov Chain package*
+
 | **Documentation**   | **PackageEvaluator**                          |      **Build Status**        |
 |:-------------------:|:---------------------------------------------:|:----------------------------:|
 | [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][pkg-0.4-img]][pkg-0.4-url] [![][pkg-0.5-img]][pkg-0.5-url] | [![][travis-img]][travis-url] [![][codecov-img]][codecov-url] |
